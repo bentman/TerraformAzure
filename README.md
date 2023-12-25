@@ -5,7 +5,7 @@ Build an Azure lab environment using Terraform. Journey into mastering infrastru
 **Step 1: Set Up Your Toolkit**
 
 - [Install Terraform on Windows with Azure PowerShell](https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-windows-powershell)
-- Write basic Terraform scripts to interact with Azure services.
+- [Write basic Terraform scripts to interact with Azure services.](https://developer.hashicorp.com/terraform/tutorials/azure-get-started)
 
 **Step 2: Connect & Automate**
 
