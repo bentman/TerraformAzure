@@ -20,6 +20,6 @@ $sp.AppId
 $sp.PasswordCredentials.SecretText # Create Credential Secret
 */
 
-/* How to generate a new Service Principle and Secret using 
+/* How to generate a new Service Principle and Secret using AZ AD SP
 az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/$($myAzSubscriptionID)"
 */
