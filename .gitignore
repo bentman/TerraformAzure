@@ -32,3 +32,6 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# Exclude example_terraform.tfvars from GitIgnore
+!example_terraform.tfvars
