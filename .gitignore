@@ -35,3 +35,6 @@ terraform.rc
 
 # Exclude example_terraform.tfvars from GitIgnore
 !example_terraform.tfvars
+
+# Exclude Terraform Lock file
+.terraform.lock.hcl
