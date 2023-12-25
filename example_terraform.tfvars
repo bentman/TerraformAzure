@@ -10,8 +10,8 @@ ARM_CLIENT_ID = "YourServicePrincipleId"
 ARM_CLIENT_SECRET = "YourServicePrincipleSecret"
 
 // admin password
-ADMIN_USER = "adminuser"
-ADMIN_PSWD = "m1n3wP4ss!"
+ADMIN_USER = "YourAdminUserName"
+ADMIN_PSWD = "YourAdminPassword"
 
 /* How to generate a new Service Principle and Secret using PowershellAzAD
 // ARM_APP_ID_NAME="Terraform"
