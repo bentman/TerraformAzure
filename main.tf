@@ -1,11 +1,18 @@
+resource "random_string" "naming_suffix" {
+  length = 5
+  special = false
+  upper = true
+  numeric = true
+}
+
 resource "azurerm_resource_group" "lab" {
-  name     = "${var.rg_prefix}-${var.resource_group_location}-${var.tags.environment}"
-  location = var.resource_group_location
+  name     = "rg-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  location = var.rg_location
   tags     = var.tags
 }
 
 resource "azurerm_virtual_network" "lab_network" {
-  name                = "${var.vnet_prefix}-${var.resource_group_location}-${var.tags.environment}"
+  name                = "vnet-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
@@ -13,14 +20,14 @@ resource "azurerm_virtual_network" "lab_network" {
 }
 
 resource "azurerm_subnet" "jumpbox_subnet" {
-  name                 = "${var.snet_prefix}-${var.resource_group_location}-${var.tags.environment}-jumpbox"
+  name                 = "snet-jumpbox-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
   resource_group_name  = azurerm_resource_group.lab.name
   virtual_network_name = azurerm_virtual_network.lab_network.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
 resource "azurerm_network_security_group" "jumpbox_nsg" {
-  name                = "${var.vnet_prefix}-${var.resource_group_location}-jumpbox-nsg"
+  name                = "vnet-jumpbox-nsg-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
 
@@ -79,36 +86,36 @@ resource "azurerm_subnet_network_security_group_association" "jumpbox_nsg_associ
   network_security_group_id = azurerm_network_security_group.jumpbox_nsg.id
 }
 
-resource "azurerm_public_ip" "windows_vm_pip" {
-  name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-windows-pip"
+resource "azurerm_public_ip" "vm-jumpwin_pip" {
+  name                = "vm-jumpwin-pip-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
-  domain_name_label   = var.vmname_windows
+  domain_name_label   = var.vm-jumpwin_hostname
   tags                = var.tags
 }
 
-resource "azurerm_network_interface" "windows_nic" {
-  name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-windows-ip"
+resource "azurerm_network_interface" "vm-jumpwin_nic" {
+  name                = "vm-jumpwin-nic-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   // enable_accelerated_networking = true
 
   ip_configuration {
-    name                          = "windows-ip"
+    name                          = "vm-jumpwin-ip"
     subnet_id                     = azurerm_subnet.jumpbox_subnet.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.1.7"
-    public_ip_address_id          = azurerm_public_ip.windows_vm_pip.id
+    public_ip_address_id          = azurerm_public_ip.vm-jumpwin_pip.id
   }
   tags = var.tags
 }
 
-resource "azurerm_virtual_machine" "windows_vm" {
-  name                  = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-jumpwin"
+resource "azurerm_virtual_machine" "vm-jumpwin" {
+  name                  = "vm-jumpwin-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
   location              = azurerm_resource_group.lab.location
   resource_group_name   = azurerm_resource_group.lab.name
-  network_interface_ids = [azurerm_network_interface.windows_nic.id]
+  network_interface_ids = [azurerm_network_interface.vm-jumpwin_nic.id]
   vm_size               = "Standard_D2s_v3"
 
   storage_image_reference {
@@ -119,14 +126,14 @@ resource "azurerm_virtual_machine" "windows_vm" {
   }
 
   storage_os_disk {
-    name              = "${var.vm_prefix}-${var.resource_group_location}-windows"
+    name              = "vm-jumpwin-disk-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
 
   os_profile {
-    computer_name  = var.vmname_windows
+    computer_name  = var.vm-jumpwin_hostname
     admin_username = var.ADMIN_USER
     admin_password = var.ADMIN_PSWD
   }
@@ -137,36 +144,36 @@ resource "azurerm_virtual_machine" "windows_vm" {
   tags = var.tags
 }
 
-resource "azurerm_public_ip" "linux_vm_pip" {
-  name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-linux-pip"
+resource "azurerm_public_ip" "vm-jumplin_pip" {
+  name                = "vm-jumplin-pip-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
-  domain_name_label   = var.vmname_linux
+  domain_name_label   = var.vm-jumplin_hostname
   tags                = var.tags
 }
 
-resource "azurerm_network_interface" "linux_nic" {
-  name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-linux-ip"
+resource "azurerm_network_interface" "vm-jumplin_nic" {
+  name                = "vm-jumplin-nic-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   // enable_accelerated_networking = true
 
   ip_configuration {
-    name                          = "linux-ip"
+    name                          = "vm-jumplin-ip"
     subnet_id                     = azurerm_subnet.jumpbox_subnet.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.1.8"
-    public_ip_address_id          = azurerm_public_ip.linux_vm_pip.id
+    public_ip_address_id          = azurerm_public_ip.vm-jumplin_pip.id
   }
   tags = var.tags
 }
 
-resource "azurerm_virtual_machine" "linux_vm" {
-  name                  = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-jumplin"
+resource "azurerm_virtual_machine" "vm-jumplin" {
+  name                  = "vm-jumplin-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
   location              = azurerm_resource_group.lab.location
   resource_group_name   = azurerm_resource_group.lab.name
-  network_interface_ids = [azurerm_network_interface.linux_nic.id]
+  network_interface_ids = [azurerm_network_interface.vm-jumplin_nic.id]
   vm_size               = "Standard_D2s_v3"
 
   storage_image_reference {
@@ -177,14 +184,14 @@ resource "azurerm_virtual_machine" "linux_vm" {
   }
 
   storage_os_disk {
-    name              = "${var.vm_prefix}-${var.resource_group_location}-linux"
+    name              = "vm-jumplin-disk-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
 
   os_profile {
-    computer_name  = var.vmname_linux
+    computer_name  = var.vm-jumplin_hostname
     admin_username = var.ADMIN_USER
     admin_password = var.ADMIN_PSWD
   }
@@ -197,8 +204,8 @@ resource "azurerm_virtual_machine" "linux_vm" {
 
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
   for_each = {
-    "vm1" = azurerm_virtual_machine.linux_vm.id
-    "vm2" = azurerm_virtual_machine.windows_vm.id
+    "vm1" = azurerm_virtual_machine.vm-jumplin.id
+    "vm2" = azurerm_virtual_machine.vm-jumpwin.id
   }
   virtual_machine_id = each.value
   location           = azurerm_resource_group.lab.location

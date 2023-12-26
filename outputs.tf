@@ -10,26 +10,26 @@ output "subnet_name" {
   value = azurerm_subnet.jumpbox_subnet.name
 }
 
-output "windows_vm_name" {
-  value = azurerm_virtual_machine.windows_vm.name
+output "vm-jumpwin_name" {
+  value = azurerm_virtual_machine.vm-jumpwin.name
 }
 
-output "windows_vm_id" {
-  value = azurerm_virtual_machine.windows_vm.id
+output "vm-jumpwin_id" {
+  value = azurerm_virtual_machine.vm-jumpwin.id
 }
 
-output "windows_vm_public_ip" {
-  value = azurerm_public_ip.windows_vm_pip.ip_address
+output "vm-jumpwin_public_ip" {
+  value = azurerm_public_ip.vm-jumpwin_pip.ip_address
 }
 
-output "linux_vm_name" {
-  value = azurerm_virtual_machine.linux_vm.name
+output "vm-jumplin_name" {
+  value = azurerm_virtual_machine.vm-jumplin.name
 }
 
-output "linux_vm_id" {
-  value = azurerm_virtual_machine.linux_vm.id
+output "vm-jumplin_id" {
+  value = azurerm_virtual_machine.vm-jumplin.id
 }
 
-output "linux_vm_public_ip" {
-  value = azurerm_public_ip.linux_vm_pip.ip_address
+output "vm-jumplin_public_ip" {
+  value = azurerm_public_ip.vm-jumplin_pip.ip_address
 }

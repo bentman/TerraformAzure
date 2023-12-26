@@ -7,47 +7,24 @@ variable "tags" {
   }
 }
 
-variable "resource_group_location" {
+variable "rg_location" {
   type        = string
   default     = "southcentralus"
   description = "Location of the resource group."
 }
 
-variable "vmname_windows" {
+variable "vm-jumpwin_hostname" {
   type = string
   default = "tacocat007"
   description = "Computername for the linux-vm"
 }
 
-variable "vmname_linux" {
+variable "vm-jumplin_hostname" {
   type = string
   default = "tacocat008"
   description = "Computername for the linux-vm"
 }
 
-variable "rg_prefix" {
-  type        = string
-  default     = "rg"
-  description = "Prefix of the resource group name prefix."
-}
-
-variable "vnet_prefix" {
-  type        = string
-  default     = "vnet"
-  description = "Prefix of the virtual network name."
-}
-
-variable "snet_prefix" {
-  type        = string
-  default     = "snet"
-  description = "Prefix of the virtual subnet name."
-}
-
-variable "vm_prefix" {
-  type        = string
-  default     = "vm"
-  description = "Prefix of the virtual machine name."
-}
 // Declare confidential variables here, specify values in *.tfvars (with .gitingnore file!)
 
 variable "ARM_TENANT_ID" {
