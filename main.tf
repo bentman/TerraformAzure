@@ -71,7 +71,6 @@ resource "azurerm_network_security_group" "jumpbox_nsg" {
     source_address_prefix      = "Internet"
     destination_address_prefix = "*"
   }
-
   tags = var.tags
 }
 
@@ -85,8 +84,7 @@ resource "azurerm_public_ip" "windows_vm_pip" {
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
-
-  tags = var.tags
+  tags                = var.tags
 }
 
 resource "azurerm_network_interface" "windows_nic" {
@@ -101,7 +99,6 @@ resource "azurerm_network_interface" "windows_nic" {
     private_ip_address            = "10.0.1.7"
     public_ip_address_id          = azurerm_public_ip.windows_vm_pip.id
   }
-
   tags = var.tags
 }
 
@@ -135,7 +132,6 @@ resource "azurerm_virtual_machine" "windows_vm" {
   os_profile_windows_config {
     enable_automatic_upgrades = true
   }
-
   tags = var.tags
 }
 
@@ -144,8 +140,7 @@ resource "azurerm_public_ip" "linux_vm_pip" {
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
-
-  tags = var.tags
+  tags                = var.tags
 }
 
 resource "azurerm_network_interface" "linux_nic" {
@@ -160,7 +155,6 @@ resource "azurerm_network_interface" "linux_nic" {
     private_ip_address            = "10.0.1.8"
     public_ip_address_id          = azurerm_public_ip.linux_vm_pip.id
   }
-
   tags = var.tags
 }
 
@@ -194,4 +188,5 @@ resource "azurerm_virtual_machine" "linux_vm" {
   os_profile_linux_config {
     disable_password_authentication = false
   }
+  tags = var.tags
 }
