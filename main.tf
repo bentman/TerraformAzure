@@ -1,11 +1,11 @@
 resource "azurerm_resource_group" "lab" {
-  name     = "${var.rg_name_prefix}-${var.resource_group_location}-${var.tags.environment}"
+  name     = "${var.rg_prefix}-${var.resource_group_location}-${var.tags.environment}"
   location = var.resource_group_location
   tags     = var.tags
 }
 
 resource "azurerm_virtual_network" "lab_network" {
-  name                = "${var.vnet_name_prefix}-${var.resource_group_location}-${var.tags.environment}"
+  name                = "${var.vnet_prefix}-${var.resource_group_location}-${var.tags.environment}"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
@@ -13,14 +13,14 @@ resource "azurerm_virtual_network" "lab_network" {
 }
 
 resource "azurerm_subnet" "jumpbox_subnet" {
-  name                 = "${var.snet_name_prefix}-${var.resource_group_location}-${var.tags.environment}-jumpbox"
+  name                 = "${var.snet_prefix}-${var.resource_group_location}-${var.tags.environment}-jumpbox"
   resource_group_name  = azurerm_resource_group.lab.name
   virtual_network_name = azurerm_virtual_network.lab_network.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
 resource "azurerm_network_security_group" "jumpbox_nsg" {
-  name                = "${var.vnet_name_prefix}-${var.resource_group_location}-jumpbox-nsg"
+  name                = "${var.vnet_prefix}-${var.resource_group_location}-jumpbox-nsg"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
 
@@ -80,15 +80,16 @@ resource "azurerm_subnet_network_security_group_association" "jumpbox_nsg_associ
 }
 
 resource "azurerm_public_ip" "windows_vm_pip" {
-  name                = "${var.vm_name_prefix}-${var.resource_group_location}-${var.tags.environment}-windows-pip"
+  name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-windows-pip"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
+  domain_name_label   = var.vmname_windows
   tags                = var.tags
 }
 
 resource "azurerm_network_interface" "windows_nic" {
-  name                = "${var.vm_name_prefix}-${var.resource_group_location}-${var.tags.environment}-windows-ip"
+  name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-windows-ip"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
 
@@ -103,7 +104,7 @@ resource "azurerm_network_interface" "windows_nic" {
 }
 
 resource "azurerm_virtual_machine" "windows_vm" {
-  name                  = "${var.vm_name_prefix}-${var.resource_group_location}-${var.tags.environment}-jumpwin"
+  name                  = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-jumpwin"
   location              = azurerm_resource_group.lab.location
   resource_group_name   = azurerm_resource_group.lab.name
   network_interface_ids = [azurerm_network_interface.windows_nic.id]
@@ -117,14 +118,14 @@ resource "azurerm_virtual_machine" "windows_vm" {
   }
 
   storage_os_disk {
-    name              = "${var.vm_name_prefix}-${var.resource_group_location}-windows"
+    name              = "${var.vm_prefix}-${var.resource_group_location}-windows"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
 
   os_profile {
-    computer_name  = "tacocat007"
+    computer_name  = var.vmname_windows
     admin_username = var.ADMIN_USER
     admin_password = var.ADMIN_PSWD
   }
@@ -136,15 +137,16 @@ resource "azurerm_virtual_machine" "windows_vm" {
 }
 
 resource "azurerm_public_ip" "linux_vm_pip" {
-  name                = "${var.vm_name_prefix}-${var.resource_group_location}-${var.tags.environment}-linux-pip"
+  name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-linux-pip"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
+  domain_name_label   = var.vmname_linux
   tags                = var.tags
 }
 
 resource "azurerm_network_interface" "linux_nic" {
-  name                = "${var.vm_name_prefix}-${var.resource_group_location}-${var.tags.environment}-linux-ip"
+  name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-linux-ip"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
 
@@ -159,7 +161,7 @@ resource "azurerm_network_interface" "linux_nic" {
 }
 
 resource "azurerm_virtual_machine" "linux_vm" {
-  name                  = "${var.vm_name_prefix}-${var.resource_group_location}-${var.tags.environment}-jumplin"
+  name                  = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-jumplin"
   location              = azurerm_resource_group.lab.location
   resource_group_name   = azurerm_resource_group.lab.name
   network_interface_ids = [azurerm_network_interface.linux_nic.id]
@@ -173,14 +175,14 @@ resource "azurerm_virtual_machine" "linux_vm" {
   }
 
   storage_os_disk {
-    name              = "${var.vm_name_prefix}-${var.resource_group_location}-linux"
+    name              = "${var.vm_prefix}-${var.resource_group_location}-linux"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
 
   os_profile {
-    computer_name  = "tacocat008"
+    computer_name  = var.vmname_linux
     admin_username = var.ADMIN_USER
     admin_password = var.ADMIN_PSWD
   }
@@ -189,4 +191,21 @@ resource "azurerm_virtual_machine" "linux_vm" {
     disable_password_authentication = false
   }
   tags = var.tags
+}
+
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
+  for_each = {
+    "vm1" = azurerm_virtual_machine.linux_vm.id
+    "vm2" = azurerm_virtual_machine.windows_vm.id
+  }
+  virtual_machine_id = each.value
+  location           = azurerm_resource_group.lab.location
+  enabled            = true
+
+  daily_recurrence_time = "0000"
+  timezone              = "Central Standard Time"
+
+  notification_settings {
+    enabled         = false
+  }
 }

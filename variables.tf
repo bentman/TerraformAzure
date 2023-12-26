@@ -13,25 +13,37 @@ variable "resource_group_location" {
   description = "Location of the resource group."
 }
 
-variable "rg_name_prefix" {
+variable "vmname_windows" {
+  type = string
+  default = "tacocat007"
+  description = "Computername for the linux-vm"
+}
+
+variable "vmname_linux" {
+  type = string
+  default = "tacocat008"
+  description = "Computername for the linux-vm"
+}
+
+variable "rg_prefix" {
   type        = string
   default     = "rg"
   description = "Prefix of the resource group name prefix."
 }
 
-variable "vnet_name_prefix" {
+variable "vnet_prefix" {
   type        = string
   default     = "vnet"
   description = "Prefix of the virtual network name."
 }
 
-variable "snet_name_prefix" {
+variable "snet_prefix" {
   type        = string
   default     = "snet"
   description = "Prefix of the virtual subnet name."
 }
 
-variable "vm_name_prefix" {
+variable "vm_prefix" {
   type        = string
   default     = "vm"
   description = "Prefix of the virtual machine name."
