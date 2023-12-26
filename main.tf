@@ -92,6 +92,7 @@ resource "azurerm_network_interface" "windows_nic" {
   name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-windows-ip"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
+  // enable_accelerated_networking = true
 
   ip_configuration {
     name                          = "windows-ip"
@@ -149,6 +150,7 @@ resource "azurerm_network_interface" "linux_nic" {
   name                = "${var.vm_prefix}-${var.resource_group_location}-${var.tags.environment}-linux-ip"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
+  // enable_accelerated_networking = true
 
   ip_configuration {
     name                          = "linux-ip"
@@ -206,6 +208,6 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
   timezone              = "Central Standard Time"
 
   notification_settings {
-    enabled         = false
+    enabled = false
   }
 }

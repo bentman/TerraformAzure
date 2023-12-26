@@ -18,7 +18,8 @@ Build an Azure lab environment using Terraform. Journey into mastering infrastru
 
 - Write a YAML pipeline for Terraform deployments and test it.
 - Use Terraform to create and destroy a sub-tenant for controlled deployments.
-- Apply simple configurations like Azure AD, storage blobs, or basic applications (e.g., WordPress). Destroy them afterwards for a solid foundation.
+- Apply simple configurations like Azure AD, storage blobs, or basic applications (e.g., WordPress). 
+- Destroy them afterwards for a solid foundation.
 
 **Step 4: Network & Deploy VMs**
 
