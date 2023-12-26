@@ -1,18 +1,11 @@
-resource "random_string" "naming_suffix" {
-  length = 5
-  special = false
-  upper = true
-  numeric = true
-}
-
 resource "azurerm_resource_group" "lab" {
-  name     = "rg-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name     = "rg-${var.tags.environment}-${var.rg_location}"
   location = var.rg_location
   tags     = var.tags
 }
 
 resource "azurerm_virtual_network" "lab_network" {
-  name                = "vnet-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name                = "vnet-${var.tags.environment}-${var.rg_location}"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
@@ -20,14 +13,14 @@ resource "azurerm_virtual_network" "lab_network" {
 }
 
 resource "azurerm_subnet" "jumpbox_subnet" {
-  name                 = "snet-jumpbox-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name                 = "snet-jumpbox-${var.tags.environment}-${var.rg_location}"
   resource_group_name  = azurerm_resource_group.lab.name
   virtual_network_name = azurerm_virtual_network.lab_network.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
 resource "azurerm_network_security_group" "jumpbox_nsg" {
-  name                = "vnet-jumpbox-nsg-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name                = "vnet-jumpbox-nsg-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
 
@@ -87,7 +80,7 @@ resource "azurerm_subnet_network_security_group_association" "jumpbox_nsg_associ
 }
 
 resource "azurerm_public_ip" "vm-jumpwin_pip" {
-  name                = "vm-jumpwin-pip-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name                = "vm-jumpwin-pip-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
@@ -96,7 +89,7 @@ resource "azurerm_public_ip" "vm-jumpwin_pip" {
 }
 
 resource "azurerm_network_interface" "vm-jumpwin_nic" {
-  name                = "vm-jumpwin-nic-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name                = "vm-jumpwin-nic-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   // enable_accelerated_networking = true
@@ -112,7 +105,7 @@ resource "azurerm_network_interface" "vm-jumpwin_nic" {
 }
 
 resource "azurerm_virtual_machine" "vm-jumpwin" {
-  name                  = "vm-jumpwin-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name                  = "vm-jumpwin-${var.tags.environment}-${var.rg_location}"
   location              = azurerm_resource_group.lab.location
   resource_group_name   = azurerm_resource_group.lab.name
   network_interface_ids = [azurerm_network_interface.vm-jumpwin_nic.id]
@@ -126,7 +119,7 @@ resource "azurerm_virtual_machine" "vm-jumpwin" {
   }
 
   storage_os_disk {
-    name              = "vm-jumpwin-disk-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+    name              = "vm-jumpwin-disk-${var.tags.environment}-${var.rg_location}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
@@ -145,7 +138,7 @@ resource "azurerm_virtual_machine" "vm-jumpwin" {
 }
 
 resource "azurerm_public_ip" "vm-jumplin_pip" {
-  name                = "vm-jumplin-pip-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name                = "vm-jumplin-pip-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
@@ -154,7 +147,7 @@ resource "azurerm_public_ip" "vm-jumplin_pip" {
 }
 
 resource "azurerm_network_interface" "vm-jumplin_nic" {
-  name                = "vm-jumplin-nic-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name                = "vm-jumplin-nic-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   // enable_accelerated_networking = true
@@ -170,7 +163,7 @@ resource "azurerm_network_interface" "vm-jumplin_nic" {
 }
 
 resource "azurerm_virtual_machine" "vm-jumplin" {
-  name                  = "vm-jumplin-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+  name                  = "vm-jumplin-${var.tags.environment}-${var.rg_location}"
   location              = azurerm_resource_group.lab.location
   resource_group_name   = azurerm_resource_group.lab.name
   network_interface_ids = [azurerm_network_interface.vm-jumplin_nic.id]
@@ -184,7 +177,7 @@ resource "azurerm_virtual_machine" "vm-jumplin" {
   }
 
   storage_os_disk {
-    name              = "vm-jumplin-disk-${var.tags.environment}-${var.rg_location}-${random_string.naming_suffix.result}"
+    name              = "vm-jumplin-disk-${var.tags.environment}-${var.rg_location}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
@@ -218,3 +211,13 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
     enabled = false
   }
 }
+
+// ${random_string.naming_suffix.result}"
+/*
+resource "random_string" "naming_suffix" {
+  length = 5
+  special = false
+  upper = true
+  numeric = true
+}
+*/
