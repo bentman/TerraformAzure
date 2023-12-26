@@ -1,5 +1,5 @@
 locals {
-  tags = {
+  common_tags = {
     environment = "lab"
     project     = "learning"
     source      = "terraform"

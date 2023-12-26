@@ -1,3 +1,12 @@
+variable "tags" {
+  type = map(string)
+  default = {
+    "environment" = "lab"
+    "project"     = "learning"
+    "source"      = "terraform"
+  }
+}
+
 variable "resource_group_location" {
   type        = string
   default     = "southcentralus"
@@ -7,7 +16,7 @@ variable "resource_group_location" {
 variable "rg_name_prefix" {
   type        = string
   default     = "rg"
-  description = "Prefix of the resource group name that's combined with a random ID so name is unique in your Azure subscription."
+  description = "Prefix of the resource group name prefix."
 }
 
 variable "vnet_name_prefix" {
