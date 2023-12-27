@@ -104,37 +104,37 @@ resource "azurerm_network_interface" "vm-jumpwin_nic" {
   tags = var.tags
 }
 
-resource "azurerm_virtual_machine" "vm-jumpwin" {
-  name                  = "vm-jumpwin-${var.tags.environment}-${var.rg_location}"
-  location              = azurerm_resource_group.lab.location
-  resource_group_name   = azurerm_resource_group.lab.name
-  network_interface_ids = [azurerm_network_interface.vm-jumpwin_nic.id]
-  vm_size               = "Standard_D2s_v3"
+resource "azurerm_windows_virtual_machine" "vm-jumpwin" {
+  name                = "vm-jumpwin-${var.tags.environment}-${var.rg_location}"
+  location            = azurerm_resource_group.lab.location
+  resource_group_name = azurerm_resource_group.lab.name
+  computer_name       = var.vm-jumpwin_hostname
+  admin_username      = var.ADMIN_USER
+  admin_password      = var.ADMIN_PSWD
+  size                = "Standard_D2s_v3"
+  // priority            = "Spot"
+  // eviction_policy     = "Deallocate"
+  // max_bid_price       = -1
+  network_interface_ids = [
+    azurerm_network_interface.vm-jumpwin_nic.id,
+  ]
 
-  storage_image_reference {
+  os_disk {
+    name                 = "vm-jumpwin-disk-${var.tags.environment}-${var.rg_location}"
+    caching              = "ReadWrite"
+    disk_size_gb         = "127"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
     publisher = "MicrosoftWindowsDesktop"
     offer     = "Windows-11"
     sku       = "win11-23h2-pro"
     version   = "latest"
   }
-
-  storage_os_disk {
-    name              = "vm-jumpwin-disk-${var.tags.environment}-${var.rg_location}"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-  }
-
-  os_profile {
-    computer_name  = var.vm-jumpwin_hostname
-    admin_username = var.ADMIN_USER
-    admin_password = var.ADMIN_PSWD
-  }
-
-  os_profile_windows_config {
-    enable_automatic_upgrades = true
-  }
-  tags = var.tags
+  // patch_mode          = "AutomaticByPlatform"
+  // hotpatching_enabled = true
+  tags                = var.tags
 }
 
 resource "azurerm_public_ip" "vm-jumplin_pip" {
@@ -162,43 +162,44 @@ resource "azurerm_network_interface" "vm-jumplin_nic" {
   tags = var.tags
 }
 
-resource "azurerm_virtual_machine" "vm-jumplin" {
-  name                  = "vm-jumplin-${var.tags.environment}-${var.rg_location}"
-  location              = azurerm_resource_group.lab.location
-  resource_group_name   = azurerm_resource_group.lab.name
-  network_interface_ids = [azurerm_network_interface.vm-jumplin_nic.id]
-  vm_size               = "Standard_D2s_v3"
+resource "azurerm_linux_virtual_machine" "vm-jumplin" {
+  name                            = "vm-jumplin-${var.tags.environment}-${var.rg_location}"
+  location                        = azurerm_resource_group.lab.location
+  resource_group_name             = azurerm_resource_group.lab.name
+  computer_name                   = var.vm-jumplin_hostname
+  admin_username                  = var.ADMIN_USER
+  admin_password                  = var.ADMIN_PSWD
+  disable_password_authentication = false
+  size                            = "Standard_D2s_v3"
+  // priority            = "Spot"
+  // eviction_policy     = "Deallocate"
+  // max_bid_price       = -1
+  network_interface_ids = [
+    azurerm_network_interface.vm-jumplin_nic.id,
+  ]
 
-  storage_image_reference {
+  os_disk {
+    name                 = "vm-jumplin-disk-${var.tags.environment}-${var.rg_location}"
+    caching              = "ReadWrite"
+    disk_size_gb         = "127"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts-gen2"
+    sku       = "22_04-lts"
     version   = "latest"
   }
-
-  storage_os_disk {
-    name              = "vm-jumplin-disk-${var.tags.environment}-${var.rg_location}"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-  }
-
-  os_profile {
-    computer_name  = var.vm-jumplin_hostname
-    admin_username = var.ADMIN_USER
-    admin_password = var.ADMIN_PSWD
-  }
-
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
-  tags = var.tags
+  // patch_mode         = "AutomaticByPlatform"
+  // provision_vm_agent = true
+  tags               = var.tags
 }
 
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
   for_each = {
-    "vm1" = azurerm_virtual_machine.vm-jumplin.id
-    "vm2" = azurerm_virtual_machine.vm-jumpwin.id
+    "vm1" = azurerm_windows_virtual_machine.vm-jumpwin.id
+    "vm2" = azurerm_linux_virtual_machine.vm-jumplin.id
   }
   virtual_machine_id = each.value
   location           = azurerm_resource_group.lab.location

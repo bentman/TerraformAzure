@@ -11,11 +11,11 @@ output "subnet_name" {
 }
 
 output "vm-jumpwin_name" {
-  value = azurerm_virtual_machine.vm-jumpwin.name
+  value = azurerm_windows_virtual_machine.vm-jumpwin.name
 }
 
 output "vm-jumpwin_id" {
-  value = azurerm_virtual_machine.vm-jumpwin.id
+  value = azurerm_windows_virtual_machine.vm-jumpwin.id
 }
 
 output "vm-jumpwin_public_ip" {
@@ -23,11 +23,11 @@ output "vm-jumpwin_public_ip" {
 }
 
 output "vm-jumplin_name" {
-  value = azurerm_virtual_machine.vm-jumplin.name
+  value = azurerm_linux_virtual_machine.vm-jumplin.name
 }
 
 output "vm-jumplin_id" {
-  value = azurerm_virtual_machine.vm-jumplin.id
+  value = azurerm_linux_virtual_machine.vm-jumplin.id
 }
 
 output "vm-jumplin_public_ip" {
