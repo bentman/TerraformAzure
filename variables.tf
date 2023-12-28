@@ -16,7 +16,7 @@ variable "rg_location" {
 variable "vm_jumpwin_hostname" {
   type        = string
   default     = "tacocat007"
-  description = "Computername for the linux-vm"
+  description = "Computername for the windows-vm"
 }
 
 variable "vm_jumplin_hostname" {
