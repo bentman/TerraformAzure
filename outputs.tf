@@ -18,18 +18,18 @@ output "vm_jumpwin_id" {
   value = azurerm_windows_virtual_machine.vm_jumpwin.id
 }
 
-output "vm-jumpwin_public_ip" {
+output "vm_jumpwin_public_ip" {
   value = azurerm_public_ip.vm_jumpwin_pip.ip_address
 }
 
-output "vm-jumplin_name" {
+output "vm_jumplin_name" {
   value = azurerm_linux_virtual_machine.vm_jumplin.name
 }
 
-output "vm-jumplin_id" {
+output "vm_jumplin_id" {
   value = azurerm_linux_virtual_machine.vm_jumplin.id
 }
 
-output "vm-jumplin_public_ip" {
+output "vm_jumplin_public_ip" {
   value = azurerm_public_ip.vm_jumplin_pip.ip_address
 }
