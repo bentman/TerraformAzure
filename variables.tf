@@ -1,9 +1,9 @@
 variable "tags" {
   type = map(string)
   default = {
-    "environment" = "lab"
-    "project"     = "learning"
     "source"      = "terraform"
+    "project"     = "learning"
+    "environment" = "lab"
   }
 }
 
@@ -13,15 +13,15 @@ variable "rg_location" {
   description = "Location of the resource group."
 }
 
-variable "vm-jumpwin_hostname" {
-  type = string
-  default = "tacocat007"
+variable "vm_jumpwin_hostname" {
+  type        = string
+  default     = "tacocat007"
   description = "Computername for the linux-vm"
 }
 
-variable "vm-jumplin_hostname" {
-  type = string
-  default = "tacocat008"
+variable "vm_jumplin_hostname" {
+  type        = string
+  default     = "tacocat008"
   description = "Computername for the linux-vm"
 }
 
