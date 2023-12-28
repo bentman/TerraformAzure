@@ -7,25 +7,25 @@ Build an Azure lab environment using Terraform. Journey into mastering infrastru
 - [Install Terraform on Windows with Azure PowerShell](https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-windows-powershell)
 - [Write basic Terraform scripts to interact with Azure services.](https://developer.hashicorp.com/terraform/tutorials/azure-get-started)
 
-**Step 2: Connect & Automate**
+**Step 2: Network & Deploy VMs**
+
+- Build your Azure network with Terraform, testing components like VNETs and subnets.
+- Deploy VMs, including Spot VMs for cost-efficiency, and manage them with Terraform.
+- Configure Windows Virtual Desktop (WVD) and secure access options like RDP or Azure Bastion.
+
+**Step 3: Connect & Automate**
 
 - Link your Azure account with your GitHub repository.
 - Set up GitHub Actions for automated workflows.
 - Connect your GitHub repository with Azure DevOps.
 - Prepare Azure DevOps for pipeline creation and Terraform integration.
 
-**Step 3: Build Your Foundation**
+**Step 4: Build Your Foundation**
 
 - Write a YAML pipeline for Terraform deployments and test it.
 - Use Terraform to create and destroy a sub-tenant for controlled deployments.
 - Apply simple configurations like Azure AD, storage blobs, or basic applications (e.g., WordPress). 
 - Destroy them afterwards for a solid foundation.
-
-**Step 4: Network & Deploy VMs**
-
-- Build your Azure network with Terraform, testing components like VNETs and subnets.
-- Deploy VMs, including Spot VMs for cost-efficiency, and manage them with Terraform.
-- Configure Windows Virtual Desktop (WVD) and secure access options like RDP or Azure Bastion.
 
 **Step 5: Learn & Expand**
 
