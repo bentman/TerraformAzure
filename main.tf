@@ -6,9 +6,9 @@ resource "azurerm_resource_group" "lab" {
 
 resource "azurerm_virtual_network" "lab_network" {
   name                = "vnet-${var.tags.environment}-${var.rg_location}"
-  address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
+  address_space       = ["10.0.0.0/16"]
   tags                = var.tags
 }
 
@@ -92,6 +92,7 @@ resource "azurerm_network_interface" "vm-jumpwin_nic" {
   name                = "vm-jumpwin-nic-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
+  tags = var.tags
   // enable_accelerated_networking = true
 
   ip_configuration {
@@ -101,7 +102,6 @@ resource "azurerm_network_interface" "vm-jumpwin_nic" {
     private_ip_address            = "10.0.1.7"
     public_ip_address_id          = azurerm_public_ip.vm-jumpwin_pip.id
   }
-  tags = var.tags
 }
 
 resource "azurerm_windows_virtual_machine" "vm-jumpwin" {
@@ -115,6 +115,7 @@ resource "azurerm_windows_virtual_machine" "vm-jumpwin" {
   // priority            = "Spot"
   // eviction_policy     = "Deallocate"
   // max_bid_price       = -1
+  tags                = var.tags
   network_interface_ids = [
     azurerm_network_interface.vm-jumpwin_nic.id,
   ]
@@ -134,7 +135,6 @@ resource "azurerm_windows_virtual_machine" "vm-jumpwin" {
   }
   // patch_mode          = "AutomaticByPlatform"
   // hotpatching_enabled = true
-  tags                = var.tags
 }
 
 resource "azurerm_public_ip" "vm-jumplin_pip" {
@@ -151,6 +151,7 @@ resource "azurerm_network_interface" "vm-jumplin_nic" {
   location            = azurerm_resource_group.lab.location
   resource_group_name = azurerm_resource_group.lab.name
   // enable_accelerated_networking = true
+  tags                = var.tags
 
   ip_configuration {
     name                          = "vm-jumplin-ip"
@@ -159,7 +160,6 @@ resource "azurerm_network_interface" "vm-jumplin_nic" {
     private_ip_address            = "10.0.1.8"
     public_ip_address_id          = azurerm_public_ip.vm-jumplin_pip.id
   }
-  tags = var.tags
 }
 
 resource "azurerm_linux_virtual_machine" "vm-jumplin" {
@@ -174,6 +174,7 @@ resource "azurerm_linux_virtual_machine" "vm-jumplin" {
   // priority            = "Spot"
   // eviction_policy     = "Deallocate"
   // max_bid_price       = -1
+  tags                = var.tags
   network_interface_ids = [
     azurerm_network_interface.vm-jumplin_nic.id,
   ]
@@ -193,7 +194,6 @@ resource "azurerm_linux_virtual_machine" "vm-jumplin" {
   }
   // patch_mode         = "AutomaticByPlatform"
   // provision_vm_agent = true
-  tags               = var.tags
 }
 
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
@@ -213,7 +213,6 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
   }
 }
 
-// ${random_string.naming_suffix.result}"
 /*
 resource "random_string" "naming_suffix" {
   length = 5
@@ -221,4 +220,5 @@ resource "random_string" "naming_suffix" {
   upper = true
   numeric = true
 }
+// USAGE: "${random_string.naming_suffix.result}"
 */
