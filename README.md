@@ -10,7 +10,8 @@ Build an Azure lab environment using Terraform. Journey into mastering infrastru
 **Step 2: Deploy Network & Virtual Machines**
 
 - [Build your Azure network with Terraform, testing components like VNETs and subnets.](https://learn.microsoft.com/en-us/azure/developer/terraform/hub-spoke-on-prem)
-- Deploy VMs, including "Spot" VMs for cost-efficiency, and manage them with Terraform.
+- [Quickstart: Use Terraform to create a Windows VM](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/quick-create-terraform)
+- Deploy "Spot" VMs for cost-efficiency, and manage them with Terraform.
     - [azurerm_windows_virtual_machine](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine)
     - [azurerm_linux_virtual_machine](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine)
 
