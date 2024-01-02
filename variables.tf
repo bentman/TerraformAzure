@@ -56,6 +56,7 @@ variable "ADMIN_USER" {
   description = "adminuser"
   sensitive   = true
 }
+
 variable "ADMIN_PSWD" {
   type        = string
   description = "adminuser password"
