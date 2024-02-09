@@ -38,7 +38,6 @@ output "vm_sql_name" {
   value = azurerm_linux_virtual_machine.vm_jumplin.name
 }
 
-/*
 ### SQL Server Outputs
 output "vm_sql_id" {
   value = azurerm_linux_virtual_machine.vm_jumplin.id
@@ -49,7 +48,6 @@ output "vm_sql_public_ip" {
 }
 
 output "vm_sql_password" {
-  value     = local.sqladmin_password
+  value     = local.generated_password
   sensitive = true
 }
-*/

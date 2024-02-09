@@ -175,7 +175,7 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
     azurerm_network_interface.vm_jumplin_nic.id,
   ]
 
-  size            = "Standard_D2s_v3"
+  size = "Standard_D2s_v3"
 
   os_disk {
     name                 = "vm-jumplin-osdisk-${var.tags.environment}-${var.rg_location}"
@@ -191,16 +191,16 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
     version   = "latest"
   }
 }
-/*
+
 ##### SQL Server #####
+locals {
+  generated_password = random_password.sql_password.result
+}
+
 resource "random_password" "sql_password" {
   length           = 16
   special          = true
   override_special = "!@#$()-_=+[]{}"
-}
-
-locals {
-  sqladmin_password = random_password.sql_password.result
 }
 
 resource "azurerm_network_interface" "vm_sql_nic" {
@@ -261,7 +261,7 @@ resource "azurerm_managed_disk" "sql_data_disk1" {
 resource "azurerm_virtual_machine_data_disk_attachment" "data_disk_attach" {
   managed_disk_id    = azurerm_managed_disk.sql_data_disk1.id
   virtual_machine_id = azurerm_windows_virtual_machine.vm_sql.id
-  lun                =  1
+  lun                = 0
   caching            = "None"
 }
 
@@ -278,7 +278,7 @@ resource "azurerm_managed_disk" "sql_logs_disk2" {
 resource "azurerm_virtual_machine_data_disk_attachment" "logs_disk_attach" {
   managed_disk_id    = azurerm_managed_disk.sql_logs_disk2.id
   virtual_machine_id = azurerm_windows_virtual_machine.vm_sql.id
-  lun                =  2
+  lun                = 1
   caching            = "None"
 }
 
@@ -295,7 +295,7 @@ resource "azurerm_managed_disk" "sql_temp_disk3" {
 resource "azurerm_virtual_machine_data_disk_attachment" "temp_disk_attach" {
   managed_disk_id    = azurerm_managed_disk.sql_temp_disk3.id
   virtual_machine_id = azurerm_windows_virtual_machine.vm_sql.id
-  lun                =  3
+  lun                = 2
   caching            = "None"
 }
 
@@ -304,7 +304,7 @@ resource "azurerm_mssql_virtual_machine" "azurerm_sqlvmmanagement" {
   sql_license_type                 = "PAYG"
   sql_connectivity_port            = 1433
   sql_connectivity_type            = "PRIVATE"
-  sql_connectivity_update_password = local.sqladmin_password
+  sql_connectivity_update_password = local.generated_password
   sql_connectivity_update_username = var.SQL_ADMIN_USER
 
   auto_patching {
@@ -316,20 +316,20 @@ resource "azurerm_mssql_virtual_machine" "azurerm_sqlvmmanagement" {
   storage_configuration {
     disk_type             = "NEW"
     storage_workload_type = "OLTP"
-  
+
     data_settings {
       default_file_path = "F:\\SQL-Data"
-      luns              = [1]
+      luns              = [0]
     }
 
     log_settings {
       default_file_path = "L:\\SQL-Logs"
-      luns              = [2]
+      luns              = [1]
     }
 
     temp_db_settings {
       default_file_path = "T:\\SQL-Temp"
-      luns              = [3]
+      luns              = [2]
     }
   }
 }
@@ -343,16 +343,16 @@ resource "azurerm_virtual_machine_extension" "vm_sql_extension" {
 
   settings = <<SETTINGS
 {
-    "commandToExecute": "echo ${local.sqladmin_password} > C:\\sql-output.txt"
+    "commandToExecute": "echo ${local.generated_password} > C:\\sql-output.txt"
 }
 SETTINGS
 }
-*/
+
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
   for_each = {
     "vm1" = azurerm_windows_virtual_machine.vm_jumpwin.id
     "vm2" = azurerm_linux_virtual_machine.vm_jumplin.id
-    //"vm3" = azurerm_windows_virtual_machine.vm_sql.id
+    "vm3" = azurerm_windows_virtual_machine.vm_sql.id
   }
   virtual_machine_id    = each.value
   location              = azurerm_resource_group.lab.location
