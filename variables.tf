@@ -53,12 +53,29 @@ variable "ARM_CLIENT_SECRET" {
 
 variable "ADMIN_USER" {
   type        = string
-  description = "adminuser"
+  description = "admin username"
+  default     = "adminuser"
   sensitive   = true
 }
 
 variable "ADMIN_PSWD" {
   type        = string
   description = "adminuser password"
+  default     = "P@ssw0rd!"
   sensitive   = true
 }
+
+/*
+### SQL Server Variables
+variable "SQL_ADMIN_USER" {
+  type        = string
+  description = "sql admin username"
+  default     = "sqladmin"
+  sensitive   = true
+}
+variable "vm_sql_hostname" {
+  type        = string
+  default     = "racecar020"
+  description = "Computername for the sql-vm"
+}
+*/

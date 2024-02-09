@@ -33,3 +33,23 @@ output "vm_jumplin_id" {
 output "vm_jumplin_public_ip" {
   value = azurerm_public_ip.vm_jumplin_pip.ip_address
 }
+
+output "vm_sql_name" {
+  value = azurerm_linux_virtual_machine.vm_jumplin.name
+}
+
+/*
+### SQL Server Outputs
+output "vm_sql_id" {
+  value = azurerm_linux_virtual_machine.vm_jumplin.id
+}
+
+output "vm_sql_public_ip" {
+  value = azurerm_public_ip.vm_jumplin_pip.ip_address
+}
+
+output "vm_sql_password" {
+  value     = local.sqladmin_password
+  sensitive = true
+}
+*/

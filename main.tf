@@ -1,12 +1,12 @@
 resource "azurerm_resource_group" "lab" {
-  name     = "rg-${var.tags.environment}-${var.rg_location}"
   location = var.rg_location
+  name     = "rg-${var.tags.environment}-${var.rg_location}"
   tags     = var.tags
 }
 
 resource "azurerm_virtual_network" "lab_network" {
-  name                = "vnet-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
+  name                = "vnet-${var.tags.environment}-${var.rg_location}"
   resource_group_name = azurerm_resource_group.lab.name
   address_space       = ["10.0.0.0/16"]
   tags                = var.tags
@@ -20,8 +20,8 @@ resource "azurerm_subnet" "jumpbox_subnet" {
 }
 
 resource "azurerm_network_security_group" "jumpbox_nsg" {
-  name                = "vnet-jumpbox-nsg-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
+  name                = "vnet-jumpbox-nsg-${var.tags.environment}-${var.rg_location}"
   resource_group_name = azurerm_resource_group.lab.name
   tags                = var.tags
 
@@ -80,17 +80,18 @@ resource "azurerm_subnet_network_security_group_association" "jumpbox_nsg_associ
 }
 
 resource "azurerm_public_ip" "vm_jumpwin_pip" {
-  name                = "vm-jumpwin-pip-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
+  name                = "vm-jumpwin-pip-${var.tags.environment}-${var.rg_location}"
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
   domain_name_label   = var.vm_jumpwin_hostname
+  sku                 = "Standard"
   tags                = var.tags
 }
 
 resource "azurerm_network_interface" "vm_jumpwin_nic" {
-  name                = "vm-jumpwin-nic-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
+  name                = "vm-jumpwin-nic-${var.tags.environment}-${var.rg_location}"
   resource_group_name = azurerm_resource_group.lab.name
   tags                = var.tags
   // enable_accelerated_networking = true
@@ -105,8 +106,8 @@ resource "azurerm_network_interface" "vm_jumpwin_nic" {
 }
 
 resource "azurerm_windows_virtual_machine" "vm_jumpwin" {
-  name                = "vm-jumpwin-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
+  name                = "vm-jumpwin-${var.tags.environment}-${var.rg_location}"
   resource_group_name = azurerm_resource_group.lab.name
   computer_name       = var.vm_jumpwin_hostname
   admin_username      = var.ADMIN_USER
@@ -114,18 +115,13 @@ resource "azurerm_windows_virtual_machine" "vm_jumpwin" {
   tags                = var.tags
 
   size = "Standard_D2s_v3"
-  // priority            = "Spot"
-  // eviction_policy     = "Deallocate"
-  // max_bid_price       = -1
-  // patch_mode          = "AutomaticByPlatform"
-  // hotpatching_enabled = true
 
   network_interface_ids = [
     azurerm_network_interface.vm_jumpwin_nic.id,
   ]
 
   os_disk {
-    name                 = "vm-jumpwin-disk-${var.tags.environment}-${var.rg_location}"
+    name                 = "vm-jumpwin-osdisk-${var.tags.environment}-${var.rg_location}"
     caching              = "ReadWrite"
     disk_size_gb         = "127"
     storage_account_type = "Standard_LRS"
@@ -140,17 +136,18 @@ resource "azurerm_windows_virtual_machine" "vm_jumpwin" {
 }
 
 resource "azurerm_public_ip" "vm_jumplin_pip" {
-  name                = "vm-jumplin-pip-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
+  name                = "vm-jumplin-pip-${var.tags.environment}-${var.rg_location}"
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
   domain_name_label   = var.vm_jumplin_hostname
+  sku                 = "Standard"
   tags                = var.tags
 }
 
 resource "azurerm_network_interface" "vm_jumplin_nic" {
-  name                = "vm-jumplin-nic-${var.tags.environment}-${var.rg_location}"
   location            = azurerm_resource_group.lab.location
+  name                = "vm-jumplin-nic-${var.tags.environment}-${var.rg_location}"
   resource_group_name = azurerm_resource_group.lab.name
   tags                = var.tags
   // enable_accelerated_networking = true
@@ -165,8 +162,8 @@ resource "azurerm_network_interface" "vm_jumplin_nic" {
 }
 
 resource "azurerm_linux_virtual_machine" "vm_jumplin" {
-  name                            = "vm-jumplin-${var.tags.environment}-${var.rg_location}"
   location                        = azurerm_resource_group.lab.location
+  name                            = "vm-jumplin-${var.tags.environment}-${var.rg_location}"
   resource_group_name             = azurerm_resource_group.lab.name
   computer_name                   = var.vm_jumplin_hostname
   admin_username                  = var.ADMIN_USER
@@ -178,15 +175,10 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
     azurerm_network_interface.vm_jumplin_nic.id,
   ]
 
-  size = "Standard_D2s_v3"
-  // priority           = "Spot"
-  // eviction_policy    = "Deallocate"
-  // max_bid_price      = -1
-  // patch_mode         = "AutomaticByPlatform"
-  // provision_vm_agent = true
+  size            = "Standard_D2s_v3"
 
   os_disk {
-    name                 = "vm-jumplin-disk-${var.tags.environment}-${var.rg_location}"
+    name                 = "vm-jumplin-osdisk-${var.tags.environment}-${var.rg_location}"
     caching              = "ReadWrite"
     disk_size_gb         = "127"
     storage_account_type = "Standard_LRS"
@@ -199,11 +191,168 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
     version   = "latest"
   }
 }
+/*
+##### SQL Server #####
+resource "random_password" "sql_password" {
+  length           = 16
+  special          = true
+  override_special = "!@#$()-_=+[]{}"
+}
 
+locals {
+  sqladmin_password = random_password.sql_password.result
+}
+
+resource "azurerm_network_interface" "vm_sql_nic" {
+  location            = azurerm_resource_group.lab.location
+  name                = "vm-sql-nic-${var.tags.environment}-${var.rg_location}"
+  resource_group_name = azurerm_resource_group.lab.name
+  tags                = var.tags
+  // enable_accelerated_networking = true
+
+  ip_configuration {
+    name                          = "vm-sql-ip"
+    subnet_id                     = azurerm_subnet.jumpbox_subnet.id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.0.1.20"
+  }
+}
+
+resource "azurerm_windows_virtual_machine" "vm_sql" {
+  location            = azurerm_resource_group.lab.location
+  name                = "vm-sql-${var.tags.environment}-${var.rg_location}"
+  resource_group_name = azurerm_resource_group.lab.name
+  computer_name       = var.vm_sql_hostname
+  admin_username      = var.ADMIN_USER
+  admin_password      = var.ADMIN_PSWD
+  tags                = var.tags
+
+  size = "Standard_D2s_v3"
+
+  network_interface_ids = [
+    azurerm_network_interface.vm_sql_nic.id,
+  ]
+
+  os_disk {
+    name                 = "vm-sql-osdisk-${var.tags.environment}-${var.rg_location}"
+    caching              = "ReadWrite"
+    disk_size_gb         = "127"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "MicrosoftSQLServer"
+    offer     = "SQL2019-WS2022"
+    sku       = "Standard"
+    version   = "latest"
+  }
+}
+
+resource "azurerm_managed_disk" "sql_data_disk1" {
+  location             = azurerm_resource_group.lab.location
+  name                 = "vm-sql-disk-DATA-${var.tags.environment}-${var.rg_location}"
+  resource_group_name  = azurerm_resource_group.lab.name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = 127
+  tags                 = var.tags
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "data_disk_attach" {
+  managed_disk_id    = azurerm_managed_disk.sql_data_disk1.id
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_sql.id
+  lun                =  1
+  caching            = "None"
+}
+
+resource "azurerm_managed_disk" "sql_logs_disk2" {
+  location             = azurerm_resource_group.lab.location
+  name                 = "vm-sql-disk-LOGS-${var.tags.environment}-${var.rg_location}"
+  resource_group_name  = azurerm_resource_group.lab.name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = 63
+  tags                 = var.tags
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "logs_disk_attach" {
+  managed_disk_id    = azurerm_managed_disk.sql_logs_disk2.id
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_sql.id
+  lun                =  2
+  caching            = "None"
+}
+
+resource "azurerm_managed_disk" "sql_temp_disk3" {
+  location             = azurerm_resource_group.lab.location
+  name                 = "vm-sql-disk-TEMP-${var.tags.environment}-${var.rg_location}"
+  resource_group_name  = azurerm_resource_group.lab.name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = 31
+  tags                 = var.tags
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "temp_disk_attach" {
+  managed_disk_id    = azurerm_managed_disk.sql_temp_disk3.id
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_sql.id
+  lun                =  3
+  caching            = "None"
+}
+
+resource "azurerm_mssql_virtual_machine" "azurerm_sqlvmmanagement" {
+  virtual_machine_id               = azurerm_windows_virtual_machine.vm_sql.id
+  sql_license_type                 = "PAYG"
+  sql_connectivity_port            = 1433
+  sql_connectivity_type            = "PRIVATE"
+  sql_connectivity_update_password = local.sqladmin_password
+  sql_connectivity_update_username = var.SQL_ADMIN_USER
+
+  auto_patching {
+    day_of_week                            = "Sunday"
+    maintenance_window_duration_in_minutes = 60
+    maintenance_window_starting_hour       = 2
+  }
+
+  storage_configuration {
+    disk_type             = "NEW"
+    storage_workload_type = "OLTP"
+  
+    data_settings {
+      default_file_path = "F:\\SQL-Data"
+      luns              = [1]
+    }
+
+    log_settings {
+      default_file_path = "L:\\SQL-Logs"
+      luns              = [2]
+    }
+
+    temp_db_settings {
+      default_file_path = "T:\\SQL-Temp"
+      luns              = [3]
+    }
+  }
+}
+
+resource "azurerm_virtual_machine_extension" "vm_sql_extension" {
+  name                 = "sqlOutputScript"
+  virtual_machine_id   = azurerm_windows_virtual_machine.vm_sql.id
+  publisher            = "Microsoft.Compute"
+  type                 = "CustomScriptExtension"
+  type_handler_version = "1.10"
+
+  settings = <<SETTINGS
+{
+    "commandToExecute": "echo ${local.sqladmin_password} > C:\\sql-output.txt"
+}
+SETTINGS
+}
+*/
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
   for_each = {
     "vm1" = azurerm_windows_virtual_machine.vm_jumpwin.id
     "vm2" = azurerm_linux_virtual_machine.vm_jumplin.id
+    //"vm3" = azurerm_windows_virtual_machine.vm_sql.id
   }
   virtual_machine_id    = each.value
   location              = azurerm_resource_group.lab.location
@@ -215,13 +364,3 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
     enabled = false
   }
 }
-
-/*
-resource "random_string" "naming_suffix" {
-  length  = 5
-  special = false
-  upper   = true
-  numeric = true
-}
-// USAGE: "${random_string.naming_suffix.result}"
-*/
