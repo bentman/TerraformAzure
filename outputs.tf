@@ -6,24 +6,24 @@ output "lab_network_name" {
   value = azurerm_virtual_network.lab_network.name
 }
 
-output "subnet_0000-jumpbox" {
-  value = azurerm_subnet.subnet_0000-jumpbox.name
+output "subnet_0000_jumpbox" {
+  value = azurerm_subnet.subnet_0000_jumpbox.address_prefixes
 }
 
-output "subnet_0032-gateway" {
-  value = azurerm_subnet.subnet_0032-gateway.name
+output "subnet_0032_gateway" {
+  value = azurerm_subnet.subnet_0032_gateway.address_prefixes
 }
 
-output "subnet_0064-mgmnt" {
-  value = azurerm_subnet.subnet_0064-mgmnt.name
+output "subnet_0064_mgmnt" {
+  value = azurerm_subnet.subnet_0064_mgmnt.address_prefixes
 }
 
-output "subnet_0128-server" {
-  value = azurerm_subnet.subnet_0128-server.name
+output "subnet_0128_server" {
+  value = azurerm_subnet.subnet_0128_server.address_prefixes
 }
 
-output "subnet_1000-client" {
-  value = azurerm_subnet.subnet_1000-client
+output "subnet_1000_client" {
+  value = azurerm_subnet.subnet_1000_client.address_prefixes
 }
 
 output "vm_jumpwin_hostname" {

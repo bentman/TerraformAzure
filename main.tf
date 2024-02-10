@@ -12,35 +12,35 @@ resource "azurerm_virtual_network" "lab_network" {
   tags                = var.tags
 }
 
-resource "azurerm_subnet" "subnet_0000-jumpbox" {
+resource "azurerm_subnet" "subnet_0000_jumpbox" {
   name                 = "snet-0.000-jumpbox-${var.rg_location}"
   resource_group_name  = azurerm_resource_group.lab.name
   virtual_network_name = azurerm_virtual_network.lab_network.name
   address_prefixes     = ["10.0.0.0/27"]
 }
 
-resource "azurerm_subnet" "subnet_0032-gateway" {
+resource "azurerm_subnet" "subnet_0032_gateway" {
   name                 = "snet-0.032-gateway-${var.rg_location}"
   resource_group_name  = azurerm_resource_group.lab.name
   virtual_network_name = azurerm_virtual_network.lab_network.name
   address_prefixes     = ["10.0.0.32/27"]
 }
 
-resource "azurerm_subnet" "subnet_0064-mgmnt" {
+resource "azurerm_subnet" "subnet_0064_mgmnt" {
   name                 = "snet-0.064-mgmnt-${var.rg_location}"
   resource_group_name  = azurerm_resource_group.lab.name
   virtual_network_name = azurerm_virtual_network.lab_network.name
   address_prefixes     = ["10.0.0.64/26"]
 }
 
-resource "azurerm_subnet" "subnet_0128-server" {
+resource "azurerm_subnet" "subnet_0128_server" {
   name                 = "snet-0.128-server-${var.rg_location}"
   resource_group_name  = azurerm_resource_group.lab.name
   virtual_network_name = azurerm_virtual_network.lab_network.name
   address_prefixes     = ["10.0.0.128/25"]
 }
 
-resource "azurerm_subnet" "subnet_1000-client" {
+resource "azurerm_subnet" "subnet_1000_client" {
   name                 = "snet-1.000-client-${var.rg_location}"
   resource_group_name  = azurerm_resource_group.lab.name
   virtual_network_name = azurerm_virtual_network.lab_network.name
