@@ -103,7 +103,7 @@ resource "azurerm_network_security_group" "jumpbox_nsg" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "jumpbox_nsg_association" {
-  subnet_id                 = azurerm_subnet.subnet_0000-jumpbox.id
+  subnet_id                 = azurerm_subnet.subnet_0000_jumpbox.id
   network_security_group_id = azurerm_network_security_group.jumpbox_nsg.id
 }
 
@@ -126,7 +126,7 @@ resource "azurerm_network_interface" "vm_jumpwin_nic" {
 
   ip_configuration {
     name                          = "vm-jumpwin-ip"
-    subnet_id                     = azurerm_subnet.subnet_0000-jumpbox.id
+    subnet_id                     = azurerm_subnet.subnet_0000_jumpbox.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.0.7"
     public_ip_address_id          = azurerm_public_ip.vm_jumpwin_pip.id
@@ -182,7 +182,7 @@ resource "azurerm_network_interface" "vm_jumplin_nic" {
 
   ip_configuration {
     name                          = "vm-jumplin-ip"
-    subnet_id                     = azurerm_subnet.subnet_0000-jumpbox.id
+    subnet_id                     = azurerm_subnet.subnet_0000_jumpbox.id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.0.8"
     public_ip_address_id          = azurerm_public_ip.vm_jumplin_pip.id
