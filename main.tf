@@ -84,7 +84,7 @@ resource "azurerm_public_ip" "vm_jumpwin_pip" {
   name                = "vm-jumpwin-pip-${var.tags.environment}-${var.rg_location}"
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
-  domain_name_label   = var.vm_jumpwin_hostname
+  domain_name_label   = "tococat007" //var.vm_jumpwin_hostname
   sku                 = "Standard"
   tags                = var.tags
 }
@@ -192,16 +192,15 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
   }
 }
 
-/*
 ##### SQL Server #####
-locals {
-  generated_password = random_password.sql_password.result
-}
-
 resource "random_password" "sql_password" {
   length           = 16
   special          = true
   override_special = "!@#$()-_=+[]{}"
+}
+
+locals {
+  generated_password = random_password.sql_password.result
 }
 
 resource "azurerm_network_interface" "vm_sql_nic" {
@@ -253,7 +252,7 @@ resource "azurerm_managed_disk" "sql_data_disk1" {
   location             = azurerm_resource_group.lab.location
   name                 = "vm-sql-disk-DATA-${var.tags.environment}-${var.rg_location}"
   resource_group_name  = azurerm_resource_group.lab.name
-  storage_account_type = "Standard_LRS"
+  storage_account_type = "StandardSSD_LRS"
   create_option        = "Empty"
   disk_size_gb         = 127
   tags                 = var.tags
@@ -262,15 +261,15 @@ resource "azurerm_managed_disk" "sql_data_disk1" {
 resource "azurerm_virtual_machine_data_disk_attachment" "data_disk_attach" {
   managed_disk_id    = azurerm_managed_disk.sql_data_disk1.id
   virtual_machine_id = azurerm_windows_virtual_machine.vm_sql.id
-  lun                = 0
-  caching            = "None"
+  lun                = 1
+  caching            = "ReadWrite"
 }
 
 resource "azurerm_managed_disk" "sql_logs_disk2" {
   location             = azurerm_resource_group.lab.location
   name                 = "vm-sql-disk-LOGS-${var.tags.environment}-${var.rg_location}"
   resource_group_name  = azurerm_resource_group.lab.name
-  storage_account_type = "Standard_LRS"
+  storage_account_type = "StandardSSD_LRS"
   create_option        = "Empty"
   disk_size_gb         = 63
   tags                 = var.tags
@@ -279,15 +278,15 @@ resource "azurerm_managed_disk" "sql_logs_disk2" {
 resource "azurerm_virtual_machine_data_disk_attachment" "logs_disk_attach" {
   managed_disk_id    = azurerm_managed_disk.sql_logs_disk2.id
   virtual_machine_id = azurerm_windows_virtual_machine.vm_sql.id
-  lun                = 1
-  caching            = "None"
+  lun                = 2
+  caching            = "ReadWrite"
 }
 
 resource "azurerm_managed_disk" "sql_temp_disk3" {
   location             = azurerm_resource_group.lab.location
   name                 = "vm-sql-disk-TEMP-${var.tags.environment}-${var.rg_location}"
   resource_group_name  = azurerm_resource_group.lab.name
-  storage_account_type = "Standard_LRS"
+  storage_account_type = "StandardSSD_LRS"
   create_option        = "Empty"
   disk_size_gb         = 31
   tags                 = var.tags
@@ -296,8 +295,8 @@ resource "azurerm_managed_disk" "sql_temp_disk3" {
 resource "azurerm_virtual_machine_data_disk_attachment" "temp_disk_attach" {
   managed_disk_id    = azurerm_managed_disk.sql_temp_disk3.id
   virtual_machine_id = azurerm_windows_virtual_machine.vm_sql.id
-  lun                = 2
-  caching            = "None"
+  lun                = 3
+  caching            = "ReadWrite"
 }
 
 resource "azurerm_mssql_virtual_machine" "azurerm_sqlvmmanagement" {
@@ -320,17 +319,17 @@ resource "azurerm_mssql_virtual_machine" "azurerm_sqlvmmanagement" {
 
     data_settings {
       default_file_path = "F:\\SQL-Data"
-      luns              = [0]
+      luns              = [1]
     }
 
     log_settings {
       default_file_path = "L:\\SQL-Logs"
-      luns              = [1]
+      luns              = [2]
     }
 
     temp_db_settings {
       default_file_path = "T:\\SQL-Temp"
-      luns              = [2]
+      luns              = [3]
     }
   }
 }
@@ -348,13 +347,12 @@ resource "azurerm_virtual_machine_extension" "vm_sql_extension" {
 }
 SETTINGS
 }
-*/
 
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
   for_each = {
-    "vm1" = azurerm_windows_virtual_machine.vm_jumpwin.id
+    //"vm1" = azurerm_windows_virtual_machine.vm_jumpwin.id
     "vm2" = azurerm_linux_virtual_machine.vm_jumplin.id
-    //"vm3" = azurerm_windows_virtual_machine.vm_sql.id
+    "vm3" = azurerm_windows_virtual_machine.vm_sql.id
   }
   virtual_machine_id    = each.value
   location              = azurerm_resource_group.lab.location

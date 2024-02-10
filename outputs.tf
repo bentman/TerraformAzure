@@ -26,7 +26,6 @@ output "vm_jumplin_public_ip" {
   value = azurerm_public_ip.vm_jumplin_pip.ip_address
 }
 
-/*
 ### SQL Server Outputs
 output "vm_sql_hostname" {
   value = azurerm_windows_virtual_machine.vm_sql.computer_name
@@ -40,4 +39,3 @@ output "vm_sql_password" {
   value     = local.generated_password
   sensitive = true
 }
-*/

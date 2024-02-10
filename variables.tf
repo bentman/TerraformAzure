@@ -25,7 +25,6 @@ variable "vm_jumplin_hostname" {
   description = "Computername for the linux-vm"
 }
 
-/*
 ### SQL Server Variables
 variable "SQL_ADMIN_USER" {
   type        = string
@@ -33,6 +32,7 @@ variable "SQL_ADMIN_USER" {
   default     = "sqladmin"
   sensitive   = true
 }
+
 variable "vm_sql_hostname" {
   type        = string
   default     = "racecar020"
@@ -44,7 +44,6 @@ variable "SQL_ADMIN_PSWD" {
   description = "sqladmin password"
   default     = ""
 }
-*/
 
 ##### Declare confidential variables here, specify values in *.tfvars (with .gitingnore file!) #####
 variable "ARM_TENANT_ID" {
