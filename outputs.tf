@@ -1,13 +1,29 @@
-output "resource_group_name" {
+output "az_resource_group_name" {
   value = azurerm_resource_group.lab.name
 }
 
-output "virtual_network_name" {
+output "lab_network_name" {
   value = azurerm_virtual_network.lab_network.name
 }
 
-output "subnet_name" {
-  value = azurerm_subnet.jumpbox_subnet.name
+output "subnet_0000-jumpbox" {
+  value = azurerm_subnet.subnet_0000-jumpbox.name
+}
+
+output "subnet_0032-gateway" {
+  value = azurerm_subnet.subnet_0032-gateway.name
+}
+
+output "subnet_0064-mgmnt" {
+  value = azurerm_subnet.subnet_0064-mgmnt.name
+}
+
+output "subnet_0128-server" {
+  value = azurerm_subnet.subnet_0128-server.name
+}
+
+output "subnet_1000-client" {
+  value = azurerm_subnet.subnet_1000-client
 }
 
 output "vm_jumpwin_hostname" {
