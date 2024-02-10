@@ -13,6 +13,7 @@ ARM_CLIENT_SECRET = "YourServicePrincipleSecret"
 ADMIN_USER = "YourAdminUserName"
 ADMIN_PSWD = "YourAdminPassword"
 
+/*
 // sql random password
 SQL_ADMIN_USER = "YourSqlAdminUserName"
 

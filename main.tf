@@ -192,6 +192,7 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
   }
 }
 
+/*
 ##### SQL Server #####
 locals {
   generated_password = random_password.sql_password.result
@@ -347,12 +348,13 @@ resource "azurerm_virtual_machine_extension" "vm_sql_extension" {
 }
 SETTINGS
 }
+*/
 
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
   for_each = {
     "vm1" = azurerm_windows_virtual_machine.vm_jumpwin.id
     "vm2" = azurerm_linux_virtual_machine.vm_jumplin.id
-    "vm3" = azurerm_windows_virtual_machine.vm_sql.id
+    //"vm3" = azurerm_windows_virtual_machine.vm_sql.id
   }
   virtual_machine_id    = each.value
   location              = azurerm_resource_group.lab.location

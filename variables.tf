@@ -25,6 +25,7 @@ variable "vm_jumplin_hostname" {
   description = "Computername for the linux-vm"
 }
 
+/*
 ### SQL Server Variables
 variable "SQL_ADMIN_USER" {
   type        = string
@@ -38,7 +39,6 @@ variable "vm_sql_hostname" {
   description = "computername for the sql-vm"
 }
 
-/*
 variable "SQL_ADMIN_PSWD" {
   type        = string
   description = "sqladmin password"
