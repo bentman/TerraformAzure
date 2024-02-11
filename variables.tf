@@ -7,11 +7,15 @@ variable "tags" {
   }
 }
 
+############################ NETWORK ############################
+
 variable "rg_location" {
   type        = string
   default     = "southcentralus"
   description = "Location of the resource group."
 }
+
+############################ JUMPBOX ############################
 
 variable "vm_jumpwin_hostname" {
   type        = string
@@ -25,7 +29,14 @@ variable "vm_jumplin_hostname" {
   description = "Computername for the linux-vm"
 }
 
-##### Declare confidential variables here, specify values in *.tfvars (with .gitingnore file!) #####
+############################ SERVERS ############################
+
+############################ SECRETS ############################
+############## Declare confidential variables here ##############
+############## Store actual values in *.tfvars file #############
+############## Check .gitingnore in repo for detail #############
+############################ SECRETS ############################
+
 variable "ARM_TENANT_ID" {
   type        = string
   description = "azure tenant id"

@@ -1,3 +1,5 @@
+############################ NETWORK ############################
+
 resource "azurerm_resource_group" "lab" {
   location = var.rg_location
   name     = "rg-${var.rg_location}"
@@ -107,12 +109,14 @@ resource "azurerm_subnet_network_security_group_association" "jumpbox_nsg_associ
   network_security_group_id = azurerm_network_security_group.jumpbox_nsg.id
 }
 
+############################ JUMPBOX ############################
+
 resource "azurerm_public_ip" "vm_jumpwin_pip" {
   location            = azurerm_resource_group.lab.location
   name                = "vm-jumpwin-pip-${var.rg_location}"
   resource_group_name = azurerm_resource_group.lab.name
   allocation_method   = "Static"
-  domain_name_label   = "tococat007" //var.vm_jumpwin_hostname
+  domain_name_label   = var.vm_jumpwin_hostname
   sku                 = "Standard"
   tags                = var.tags
 }
@@ -235,3 +239,5 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_shutown" {
     enabled = false
   }
 }
+
+############################ SERVERS ############################

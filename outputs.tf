@@ -1,3 +1,5 @@
+############################ NETWORK ############################
+
 output "az_resource_group_name" {
   value = azurerm_resource_group.lab.name
 }
@@ -26,6 +28,8 @@ output "subnet_1000_client" {
   value = azurerm_subnet.subnet_1000_client.address_prefixes
 }
 
+############################ JUMPBOX ############################
+
 output "vm_jumpwin_hostname" {
   value = azurerm_windows_virtual_machine.vm_jumpwin.computer_name
 }
@@ -41,3 +45,5 @@ output "vm_jumplin_hostname" {
 output "vm_jumplin_public_ip" {
   value = azurerm_public_ip.vm_jumplin_pip.ip_address
 }
+
+############################ SERVERS ############################
