@@ -7,8 +7,6 @@ variable "tags" {
   }
 }
 
-############################ NETWORK ############################
-
 variable "rg_location" {
   type        = string
   default     = "southcentralus"
