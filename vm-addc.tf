@@ -158,7 +158,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
   auto_upgrade_minor_version = true
   settings                   = <<SETTINGS
     {
-    "commandToExecute": "powershell.exe -Command \"${join(";", local.powershell_gpmc)}\""
+      "commandToExecute": "powershell.exe -Command \"${join(";", local.powershell_gpmc)}\""
     }
   SETTINGS
   depends_on = [
@@ -223,19 +223,21 @@ locals {
 
   # Generate commands to install DNS and AD Forest
   powershell_gpmc = [
-    "New-LocalUser -Name ${var.vm_localadmin_username} -PasswordNeverExpires -Password (ConvertTo-SecureString ${var.vm_localadmin_password} -AsPlainText -Force)",
-    "Add-LocalGroupMember -Group Administrators -Member ${var.vm_localadmin_username}",
     "Set-NetFirewallProfile -Enabled False",
     "Install-WindowsFeature AD-Domain-Services -IncludeAllSubFeature -IncludeManagementTools",
     "Install-WindowsFeature DNS -IncludeAllSubFeature -IncludeManagementTools",
     "Import-Module ADDSDeployment, DnsServer",
-    "Install-ADDSForest -DomainName ${var.domain_name} -DomainNetbiosName ${var.domain_netbios_name} -NoRebootOnCompletion:$false -Force:$true -SafeModeAdministratorPassword (ConvertTo-SecureString ${var.safemode_admin_pswd} -AsPlainText -Force)"
+    "Install-ADDSForest -DomainName ${var.domain_name} -DomainNetbiosName ${var.domain_netbios_name} -NoRebootOnCompletion:$false -Force:$true -SafeModeAdministratorPassword (ConvertTo-SecureString ${var.domain_admin_pswd} -AsPlainText -Force)"
   ]
-
+  
   # Generate commands to create new Organization Unit and technical users for SQL installation
   powershell_add_users = [
-    "New-Item -Path C:\\Temp\\ -ItemType Directory -Force",
-    "Start-Transcript -Path C:\\Temp\\transcript_aduser.txt",
+    "New-Item -Path C:\\BUILD\\ -ItemType Directory -Force",
+    "Start-Transcript -Path C:\\BUILD\\transcript-gpmc.txt",
+    "New-LocalUser -Name ${var.vm_localadmin_username} -PasswordNeverExpires -Password (ConvertTo-SecureString ${var.vm_localadmin_password} -AsPlainText -Force)",
+    "Add-LocalGroupMember -Group Administrators -Member ${var.vm_localadmin_username}",
+    "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
+    "Test-NetConnection -Computername ${azurerm_network_interface.vm_addc_nic.private_ip_address} -Port 22",
     "Import-Module ActiveDirectory",
     "New-ADOrganizationalUnit -Name 'Servers' -Path '${local.dn_path}' -Description 'Servers OU for new objects'",
     "$secPass = ConvertTo-SecureString '${var.sql_service_account_password}' -AsPlainText -Force",
@@ -247,22 +249,27 @@ locals {
 
   # Generate commands to add install domain account to local administrators group on SQL servers and to sysadmin roles on SQL
   powershell_local_admin = [
-    "Start-Transcript -Path C:\\Temp\\transcript_local_admin.txt",
+    "Start-Transcript -Path C:\\BUILD\\transcript-sql_local_admin.txt",
     "Get-LocalGroup",
+    "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
+    "Test-NetConnection -Computername ${azurerm_network_interface.vm_addc_nic.private_ip_address} -Port 22",
     "Add-LocalGroupMember -Group 'Administrators' -Member '${var.domain_netbios_name}\\sqlinstall'",
     "Stop-Transcript"
   ]
 
   # Generate commands to add install domain account to sysadmin roles on SQL servers
   powershell_sql_sysadmin = [
-    "Start-Transcript -Path C:\\Temp\\transcript_sql_sysadmin.txt",
+    "Start-Transcript -Path C:\\BUILD\\transcript-sql_sysadmin.txt",
+    "Test-NetConnection -Computername $env:COMPUTERNAME -Port 1433",
     "Invoke-Sqlcmd -ServerInstance 'localhost' -Database 'master' -Query 'CREATE LOGIN [${var.domain_netbios_name}\\sqlinstall] FROM WINDOWS WITH DEFAULT_DATABASE=[master]; EXEC master..sp_addsrvrolemember @loginame = ''${var.domain_netbios_name}\\sqlinstall'', @rolename = ''sysadmin'';' -QueryTimeout '10'",
     "Stop-Transcript"
   ]
 
   # Generate commands to add special ACL permission to cluster computer object
   powershell_acl_commands = [
-    "Start-Transcript -Path C:\\Temp\\transcript_acl.txt",
+    "Start-Transcript -Path C:\\BUILD\\transcript-sql_acl.txt",
+    "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
+    "Test-NetConnection -Computername ${azurerm_network_interface.vm_addc_nic.private_ip_address} -Port 22",
     "$Computer = Get-ADComputer ${var.sqlcluster_name}",
     "$ComputerSID = [System.Security.Principal.SecurityIdentifier] $Computer.SID",
     "$ACL = Get-Acl -Path 'AD:${local.servers_ou_path}'",
