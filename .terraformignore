@@ -1,0 +1,3 @@
+# Exclude example_*.tfvars from terraform
+example_terraform.tfvars
+example_vm-jumpbox.tfvars

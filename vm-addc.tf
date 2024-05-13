@@ -2,7 +2,7 @@
 ########## vm-addc variables 
 variable "vm_addc_hostname" {
   type        = string
-  default     = "addc-0150"
+  default     = "vmaddc"
   description = "Computername for domain controller"
 }
 
@@ -229,7 +229,7 @@ locals {
     "Import-Module ADDSDeployment, DnsServer",
     "Install-ADDSForest -DomainName ${var.domain_name} -DomainNetbiosName ${var.domain_netbios_name} -NoRebootOnCompletion:$false -Force:$true -SafeModeAdministratorPassword (ConvertTo-SecureString ${var.domain_admin_pswd} -AsPlainText -Force)"
   ]
-  
+
   # Generate commands to create new Organization Unit and technical users for SQL installation
   powershell_add_users = [
     "New-Item -Path C:\\BUILD\\ -ItemType Directory -Force",

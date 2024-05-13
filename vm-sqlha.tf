@@ -172,7 +172,7 @@ resource "azurerm_network_interface" "vm_sqlha_nic" {
     private_ip_address            = cidrhost(count.index == 0 ? azurerm_subnet.snet_0064_db1.address_prefixes[0] : azurerm_subnet.snet_0096_db2.address_prefixes[0], 11)
   }
   # Must be set and restart the computer to reach the domain controller and DNS
-  dns_servers = [azurerm_network_interface.vm_addc_nic.ip_configuration[0].private_ip_address,"1.1.1.1","8.8.8.8"]
+  dns_servers = [azurerm_network_interface.vm_addc_nic.ip_configuration[0].private_ip_address, "1.1.1.1", "8.8.8.8"]
 }
 
 ########## vm-sqlha
@@ -359,9 +359,9 @@ PROTECTED_SETTINGS
 
 # time delay after SQL domain join
 resource "time_sleep" "vm_sqljoin" {
-  depends_on      = [
+  depends_on = [
     azurerm_virtual_machine_extension.vm_sqlha_domain_join,
-    ]
+  ]
   create_duration = "180s"
 }
 
@@ -389,7 +389,7 @@ resource "terraform_data" "sqlsvc_local_admin" {
   depends_on = [
     azurerm_virtual_machine_extension.openssh_sqlha,
     time_sleep.vm_sqljoin
-    ]
+  ]
 }
 
 # Add the 'domain\sqlinstall' account to sysadmin roles on SQL servers
