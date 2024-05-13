@@ -234,16 +234,13 @@ locals {
   powershell_add_users = [
     "New-Item -Path C:\\BUILD\\ -ItemType Directory -Force",
     "Start-Transcript -Path C:\\BUILD\\transcript-gpmc.txt",
-    "New-LocalUser -Name ${var.vm_localadmin_username} -PasswordNeverExpires -Password (ConvertTo-SecureString ${var.vm_localadmin_password} -AsPlainText -Force)",
-    "Add-LocalGroupMember -Group Administrators -Member ${var.vm_localadmin_username}",
     "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
-    "Test-NetConnection -Computername ${azurerm_network_interface.vm_addc_nic.private_ip_address} -Port 22",
     "Import-Module ActiveDirectory",
     "New-ADOrganizationalUnit -Name 'Servers' -Path '${local.dn_path}' -Description 'Servers OU for new objects'",
     "$secPass = ConvertTo-SecureString '${var.sql_service_account_password}' -AsPlainText -Force",
     "New-ADUser -Name sqlinstall -GivenName sql -Surname install -UserPrincipalName 'sqlinstall@${var.domain_name}' -SamAccountName sqlinstall -AccountPassword $secPass -Enabled $true",
-    "New-ADUser -Name '${var.sql_service_account_login}' -GivenName SQL -Surname SERVICE -UserPrincipalName '${var.sql_service_account_login}@${var.domain_name}' -SamAccountName '${var.sql_service_account_login}' -AccountPassword $secPass -Enabled $true",
     "Add-ADGroupMember -Identity 'Domain Admins' -Members sqlinstall",
+    "New-ADUser -Name '${var.sql_service_account_login}' -GivenName SQL -Surname SERVICE -UserPrincipalName '${var.sql_service_account_login}@${var.domain_name}' -SamAccountName '${var.sql_service_account_login}' -AccountPassword $secPass -Enabled $true",
     "Stop-Transcript"
   ]
 
@@ -252,8 +249,8 @@ locals {
     "Start-Transcript -Path C:\\BUILD\\transcript-sql_local_admin.txt",
     "Get-LocalGroup",
     "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
-    "Test-NetConnection -Computername ${azurerm_network_interface.vm_addc_nic.private_ip_address} -Port 22",
-    "Add-LocalGroupMember -Group 'Administrators' -Member '${var.domain_netbios_name}\\sqlinstall'",
+    "Add-LocalGroupMember -Group 'Administrators' -Member 'sqlinstall@${var.domain_name}'",
+    "Add-LocalGroupMember -Group 'Administrators' -Member '${var.sql_service_account_login}@${var.domain_name}'",
     "Stop-Transcript"
   ]
 
@@ -269,7 +266,6 @@ locals {
   powershell_acl_commands = [
     "Start-Transcript -Path C:\\BUILD\\transcript-sql_acl.txt",
     "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
-    "Test-NetConnection -Computername ${azurerm_network_interface.vm_addc_nic.private_ip_address} -Port 22",
     "$Computer = Get-ADComputer ${var.sqlcluster_name}",
     "$ComputerSID = [System.Security.Principal.SecurityIdentifier] $Computer.SID",
     "$ACL = Get-Acl -Path 'AD:${local.servers_ou_path}'",

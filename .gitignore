@@ -35,6 +35,9 @@ terraform.rc
 
 # Exclude example_terraform.tfvars from GitIgnore
 !example_terraform.tfvars
+!example_vm-addc.tfvars
+!example_vm-sqlha.tfvars
+!example_vm-jumpbox.tfvars
 
 # Exclude Terraform Lock file
 .terraform.lock.hcl

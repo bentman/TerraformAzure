@@ -38,8 +38,14 @@ variable "vm_sqlha_image_sku" {
 
 variable "sqlcluster_name" {
   type        = string
-  default     = "mysqlcluster"
-  description = "(Required) The default name of failover SQL Cluster (12 char limit)"
+  default     = "sqlcluster"
+  description = "(Required) The default name of failover SQL Cluster (12 char recommended)"
+}
+
+variable "sqlaag_name" {
+  type        = string
+  default     = "sqlhaaoaag"
+  description = "(Required) The default name of failover SQL-AO Availablity Group (12 char recommended)"
 }
 
 variable "sqldatafilepath" {
@@ -99,7 +105,7 @@ variable "sql_image_sku" {
 ########## vm-sqlha cluster storage
 # storage account for cloud sql-witness
 resource "azurerm_storage_account" "sqlha_stga" {
-  name                     = "stgsqlwitnes"
+  name                     = "sqlstgwitnesst"
   location                 = azurerm_resource_group.mylab.location
   resource_group_name      = azurerm_resource_group.mylab.name
   account_tier             = "Standard"
@@ -112,7 +118,7 @@ resource "azurerm_storage_account" "sqlha_stga" {
 
 # blob container cloud sql-quorum
 resource "azurerm_storage_container" "sqlha_quorum" {
-  name                  = "stgsqlquorum"
+  name                  = "sqlstgquorum"
   storage_account_name  = azurerm_storage_account.sqlha_stga.name
   container_access_type = "private"
 }
@@ -177,8 +183,8 @@ resource "azurerm_windows_virtual_machine" "vm_sqlha" {
   resource_group_name = azurerm_resource_group.mylab.name
   size                = var.vm_sqlha_size
   computer_name       = "${var.vm_sqlha_hostname}0${count.index + 1}"
-  admin_username      = var.vm_localadmin_username
-  admin_password      = var.vm_localadmin_password
+  admin_username      = var.domain_admin_user
+  admin_password      = var.domain_admin_pswd
   license_type        = "Windows_Server"
   zone                = count.index + 1
   tags                = var.tags
@@ -370,7 +376,7 @@ resource "terraform_data" "sqlsvc_local_admin" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.domain_admin_user}"
+      user            = var.domain_admin_user
       password        = var.domain_admin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
@@ -397,7 +403,7 @@ resource "terraform_data" "sql_sysadmin" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.domain_admin_user}"
+      user            = var.domain_admin_user
       password        = var.domain_admin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
@@ -486,7 +492,7 @@ resource "terraform_data" "cluster_acl" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.domain_admin_user}"
+      user            = var.domain_admin_user
       password        = var.domain_admin_pswd
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
@@ -505,7 +511,7 @@ resource "terraform_data" "cluster_acl" {
 # Create Always-On availability listener for SQL cluster with multi-subnet configuration
 resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
   name                         = "sqlha-listener" # Length of the name (1-15)
-  availability_group_name      = "${var.vm_sqlha_hostname}-aag"
+  availability_group_name      = "sqlhaaag"
   port                         = 1433
   sql_virtual_machine_group_id = azurerm_mssql_virtual_machine_group.sqlha_vmg.id
 
