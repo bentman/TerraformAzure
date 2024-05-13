@@ -397,8 +397,8 @@ resource "terraform_data" "sql_sysadmin" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = var.vm_localadmin_username
-      password        = var.vm_localadmin_password
+      user            = "${var.domain_netbios_name}\\${var.domain_admin_user}"
+      password        = var.domain_admin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
       timeout         = "1m"
@@ -486,8 +486,8 @@ resource "terraform_data" "cluster_acl" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = var.vm_localadmin_username
-      password        = var.vm_localadmin_password
+      user            = "${var.domain_netbios_name}\\${var.domain_admin_user}"
+      password        = var.domain_admin_pswd
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
       timeout         = "1m"
