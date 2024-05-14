@@ -190,7 +190,7 @@ resource "terraform_data" "vm_addc_ad_user" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.domain_admin_user}"
+      user            = var.domain_admin_user
       password        = var.domain_admin_pswd
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
