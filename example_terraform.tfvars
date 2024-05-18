@@ -11,24 +11,29 @@ arm_client_secret      = "YourServicePrincipleSecret" // azure service principle
 vm_localadmin_username = "YourAdminUsername"          // vm local admin username
 vm_localadmin_password = "YourAdminPassword"          // vm local admin password
 
-########## NON-DEFAULT VALUES ##########
+########## VALUES ##########
 ##### main.tf values
-lab_name              = "mylab"                 // defaults to 'mylab'
-resource_group_region = "westus"                // defaults to 'westus'
-vm_shutdown_hhmm      = "0000"                  // defaults to '0000' - aka midnight ;-)
-vm_shutdown_tz        = "Pacific Standard Time" // defaults to 'Pacific Standard Time'
-
-# vm common values
-vm_size = "Standard_D2s_v3" // defaults to 'Standard_D2s_v3'
+lab_name          = "mylab"                 // defaults to 'mylab'
+rg_location       = "westus"                // defaults to 'westus'
+tags = {
+    "source"      = "terraform"
+    "project"     = "learning"
+    "environment" = "lab"
+}
 
 ##### vm-jumpbox.tf values
+# vm common values
+vm_size = "Standard_D2s_v3" // defaults to 'Standard_D2s_v3'
+vm_shutdown_hhmm  = "0000"                  // defaults to '0000' - aka midnight ;-)
+vm_shutdown_tz    = "Pacific Standard Time" // defaults to 'Pacific Standard Time'
+
 # vm-jumpwin (fail if not unique in public DNS)
 vm_jumpwin_hostname = "jumpwin007" // defaults to 'jumpwin007'
 
 # vm-jumplin (fail if not unique in public DNS)
 vm_jumplin_hostname = "jumpwin008" // defaults to 'jumpwin008'
 
-##### vm-addc.tf value
+/*##### vm-addc.tf value
 vm_addc_size        = "Standard_D2s_v3"            // vm addc size
 vm_addc_hostname    = "vm-dc0150"                  // vm addc hostname, 15 character max
 domain_name         = "your.fqdn.onmicrosoft.com"  // ad fqdn domain name
@@ -46,7 +51,7 @@ sql_sysadmin_login           = "mysqllogin"      // sql sysadmin username
 sql_sysadmin_password        = "P@ssword!2024"   // sql sysadmin password
 sql_service_account_login    = "mysqlsvc"        // sql service username
 sql_service_account_password = "P@ssword!2024"   // sql service password
-
+*/
 /*#################### NOTES ####################
 How to generate a new Service Principle and Secret using PowershellAzAD
 

@@ -1,17 +1,18 @@
-#################### vm-jumpbox ####################
-########## vm-jumpWin 
-# vm-jumpWin Variables
-variable "vm_jumpwin_hostname" {
-  type        = string
-  default     = "jumpwin007" // fail if not unique in public DNS
-  description = "Computername for the windows-vm jumpbox"
+# v-network.tf
+module "v_network" {
+  source      = "../v-network"
+  lab_name    = var.lab_name
+  rg_location = var.rg_location
+  rg_name     = var.rg_name
+  tags        = var.tags
 }
 
+#################### vm-jumpbox ####################
 # vm-jumpWin Publip IP with internet DNS hostname
 resource "azurerm_public_ip" "vm_jumpwin_pip" {
   name                = "vm-jumpwin-pip"
-  location            = azurerm_resource_group.mylab.location
-  resource_group_name = azurerm_resource_group.mylab.name
+  location            = var.rg_location
+  resource_group_name = var.rg_name
   allocation_method   = "Static"
   sku                 = "Standard"
   domain_name_label   = var.vm_jumpwin_hostname
@@ -24,13 +25,13 @@ resource "azurerm_public_ip" "vm_jumpwin_pip" {
 # vm-jumpbox primary NIC 
 resource "azurerm_network_interface" "vm_jumpwin_nic" {
   name                          = "vm-jumpwin-nic"
-  location                      = azurerm_resource_group.mylab.location
-  resource_group_name           = azurerm_resource_group.mylab.name
+  location                      = var.rg_location
+  resource_group_name           = var.rg_name
   enable_accelerated_networking = true
   tags                          = var.tags
   ip_configuration {
     name                          = "vm-jumpwin-ip"
-    subnet_id                     = azurerm_subnet.snet_0000_jumpbox.id
+    subnet_id                     = var.vm_snet_id
     private_ip_address_allocation = "Static"
     private_ip_address            = cidrhost("10.0.0.0/27", 7) //"10.0.0.7"
     primary                       = true
@@ -44,12 +45,12 @@ resource "azurerm_network_interface" "vm_jumpwin_nic" {
 # vm-jumpWin Windows Jumpbox
 resource "azurerm_windows_virtual_machine" "vm_jumpwin" {
   name                = "vm-jumpwin"
-  location            = azurerm_resource_group.mylab.location
-  resource_group_name = azurerm_resource_group.mylab.name
+  location            = var.rg_location
+  resource_group_name = var.rg_name
   size                = var.vm_size
   computer_name       = var.vm_jumpwin_hostname
-  admin_username      = var.vm_localadmin_username
-  admin_password      = var.vm_localadmin_password
+  admin_username      = var.vm_localadmin_user
+  admin_password      = var.vm_localadmin_pswd
   license_type        = "Windows_Client"
   tags                = var.tags
   os_disk {
@@ -70,7 +71,7 @@ resource "azurerm_windows_virtual_machine" "vm_jumpwin" {
     Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private
     Enable-PSRemoting -Verbose
     Set-NetFirewallRule -Name WINRM-HTTP-In-TCP -RemoteAddress Any -Enabled True
-    Start-Process -FilePath winrm -ArgumentList "quickconfig", "-q", "-force" -NoNewWindow -Verbose
+    Start-Process -FilePath winrm -ArgumentList "quickconfig", "-q", "-Force" -nonewwindow -Verbose
     </powershell>
   EOF
   )
@@ -85,7 +86,7 @@ resource "azurerm_windows_virtual_machine" "vm_jumpwin" {
 # vm-jumpWin associate NIC with NSG
 resource "azurerm_network_interface_security_group_association" "vm_jumpwin_nsg_assoc" {
   network_interface_id      = azurerm_network_interface.vm_jumpwin_nic.id
-  network_security_group_id = azurerm_network_security_group.vnet_nsg.id
+  network_security_group_id = azurerm_network_security_group.nsg_jumpbox.id
 }
 
 # Create extension to Open SSH on vm_jumpwin
@@ -104,30 +105,10 @@ resource "azurerm_virtual_machine_extension" "vm_jumpwin_openssh" {
   ]
 }
 
-/* UNDER DEVELOPMENT
-resource "null_resource" "jumpwin_copy_file" {
-  connection {
-    type     = "ssh"
-    host     = azurerm_public_ip.vm_jumpwin_pip.ip_address
-    user     = var.vm_localadmin_username
-    password = var.vm_localadmin_password
-    agent    = false
-    timeout  = "2m"
-  }
-  provisioner "file" {
-    source      = "./content/windows/get-mystuff.ps1"
-    destination = "c:\\users\\public\\documents\\get-mystuff.bash"
-  }
-  depends_on = [
-    azurerm_virtual_machine_extension.vm_jumpwin_openssh,
-    azurerm_network_interface_security_group_association.vm_jumpwin_nsg_assoc,
-  ]
-}*/
-
 # vm-jumpWin AUTOSHUTDOWN
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumpwin_shutdown" {
   virtual_machine_id    = azurerm_windows_virtual_machine.vm_jumpwin.id
-  location              = azurerm_resource_group.mylab.location
+  location              = var.rg_location
   enabled               = true
   daily_recurrence_time = var.vm_shutdown_hhmm
   timezone              = var.vm_shutdown_tz
@@ -136,28 +117,32 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumpwin_shutdown" {
   }
 }
 
-# vm-jumpWin OUTPUTS 
-output "vm_jumpwin_public_name" {
-  value = azurerm_public_ip.vm_jumpwin_pip.domain_name_label
-}
-
-output "vm_jumpwin_public_ip" {
-  value = azurerm_public_ip.vm_jumpwin_pip.ip_address
-}
+/* UNDER DEVELOPMENT
+resource "null_resource" "jumpwin_copy_file" {
+  connection {
+    type     = "ssh"
+    host     = azurerm_public_ip.vm_jumpwin_pip.ip_address
+    user     = var.vm_localadmin_user
+    password = var.vm_localadmin_pswd
+    agent    = false
+    timeout  = "2m"
+  }
+  provisioner "file" {
+    source      = "../content/windows/get-mystuff.ps1"
+    destination = "c:\\users\\public\\documents\\get-mystuff.bash"
+  }
+  depends_on = [
+    azurerm_virtual_machine_extension.vm_jumpwin_openssh,
+    azurerm_network_interface_security_group_association.vm_jumpwin_nsg_assoc,
+  ]
+}*/
 
 ########## vm-jumpLin 
-# vm-jumpLin Variables
-variable "vm_jumplin_hostname" {
-  type        = string
-  default     = "jumplin008" // fail if not unique in public DNS
-  description = "Computername for the linux-vm jumpbox"
-}
-
 # vm-jumpLin Publip IP with internet DNS hostname
 resource "azurerm_public_ip" "vm_jumplin_pip" {
   name                = "vm-jumplin-pip"
-  location            = azurerm_resource_group.mylab.location
-  resource_group_name = azurerm_resource_group.mylab.name
+  location            = var.rg_location
+  resource_group_name = var.rg_name
   allocation_method   = "Static"
   sku                 = "Standard"
   domain_name_label   = var.vm_jumplin_hostname
@@ -170,13 +155,13 @@ resource "azurerm_public_ip" "vm_jumplin_pip" {
 # Primary vm-jumpLin NIC for VM Internal Communication
 resource "azurerm_network_interface" "vm_jumplin_nic" {
   name                          = "vm-jumplin-nic"
-  location                      = azurerm_resource_group.mylab.location
-  resource_group_name           = azurerm_resource_group.mylab.name
+  location                      = var.rg_location
+  resource_group_name           = var.rg_name
   enable_accelerated_networking = true
   tags                          = var.tags
   ip_configuration {
     name                          = "vm-jumplin-ip"
-    subnet_id                     = azurerm_subnet.snet_0000_jumpbox.id
+    subnet_id                     = var.vm_snet_id
     private_ip_address_allocation = "Static"
     private_ip_address            = cidrhost("10.0.0.0/27", 8) //"10.0.0.8"
     primary                       = true
@@ -190,12 +175,12 @@ resource "azurerm_network_interface" "vm_jumplin_nic" {
 # Create vm-jumpLin Jumpbox
 resource "azurerm_linux_virtual_machine" "vm_jumplin" {
   name                            = "vm-jumplin"
-  location                        = azurerm_resource_group.mylab.location
-  resource_group_name             = azurerm_resource_group.mylab.name
+  location                        = var.rg_location
+  resource_group_name             = var.rg_name
   size                            = var.vm_size
   computer_name                   = var.vm_jumplin_hostname
-  admin_username                  = var.vm_localadmin_username
-  admin_password                  = var.vm_localadmin_password
+  admin_username                  = var.vm_localadmin_user
+  admin_password                  = var.vm_localadmin_pswd
   disable_password_authentication = false
   tags                            = var.tags
   os_disk {
@@ -221,7 +206,19 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
 # Associate vm-jumplin NIC with internal lab NSG
 resource "azurerm_network_interface_security_group_association" "vm_jumplin_nsg_assoc" {
   network_interface_id      = azurerm_network_interface.vm_jumplin_nic.id
-  network_security_group_id = azurerm_network_security_group.vnet_nsg.id
+  network_security_group_id = azurerm_network_security_group.nsg_jumpbox.id
+}
+
+# vm-jumpLin AUTOSHUTDOWN
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumplin_shutdown" {
+  virtual_machine_id    = azurerm_linux_virtual_machine.vm_jumplin.id
+  location              = var.rg_location
+  enabled               = true
+  daily_recurrence_time = var.vm_shutdown_hhmm
+  timezone              = var.vm_shutdown_tz
+  notification_settings {
+    enabled = false
+  }
 }
 
 /* UNDER DEVELOPMENT
@@ -235,7 +232,7 @@ resource "null_resource" "jumplin_copy_file" {
     timeout  = "2m"
   }
   provisioner "file" {
-    source      = "./content/linux/get-mystuff.bash"
+    source      = "../content/linux/get-mystuff.bash"
     destination = "/home/get-mystuff.bash"
   }
   depends_on = [
@@ -243,23 +240,73 @@ resource "null_resource" "jumplin_copy_file" {
   ]
 }*/
 
-# vm-jumpLin AUTOSHUTDOWN
-resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumplin_shutdown" {
-  virtual_machine_id    = azurerm_linux_virtual_machine.vm_jumplin.id
-  location              = azurerm_resource_group.mylab.location
-  enabled               = true
-  daily_recurrence_time = var.vm_shutdown_hhmm
-  timezone              = var.vm_shutdown_tz
-  notification_settings {
-    enabled = false
+# Create NSG Lab
+resource "azurerm_network_security_group" "nsg_jumpbox" {
+  name                = "vnet-nsg-jumpbox"
+  location            = var.rg_location
+  resource_group_name = var.rg_name
+  tags                = var.tags
+  # NSG-Rule to allow SSH
+  security_rule {
+    name                       = "vnet-nsg-rule-SSH"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
   }
-}
-
-# vm-jumpLin OUTPUTS 
-output "vm_jumplin_public_name" {
-  value = azurerm_public_ip.vm_jumplin_pip.domain_name_label
-}
-
-output "vm_jumplin_public_ip" {
-  value = azurerm_public_ip.vm_jumplin_pip.ip_address
+  # NSG-Rule to allow RDP
+  security_rule {
+    name                       = "vnet-nsg-rule-RDP"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  /*# NSG-Rule to allow WinRM
+  security_rule {
+    name                       = "vnet-nsg-rule-WinRM"
+    priority                   = 120
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "5985-5986"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }*/
+  # NSG-Rule to allow ping
+  security_rule {
+    name                       = "vnet-nsg-rule-ping"
+    priority                   = 900
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Icmp"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  # NSG-Rule to allow ALL
+  security_rule {
+    name                       = "vnet-nsg-rule-local-all"
+    priority                   = 1000
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.0.0.0/23"
+    destination_address_prefix = "*"
+  }
+  lifecycle {
+    ignore_changes = [tags]
+  }
 }

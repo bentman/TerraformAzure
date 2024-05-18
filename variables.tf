@@ -1,9 +1,9 @@
 #################### VARIABLES ####################
-########## SECRETS VARIABLES ##########
+########## SECRETS VARIABLES 
 #####  Declare confidential variables here
 #####  Store secret values in *.tfvars file
 #####  Check .gitingnore in repo for details
-########## SECRETS VARIABLES ##########
+########## SECRETS VARIABLES 
 
 variable "arm_tenant_id" {
   type        = string
@@ -29,31 +29,31 @@ variable "arm_client_secret" {
   sensitive   = true
 }
 
-variable "vm_localadmin_username" {
+variable "vm_localadmin_user" {
   type        = string
-  description = "vm local admin username"
   default     = "localadmin"
+  description = "vm local admin username"
   sensitive   = true
 }
 
-variable "vm_localadmin_password" {
+variable "vm_localadmin_pswd" {
   type        = string
-  description = "vm local admin password"
   default     = "P@ssw0rd!"
+  description = "vm local admin password"
   sensitive   = true
 }
 
-#################### VARIABLES - w/ default values ####################
+##### RESOURCE VARIABLES
 variable "lab_name" {
   type        = string
-  description = "lab name (suggest 'lab', 'dev', 'qa', 'test', etc)"
   default     = "mylab"
+  description = "lab name (suggest 'lab', 'dev', 'qa', 'test', etc)"
 }
 
-variable "resource_group_region" {
+variable "rg_location" {
   type        = string
-  description = "azure region for lab"
   default     = "westus"
+  description = "azure region for lab"
 }
 
 variable "tags" {
@@ -65,6 +65,21 @@ variable "tags" {
   }
 }
 
+########## vm-jumpBox
+# vm-jumpWin Hostname
+variable "vm_jumpwin_hostname" {
+  type        = string
+  default     = "jumpwin007" // fail if not unique in public DNS
+  description = "Computername for the windows-vm jumpbox"
+}
+# vm-jumpLin Hostname
+variable "vm_jumplin_hostname" {
+  type        = string
+  default     = "jumplin008" // fail if not unique in public DNS
+  description = "Computername for the linux-vm jumpbox"
+}
+
+# vm common Variables
 variable "vm_size" {
   type        = string
   default     = "Standard_D2s_v3" // 2 x vCPU + 8gb RAM
