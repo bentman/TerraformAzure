@@ -1,11 +1,11 @@
-# v-network.tf
+/*# v-network.tf
 module "v_network" {
   source      = "../v-network"
   lab_name    = var.lab_name
   rg_location = var.rg_location
   rg_name     = var.rg_name
   tags        = var.tags
-}
+}*/
 
 #################### vm-jumpbox ####################
 # vm-jumpWin Publip IP with internet DNS hostname
@@ -240,15 +240,15 @@ resource "null_resource" "jumplin_copy_file" {
   ]
 }*/
 
-# Create NSG Lab
+# Create NSG Jumpbox
 resource "azurerm_network_security_group" "nsg_jumpbox" {
   name                = "vnet-nsg-jumpbox"
   location            = var.rg_location
   resource_group_name = var.rg_name
   tags                = var.tags
-  # NSG-Rule to allow SSH
+  # nsg-jumpbox to allow SSH
   security_rule {
-    name                       = "vnet-nsg-rule-SSH"
+    name                       = "vnet-nsg-jumpbox-SSH"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
@@ -258,9 +258,9 @@ resource "azurerm_network_security_group" "nsg_jumpbox" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  # NSG-Rule to allow RDP
+  # nsg-jumpbox to allow RDP
   security_rule {
-    name                       = "vnet-nsg-rule-RDP"
+    name                       = "vnet-nsg-jumpbox-RDP"
     priority                   = 110
     direction                  = "Inbound"
     access                     = "Allow"
@@ -270,9 +270,9 @@ resource "azurerm_network_security_group" "nsg_jumpbox" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  /*# NSG-Rule to allow WinRM
+  /*# nsg-jumpbox to allow WinRM
   security_rule {
-    name                       = "vnet-nsg-rule-WinRM"
+    name                       = "vnet-nsg-jumpbox-WinRM"
     priority                   = 120
     direction                  = "Inbound"
     access                     = "Allow"
@@ -282,9 +282,9 @@ resource "azurerm_network_security_group" "nsg_jumpbox" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }*/
-  # NSG-Rule to allow ping
+  # nsg-jumpbox to allow ping
   security_rule {
-    name                       = "vnet-nsg-rule-ping"
+    name                       = "vnet-nsg-jumpbox-ping"
     priority                   = 900
     direction                  = "Inbound"
     access                     = "Allow"
@@ -294,9 +294,9 @@ resource "azurerm_network_security_group" "nsg_jumpbox" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  # NSG-Rule to allow ALL
+  # nsg-jumpbox to allow ALL
   security_rule {
-    name                       = "vnet-nsg-rule-local-all"
+    name                       = "vnet-nsg-jumpbox-local-all"
     priority                   = 1000
     direction                  = "Inbound"
     access                     = "Allow"
