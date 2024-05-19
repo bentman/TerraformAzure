@@ -15,7 +15,7 @@ variable "vm_jumplin_hostname" {
 
 # vm-jumpbox subnet
 variable "vm_snet_id" {
-  type = string
+  type        = string
   description = "vm-jumpbot subnet "
 }
 

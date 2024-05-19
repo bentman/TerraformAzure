@@ -8,8 +8,8 @@ arm_tenant_id          = "YourTenantId"               // azure tenant id
 arm_subscription_id    = "YourSubscriptionId"         // azure subscription id
 arm_client_id          = "YourServicePrincipleId"     // azure service principle id
 arm_client_secret      = "YourServicePrincipleSecret" // azure service principle secret
-vm_localadmin_username = "YourAdminUsername"          // vm local admin username
-vm_localadmin_password = "YourAdminPassword"          // vm local admin password
+vm_localadmin_username = "YourAdminUsername"          // vm local admin username 'localadmin'
+vm_localadmin_password = "YourAdminPassword"          // vm local admin password 'P@ssw0rd!234'
 
 ########## VALUES ##########
 ##### main.tf values
@@ -38,8 +38,8 @@ vm_addc_size        = "Standard_D2s_v3"            // vm addc size
 vm_addc_hostname    = "vm-dc0150"                  // vm addc hostname, 15 character max
 domain_name         = "your.fqdn.onmicrosoft.com"  // ad fqdn domain name
 domain_netbios_name = "YourNetBIOSDomainName"      // ad netbios domain name
-domain_admin_user   = "YourDomainAdminUserName"    // domwin admin username
-domain_admin_pswd   = "YourDomainAdminPassword"    // domain admin password
+domain_admin_user   = "YourDomainAdminUserName"    // domwin admin username 'domainadmin'
+domain_admin_pswd   = "YourDomainAdminPassword"    // domain admin password 'P@ssw0rd!234'
 safemode_admin_pswd = "YourDomainSafeModePassword" // domain safemode password
 
 ##### vm-sqlha.tf value

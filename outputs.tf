@@ -26,32 +26,32 @@ output "lab_gw_pip" {
 
 # vm-jumpWin OUTPUTS 
 output "vm_jumpwin_public_name" {
-  value = length(module.vm_jumpbox) > 0 ? module.vm_jumpbox[0].vm_jumpwin_public_name : ""
-  description = "The public DNS name of windows jumpbox VM, if exists"
+  value       = length(module.vm_jumpbox) > 0 ? module.vm_jumpbox[0].vm_jumpwin_public_name : null
+  description = "The public DNS name of windows jumpbox VM, if exists - 'null' if not"
 }
 
 output "vm_jumpwin_public_ip" {
-  value = length(module.vm_jumpbox) > 0 ? module.vm_jumpbox[0].vm_jumpwin_public_ip : ""
-  description = "The public IP address of windows jumpbox VM, if exists"
+  value       = length(module.vm_jumpbox) > 0 ? module.vm_jumpbox[0].vm_jumpwin_public_ip : null
+  description = "The public IP address of windows jumpbox VM, if exists - 'null' if not"
 }
 # vm-jumpLin OUTPUTS 
 output "vm_jumplin_public_name" {
-  value = length(module.vm_jumpbox) > 0 ? module.vm_jumpbox[0].vm_jumplin_public_name : ""
-  description = "The public DNS name of Linux jumpbox VM, if exists"
+  value       = length(module.vm_jumpbox) > 0 ? module.vm_jumpbox[0].vm_jumplin_public_name : null
+  description = "The public DNS name of Linux jumpbox VM, if exists - 'null' if not"
 }
 
 output "vm_jumplin_public_ip" {
-  value = length(module.vm_jumpbox) > 0 ? module.vm_jumpbox[0].vm_jumplin_public_ip : ""
-  description = "The public IP address of Linux jumpbox VM, if exists"
+  value       = length(module.vm_jumpbox) > 0 ? module.vm_jumpbox[0].vm_jumplin_public_ip : null
+  description = "The public IP address of Linux jumpbox VM, if exists - 'null' if not"
 }
 
 ##### vm-addc.tf outputs
 output "vm_addc_public_name" {
-  value = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_name : ""
+  value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_name : null
   description = "The public DNS name of addc VM, if exists"
 }
 
 output "vm_addc_public_ip" {
-  value = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_ip : ""
+  value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_ip : null
   description = "The public IP address of addc VM, if exists"
 }

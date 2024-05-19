@@ -38,7 +38,7 @@ variable "vm_localadmin_user" {
 
 variable "vm_localadmin_pswd" {
   type        = string
-  default     = "P@ssw0rd!"
+  default     = "P@ssw0rd!234"
   description = "vm local admin password"
   sensitive   = true
 }
@@ -127,7 +127,7 @@ variable "vm_addc_shutdown_tz" {
 ########## addc 
 variable "domain_name" {
   type        = string
-  default     = "mylab.mytenant.onmicrosoft.com"
+  default     = "mylab.onmicrosoft.lan"
   description = "domain name"
 }
 
@@ -146,7 +146,7 @@ variable "domain_admin_user" {
 
 variable "domain_admin_pswd" {
   type        = string
-  default     = "P@ssw0rd!"
+  default     = "P@ssw0rd!234"
   description = "domainadmin password"
   sensitive   = true
 }

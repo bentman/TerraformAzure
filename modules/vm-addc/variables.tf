@@ -8,22 +8,22 @@ variable "vm_addc_hostname" {
 
 # vm-addc subnet
 variable "vm_server_snet_id" {
-  type = string
+  type        = string
   description = "vm-server subnet"
 }
 
 # vm common Variables
 variable "vm_localadmin_user" {
   type        = string
-  default     = "neoadmin"
-  description = "vm local admin username"
+  default     = "localadmin"
+  description = "vm local admin username - NOTE: becomes domain admin after dcpromo"
   sensitive   = true
 }
 
 variable "vm_localadmin_pswd" {
   type        = string
   default     = "P@ssw0rd!"
-  description = "vm local admin password"
+  description = "vm local admin password - NOTE: becomes domain admin after dcpromo"
   sensitive   = true
 }
 
@@ -58,23 +58,9 @@ variable "domain_netbios_name" {
   description = "domain netbios name"
 }
 
-variable "domain_admin_user" {
-  type        = string
-  default     = "domainadmin"
-  description = "admin username"
-  sensitive   = true
-}
-
-variable "domain_admin_pswd" {
-  type        = string
-  default     = "P@ssw0rd!"
-  description = "domainadmin password"
-  sensitive   = true
-}
-
 variable "safemode_admin_pswd" {
   type        = string
-  default     = "P@ssw0rd!"
+  default     = "P@ssw0rd!234"
   description = "domain safemode password"
   sensitive   = true
 }

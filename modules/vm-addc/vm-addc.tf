@@ -39,14 +39,14 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   resource_group_name = var.rg_name
   size                = var.vm_addc_size
   computer_name       = var.vm_addc_hostname
-  admin_username      = var.domain_admin_user
-  admin_password      = var.domain_admin_pswd
+  admin_username      = var.vm_localadmin_user
+  admin_password      = var.vm_localadmin_pswd
   license_type        = "Windows_Server"
   tags                = var.tags
   os_disk {
     name                 = "vm-addc-dsk0os"
     caching              = "ReadWrite"
-    disk_size_gb         = "127"
+    disk_size_gb         = 127
     storage_account_type = "Standard_LRS"
   }
   source_image_reference {
@@ -57,13 +57,10 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   }
   custom_data = base64encode(<<-EOT
     <powershell>
-    New-LocalUser -Name "${var.vm_localadmin_pswd}" -Password (ConvertTo-SecureString "${var.vm_localadmin_pswd}" -AsPlainText -Force) -FullName "troubleshooter" -Description "troubleshooter" -UserMayNotChangePassword $false -PasswordNeverExpires $true -AccountNeverExpires $true
+    New-Item -Path 'c:\\BUILD\\' -ItemType Directory -Force -ea 0
     </powershell>
   EOT
   )
-winrm_listener {
-    protocol = "Http"
-  }
   network_interface_ids = [
     azurerm_network_interface.vm_addc_nic.id,
   ]
@@ -112,11 +109,15 @@ resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
   type                       = "CustomScriptExtension"
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
-  settings                   = <<SETTINGS
-    {
-      "commandToExecute": "powershell.exe -Command \"${join(";", local.powershell_gpmc)}\""
-    }
-  SETTINGS
+  settings = jsonencode({
+    "commandToExecute" : "powershell.exe -Command \"${join(";", local.powershell_dcpromo)}\""
+  })
+  timeouts {
+    create = "30m" // default is '30m'
+    update = "15m" // default is '30m'
+    read   = "5m"  // default is '5m'
+    delete = "15m" // default is '30m'
+  }
   depends_on = [
     azurerm_windows_virtual_machine.vm_addc,
     azurerm_virtual_machine_extension.vm_addc_openssh
@@ -129,7 +130,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
 # time delay after gpmc
 resource "time_sleep" "vm_addc_gpmc_sleep" {
   create_duration = "120s"
-  depends_on = [azurerm_virtual_machine_extension.vm_addc_gpmc]
+  depends_on      = [azurerm_virtual_machine_extension.vm_addc_gpmc]
 }
 
 # Azure AD technical users with remote-exec module to use PowerShell
