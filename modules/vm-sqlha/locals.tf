@@ -26,8 +26,8 @@ locals {
 
   # Generate commands to create new Organization Unit and technical users for SQL installation
   powershell_add_users = [
-    "New-Item -Path C:\\BUILD\\ -ItemType Directory -Force",
-    "Start-Transcript -Path C:\\BUILD\\transcript-gpmc.txt",
+    "if (!(test-path -Path C:\\BUILD\\)) {New-Item -Path C:\\BUILD\\ -ItemType Directory -Force}",
+    "Start-Transcript -Path C:\\BUILD\\transcript-add_users.txt",
     "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
     "Import-Module ActiveDirectory",
     "New-ADOrganizationalUnit -Name 'Servers' -Path '${local.dn_path}' -Description 'Servers OU for new objects'",

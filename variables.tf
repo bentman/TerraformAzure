@@ -97,3 +97,63 @@ variable "vm_shutdown_tz" {
   default     = "Pacific Standard Time"
   description = "Time Zone for VM Shutdown"
 }
+
+########## vm-addc
+# vm-addc Hostname
+variable "vm_addc_hostname" {
+  type        = string
+  default     = "vmaddc"
+  description = "Computername for domain controller"
+}
+
+variable "vm_addc_size" {
+  type        = string
+  default     = "Standard_D2s_v3"
+  description = "The size of the Virtual Machine(s) type."
+}
+
+variable "vm_addc_shutdown_hhmm" {
+  type        = string
+  default     = "0000" // midnight ;-)
+  description = "Time for VM Shutdown HHMM"
+}
+
+variable "vm_addc_shutdown_tz" {
+  type        = string
+  default     = "Pacific Standard Time"
+  description = "Time Zone for VM Shutdown"
+}
+
+########## addc 
+variable "domain_name" {
+  type        = string
+  default     = "mylab.mytenant.onmicrosoft.com"
+  description = "domain name"
+}
+
+variable "domain_netbios_name" {
+  type        = string
+  default     = "MYLAB"
+  description = "domain netbios name"
+}
+
+variable "domain_admin_user" {
+  type        = string
+  default     = "domainadmin"
+  description = "admin username"
+  sensitive   = true
+}
+
+variable "domain_admin_pswd" {
+  type        = string
+  default     = "P@ssw0rd!"
+  description = "domainadmin password"
+  sensitive   = true
+}
+
+variable "safemode_admin_pswd" {
+  type        = string
+  default     = "P@ssw0rd!"
+  description = "domain safemode password"
+  sensitive   = true
+}

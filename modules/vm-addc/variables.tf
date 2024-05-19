@@ -15,7 +15,7 @@ variable "vm_server_snet_id" {
 # vm common Variables
 variable "vm_localadmin_user" {
   type        = string
-  default     = "localadmin"
+  default     = "neoadmin"
   description = "vm local admin username"
   sensitive   = true
 }
@@ -33,13 +33,13 @@ variable "vm_addc_size" {
   description = "The size of the Virtual Machine(s) type."
 }
 
-variable "vm_shutdown_hhmm" {
+variable "vm_addc_shutdown_hhmm" {
   type        = string
   default     = "0000" // midnight ;-)
   description = "Time for VM Shutdown HHMM"
 }
 
-variable "vm_shutdown_tz" {
+variable "vm_addc_shutdown_tz" {
   type        = string
   default     = "Pacific Standard Time"
   description = "Time Zone for VM Shutdown"

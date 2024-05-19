@@ -22,7 +22,17 @@ module "v_network" {
 }
 
 # vm-jumpbox.tf
+variable "module_vm_jumpbox_enable" {
+  description = "A boolean flag to enable or disable the vm-jumpbox.tf module"
+  type        = bool
+  default     = false // true -or- false 
+  //caution: even 'terraform plan' produces 'changed state' after toggle
+  //         if exist, resources will be destroyed on next 'apply'
+  //         false = '# to destroy' | true = '# to add ... # to destroy'
+}
+
 module "vm_jumpbox" {
+  count               = var.module_vm_jumpbox_enable ? 1 : 0
   source              = "./modules/vm-jumpbox"
   lab_name            = var.lab_name
   rg_location         = azurerm_resource_group.mylab.location
@@ -36,10 +46,35 @@ module "vm_jumpbox" {
   vm_shutdown_hhmm    = var.vm_shutdown_hhmm
   vm_shutdown_tz      = var.vm_shutdown_tz
   tags                = var.tags
-  depends_on          = [module.v_network]
+  depends_on          = [module.v_network, data.azurerm_subnet.snet_0000_jumpbox]
 }
 
 # vm-addc.tf
+variable "module_vm_addc_enable" {
+  description = "A boolean flag to enable or disable the vm-addc.tf module"
+  type        = bool
+  default     = true // true -or- false 
+  //caution: even 'terraform plan' produces 'changed state' after toggle
+  //         if exist, resources will be destroyed on next 'apply'
+  //         false = '# to destroy' | true = '# to add ... # to destroy'
+}
+
+module "vm_addc" {
+  count                 = var.module_vm_addc_enable ? 1 : 0
+  source                = "./modules/vm-addc"
+  lab_name              = var.lab_name
+  rg_location           = azurerm_resource_group.mylab.location
+  rg_name               = azurerm_resource_group.mylab.name
+  vm_server_snet_id     = data.azurerm_subnet.snet_0128_server.id
+  vm_addc_hostname      = var.vm_addc_hostname
+  vm_addc_size          = var.vm_addc_size
+  vm_localadmin_user    = var.domain_admin_user
+  vm_localadmin_pswd    = var.domain_admin_pswd
+  safemode_admin_pswd   = var.safemode_admin_pswd
+  vm_addc_shutdown_hhmm = var.vm_shutdown_hhmm
+  vm_addc_shutdown_tz   = var.vm_shutdown_tz
+  tags                  = var.tags
+  depends_on            = [module.v_network, data.azurerm_subnet.snet_0128_server]
+}
 
 # vm-sqlha.tf
-

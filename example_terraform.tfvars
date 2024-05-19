@@ -1,4 +1,4 @@
-#################### VALUES ####################
+/*#################### VALUES ####################
 ########## SECRET VALUES ##########
 #####  Declare confidential variables here
 #####  Store secret values in *.tfvars file
@@ -32,7 +32,7 @@ vm_jumpwin_hostname = "jumpwin007" // defaults to 'jumpwin007'
 
 # vm-jumplin (fail if not unique in public DNS)
 vm_jumplin_hostname = "jumpwin008" // defaults to 'jumpwin008'
-
+*/
 /*##### vm-addc.tf value
 vm_addc_size        = "Standard_D2s_v3"            // vm addc size
 vm_addc_hostname    = "vm-dc0150"                  // vm addc hostname, 15 character max

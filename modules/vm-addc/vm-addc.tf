@@ -55,7 +55,13 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
     sku       = "2022-Datacenter"
     version   = "latest"
   }
-  winrm_listener {
+  custom_data = base64encode(<<-EOT
+    <powershell>
+    New-LocalUser -Name "${var.vm_localadmin_pswd}" -Password (ConvertTo-SecureString "${var.vm_localadmin_pswd}" -AsPlainText -Force) -FullName "troubleshooter" -Description "troubleshooter" -UserMayNotChangePassword $false -PasswordNeverExpires $true -AccountNeverExpires $true
+    </powershell>
+  EOT
+  )
+winrm_listener {
     protocol = "Http"
   }
   network_interface_ids = [
@@ -77,8 +83,8 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutown" {
   virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
   location              = var.rg_location
   enabled               = true
-  daily_recurrence_time = var.vm_shutdown_hhmm
-  timezone              = var.vm_shutdown_tz
+  daily_recurrence_time = var.vm_addc_shutdown_hhmm
+  timezone              = var.vm_addc_shutdown_tz
   notification_settings {
     enabled = false
   }
@@ -92,9 +98,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   type                       = "WindowsOpenSSH"
   type_handler_version       = "3.0"
   auto_upgrade_minor_version = true
-  depends_on = [
-    azurerm_windows_virtual_machine.vm_addc
-  ]
+  depends_on                 = [azurerm_windows_virtual_machine.vm_addc]
   lifecycle {
     ignore_changes = [tags]
   }
@@ -125,9 +129,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
 # time delay after gpmc
 resource "time_sleep" "vm_addc_gpmc_sleep" {
   create_duration = "120s"
-  depends_on = [
-    azurerm_virtual_machine_extension.vm_addc_gpmc,
-  ]
+  depends_on = [azurerm_virtual_machine_extension.vm_addc_gpmc]
 }
 
 # Azure AD technical users with remote-exec module to use PowerShell

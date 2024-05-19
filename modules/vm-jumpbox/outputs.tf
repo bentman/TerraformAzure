@@ -1,6 +1,6 @@
 # vm-jumpWin OUTPUTS 
 output "vm_jumpwin_public_name" {
-  value = azurerm_public_ip.vm_jumpwin_pip.domain_name_label
+  value = azurerm_public_ip.vm_jumpwin_pip.fqdn
 }
 
 output "vm_jumpwin_public_ip" {
@@ -9,7 +9,7 @@ output "vm_jumpwin_public_ip" {
 
 # vm-jumpLin OUTPUTS 
 output "vm_jumplin_public_name" {
-  value = azurerm_public_ip.vm_jumplin_pip.domain_name_label
+  value = azurerm_public_ip.vm_jumplin_pip.fqdn
 }
 
 output "vm_jumplin_public_ip" {
