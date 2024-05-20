@@ -12,7 +12,7 @@ locals {
     "$dnsPswd = ConvertTo-SecureString '${var.vm_localadmin_pswd}' -AsPlainText -Force",
     "$dnsCred = New-Object System.Management.Automation.PSCredential ('${var.vm_localadmin_user}', $dnsPswd)",
     "Add-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools -LogPath C:\\BUILD\\AD-Domain-Services.log",
-    "Install-WindowsFeature DNS -IncludeAllSubFeature -IncludeManagementTools  -LogPath C:\\BUILD\\ADDS-DNS.log",
+    "Install-WindowsFeature DNS -IncludeAllSubFeature -IncludeManagementTools -LogPath C:\\BUILD\\ADDS-DNS.log",
     "Import-Module ADDSDeployment, DnsServer",
     "Install-ADDSForest -DomainName '${var.domain_name}' -InstallDns -Credential $dnsCred -SafeModeAdministratorPassword $safePswd -NoRebootOnCompletion:$false -LogPath C:\\BUILD\\adpromo.log -Force:$true",
     "exit 0",
