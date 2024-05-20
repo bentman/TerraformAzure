@@ -7,12 +7,14 @@ locals {
   servers_ou_path = "OU=Servers,${join(",", [for dc in local.split_domain : "DC=${dc}"])}"
 
   # Generate commands to install DNS and AD Forest
-  powershell_dcpromo = [
+  powershell_gpmc = [
+    "New-Item -Path 'c:\\BUILD\\' -ItemType Directory -Force -ea 0",
+    "Disable-WindowsOptionalFeature -Online -FeatureName AzureArcSetup -LogPath 'c:\\BUILD\\disableAzureArcSetup.log' -Verbose",
     "$safePswd = ConvertTo-SecureString '${var.safemode_admin_pswd}' -AsPlainText -Force",
     "Add-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools",
     "Install-WindowsFeature DNS -IncludeAllSubFeature -IncludeManagementTools",
     "Import-Module ADDSDeployment, DnsServer",
-    "Install-ADDSForest -DomainName '${var.domain_name}' -DomainNetBiosName '${var.domain_netbios_name}' -InstallDns -SafeModeAdministratorPassword $safePswd -NoRebootOnCompletion:$false -LogPath 'C:\\BUILD\\adpromo.log' confirm:$false -Force:$true -Verbose",
+    "Install-ADDSForest -DomainName '${var.domain_name}' -DomainNetBiosName '${var.domain_netbios_name}' -InstallDns -SafeModeAdministratorPassword $safePswd -NoRebootOnCompletion:$false -LogPath 'C:\\BUILD\\adpromo.log' -Confirm:$false -Force:$true -Verbose",
     "exit 0",
   ]
 }

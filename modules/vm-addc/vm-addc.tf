@@ -55,13 +55,6 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
     sku       = "2022-Datacenter"
     version   = "latest"
   }
-  custom_data = base64encode(<<-EOT
-    <powershell>
-    New-Item -Path 'c:\\BUILD\\' -ItemType Directory -Force -ea 0
-    Disable-WindowsOptionalFeature -Online -FeatureName AzureArcSetup -LogPath 'c:\\BUILD\\disableAzureArcSetup.log' -Verbose
-    </powershell>
-  EOT
-  )
   network_interface_ids = [
     azurerm_network_interface.vm_addc_nic.id,
   ]
@@ -111,7 +104,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
   settings = jsonencode({
-    "commandToExecute" : "powershell.exe -Command \"${join(";", local.powershell_dcpromo)}\""
+    "commandToExecute" : "powershell.exe -Command \"${join(";", local.powershell_gpmc)}\""
   })
   timeouts {
     create = "30m" // default is '30m'
