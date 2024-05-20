@@ -53,7 +53,7 @@ module "vm_jumpbox" {
 variable "module_vm_addc_enable" {
   description = "A boolean flag to enable or disable the vm-addc.tf module"
   type        = bool
-  default     = true // true -or- false 
+  default     = false // true -or- false 
   //caution: even 'terraform plan' produces 'changed state' after toggle
   //         if exist, resources will be destroyed on next 'apply'
   //         false = '# to destroy' | true = '# to add ... # to destroy'

@@ -58,6 +58,7 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   custom_data = base64encode(<<-EOT
     <powershell>
     New-Item -Path 'c:\\BUILD\\' -ItemType Directory -Force -ea 0
+    Disable-WindowsOptionalFeature -Online -FeatureName AzureArcSetup -LogPath 'c:\\BUILD\\disableAzureArcSetup.log' -Verbose
     </powershell>
   EOT
   )
@@ -129,7 +130,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
 
 # time delay after gpmc
 resource "time_sleep" "vm_addc_gpmc_sleep" {
-  create_duration = "120s"
+  create_duration = "60s"
   depends_on      = [azurerm_virtual_machine_extension.vm_addc_gpmc]
 }
 

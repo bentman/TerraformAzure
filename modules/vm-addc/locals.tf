@@ -9,12 +9,10 @@ locals {
   # Generate commands to install DNS and AD Forest
   powershell_dcpromo = [
     "$safePswd = ConvertTo-SecureString '${var.safemode_admin_pswd}' -AsPlainText -Force",
-    "$dnsPswd = ConvertTo-SecureString '${var.vm_localadmin_pswd}' -AsPlainText -Force",
-    "$dnsCred = New-Object System.Management.Automation.PSCredential ('${var.vm_localadmin_user}', $dnsPswd)",
-    "Add-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools -LogPath C:\\BUILD\\AD-Domain-Services.log",
-    "Install-WindowsFeature DNS -IncludeAllSubFeature -IncludeManagementTools -LogPath C:\\BUILD\\ADDS-DNS.log",
+    "Add-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools",
+    "Install-WindowsFeature DNS -IncludeAllSubFeature -IncludeManagementTools",
     "Import-Module ADDSDeployment, DnsServer",
-    "Install-ADDSForest -DomainName '${var.domain_name}' -InstallDns -Credential $dnsCred -SafeModeAdministratorPassword $safePswd -NoRebootOnCompletion:$false -LogPath C:\\BUILD\\adpromo.log -Force:$true",
+    "Install-ADDSForest -DomainName '${var.domain_name}' -DomainNetBiosName '${var.domain_netbios_name}' -InstallDns -SafeModeAdministratorPassword $safePswd -NoRebootOnCompletion:$false -LogPath 'C:\\BUILD\\adpromo.log' confirm:$false -Force:$true -Verbose",
     "exit 0",
   ]
 }

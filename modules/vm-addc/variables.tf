@@ -22,7 +22,7 @@ variable "vm_localadmin_user" {
 
 variable "vm_localadmin_pswd" {
   type        = string
-  default     = "P@ssw0rd!"
+  default     = "P@ssw0rd!234"
   description = "vm local admin password - NOTE: becomes domain admin after dcpromo"
   sensitive   = true
 }
