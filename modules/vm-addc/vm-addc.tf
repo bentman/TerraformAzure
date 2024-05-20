@@ -52,7 +52,7 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
-    sku       = "2022-Datacenter"
+    sku       = "2019-Datacenter"
     version   = "latest"
   }
   network_interface_ids = [
@@ -103,8 +103,13 @@ resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
   type                       = "CustomScriptExtension"
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
+  /*settings = <<SETTINGS
+    {
+    "commandToExecute": "powershell.exe -Command ${local.powershell_gpmc}"
+    }
+  SETTINGS*/
   settings = jsonencode({
-    "commandToExecute" : "powershell.exe -Command \"${join(";", local.powershell_gpmc)}\""
+    "commandToExecute" : "powershell.exe -Command ${local.powershell_gpmc}"
   })
   timeouts {
     create = "30m" // default is '30m'
@@ -123,7 +128,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
 
 # time delay after gpmc
 resource "time_sleep" "vm_addc_gpmc_sleep" {
-  create_duration = "60s"
+  create_duration = "150s"
   depends_on      = [azurerm_virtual_machine_extension.vm_addc_gpmc]
 }
 

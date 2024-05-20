@@ -115,3 +115,50 @@ resource "azurerm_subnet_nat_gateway_association" "vnet_gw_snet_assoc_client" {
   subnet_id      = azurerm_subnet.snet_1000_client.id
   nat_gateway_id = azurerm_nat_gateway.vnet_gw_nat.id
 }
+
+# Create Route Table
+resource "azurerm_route_table" "lab_route_table" {
+  name                = "lab-route-table"
+  location            = var.rg_location
+  resource_group_name = var.rg_name
+}
+
+# Create a route to the Internet
+resource "azurerm_route" "route_to_internet" {
+  name                = "route-to-internet"
+  resource_group_name = var.rg_name
+  route_table_name    = azurerm_route_table.lab_route_table.name
+  address_prefix      = "0.0.0.0/0"
+  next_hop_type       = "Internet"
+}
+
+# Associate Route Table with each subnet
+resource "azurerm_subnet_route_table_association" "snet_assoc_jumpbox" {
+  subnet_id      = azurerm_subnet.snet_0000_jumpbox.id
+  route_table_id = azurerm_route_table.lab_route_table.id
+}
+
+resource "azurerm_subnet_route_table_association" "snet_assoc_gateway" {
+  subnet_id      = azurerm_subnet.snet_0032_gateway.id
+  route_table_id = azurerm_route_table.lab_route_table.id
+}
+
+resource "azurerm_subnet_route_table_association" "snet_assoc_db1" {
+  subnet_id      = azurerm_subnet.snet_0064_db1.id
+  route_table_id = azurerm_route_table.lab_route_table.id
+}
+
+resource "azurerm_subnet_route_table_association" "snet_assoc_db2" {
+  subnet_id      = azurerm_subnet.snet_0096_db2.id
+  route_table_id = azurerm_route_table.lab_route_table.id
+}
+
+resource "azurerm_subnet_route_table_association" "snet_assoc_server" {
+  subnet_id      = azurerm_subnet.snet_0128_server.id
+  route_table_id = azurerm_route_table.lab_route_table.id
+}
+
+resource "azurerm_subnet_route_table_association" "snet_assoc_client" {
+  subnet_id      = azurerm_subnet.snet_1000_client.id
+  route_table_id = azurerm_route_table.lab_route_table.id
+}
