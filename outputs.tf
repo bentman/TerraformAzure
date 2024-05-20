@@ -55,3 +55,7 @@ output "vm_addc_public_ip" {
   value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_ip : null
   description = "The public IP address of addc VM, if exists"
 }
+
+output "addc_module_vars" {
+  value = module.vm_addc[0].addc_module_vars
+}

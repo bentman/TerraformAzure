@@ -53,7 +53,7 @@ module "vm_jumpbox" {
 variable "module_vm_addc_enable" {
   description = "A boolean flag to enable or disable the vm-addc.tf module"
   type        = bool
-  default     = false // true -or- false 
+  default     = true // true -or- false 
   //caution: even 'terraform plan' produces 'changed state' after toggle
   //         if exist, resources will be destroyed on next 'apply'
   //         false = '# to destroy' | true = '# to add ... # to destroy'
@@ -68,6 +68,8 @@ module "vm_addc" {
   vm_server_snet_id     = data.azurerm_subnet.snet_0128_server.id
   vm_addc_hostname      = var.vm_addc_hostname
   vm_addc_size          = var.vm_addc_size
+  domain_name           = var.domain_name
+  domain_netbios_name   = var.domain_netbios_name
   vm_localadmin_user    = var.domain_admin_user //NOTE: becomes domain admin after dcpromo
   vm_localadmin_pswd    = var.domain_admin_pswd //NOTE: becomes domain admin after dcpromo
   safemode_admin_pswd   = var.safemode_admin_pswd
