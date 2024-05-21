@@ -57,5 +57,6 @@ output "vm_addc_public_ip" {
 }
 
 output "addc_module_vars" {
-  value = module.vm_addc[0].addc_module_vars
+  value       = length(module.vm_addc) > 0 ? module.vm_addc[0].addc_module_vars : null
+  description = "List of vars to verify on 'apply' - modify in vm-addc/outputs.tf"
 }

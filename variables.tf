@@ -157,3 +157,49 @@ variable "safemode_admin_pswd" {
   description = "domain safemode password"
   sensitive   = true
 }
+
+/*########## vm-sqlha 
+variable "vm_sqlha_hostname" {
+  type        = string
+  default     = "vmsqlha"
+  description = "Computername prefix for sqlha cluster servers"
+}
+
+# vm-sqlha subnet-db1
+variable "snet_sqlha_0064_db1" {
+  type        = string
+  description = "vm-sqlha server subnet-db1"
+}
+
+# vm-sqlha subnet-db2
+variable "snet_sqlha_0096_db2" {
+  type        = string
+  description = "vm-sqlha server subnet-db2"
+}
+
+variable "vm_sqlha_size" {
+  type        = string
+  default     = "Standard_D2s_v3"
+  description = "The size of the Virtual Machine(s) type."
+}
+
+variable "vm_sqlha_shutdown_hhmm" {
+  type        = string
+  default     = "0000" // midnight ;-)
+  description = "Time for VM Shutdown HHMM"
+}
+
+variable "vm_sqlha_shutdown_tz" {
+  type        = string
+  default     = "Pacific Standard Time"
+  description = "Time Zone for VM Shutdown"
+}
+*/
+/*
+sqlcluster_name              
+sqlaag_name                  
+sql_sysadmin_login           
+sql_sysadmin_password        
+sql_service_account_login    
+sql_service_account_password 
+*/

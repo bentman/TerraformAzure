@@ -11,8 +11,8 @@ output "vm_addc_public_ip" {
 
 output "addc_module_vars" {
   value = {
-    vm_addc_hostname = var.vm_addc_hostname
-    domain_name = var.domain_name
+    vm_addc_hostname    = var.vm_addc_hostname
+    domain_name         = var.domain_name
     domain_netbios_name = var.domain_netbios_name
   }
   description = "A map of all variables used by the submodule."

@@ -18,7 +18,9 @@ module "v_network" {
   rg_location = azurerm_resource_group.mylab.location
   rg_name     = azurerm_resource_group.mylab.name
   tags        = var.tags
-  depends_on  = [azurerm_resource_group.mylab]
+  depends_on = [
+    azurerm_resource_group.mylab
+  ]
 }
 
 # vm-jumpbox.tf
@@ -46,7 +48,9 @@ module "vm_jumpbox" {
   vm_shutdown_hhmm    = var.vm_shutdown_hhmm
   vm_shutdown_tz      = var.vm_shutdown_tz
   tags                = var.tags
-  depends_on          = [module.v_network, data.azurerm_subnet.snet_0000_jumpbox]
+  depends_on = [
+    data.azurerm_subnet.snet_0000_jumpbox
+  ]
 }
 
 # vm-addc.tf
@@ -60,7 +64,7 @@ variable "module_vm_addc_enable" {
 }
 
 module "vm_addc" {
-  count                 = var.module_vm_addc_enable ? 1 : 0
+  count                 = var.module_vm_sqlha_enable ? 1 : 0
   source                = "./modules/vm-addc"
   lab_name              = var.lab_name
   rg_location           = azurerm_resource_group.mylab.location
@@ -76,7 +80,41 @@ module "vm_addc" {
   vm_addc_shutdown_hhmm = var.vm_shutdown_hhmm
   vm_addc_shutdown_tz   = var.vm_shutdown_tz
   tags                  = var.tags
-  depends_on            = [module.v_network, data.azurerm_subnet.snet_0128_server]
+  depends_on = [
+    data.azurerm_subnet.snet_0128_server
+  ]
 }
 
 # vm-sqlha.tf
+variable "module_vm_sqlha_enable" {
+  description = "A boolean flag to enable or disable the vm-addc.tf module"
+  type        = bool
+  default     = false // true -or- false 
+  //caution: even 'terraform plan' produces 'changed state' after toggle
+  //         if exist, resources will be destroyed on next 'apply'
+  //         false = '# to destroy' | true = '# to add ... # to destroy'
+}
+
+/*module "vm_sqlha" {
+  count                  = var.module_vm_sqlha_enable ? 1 : 0
+  source                 = "./modules/vm-sqlha"
+  lab_name               = var.lab_name
+  rg_location            = azurerm_resource_group.mylab.location
+  rg_name                = azurerm_resource_group.mylab.name
+  snet_sqlha_0064_db1    = data.azurerm_subnet.snet_0064_db1.id
+  snet_sqlha_0096_db2    = data.azurerm_subnet.snet_0096_db2.id
+  vm_sqlha_hostname = var.vm_addc_size
+  vm_sqlha_size          = var.vm_sqlha_size
+  domain_name            = var.domain_name
+  domain_netbios_name    = var.domain_netbios_name
+  vm_localadmin_user     = var.vm_localadmin_user
+  vm_localadmin_pswd     = var.vm_localadmin_pswd
+  vm_sqlha_shutdown_hhmm = var.vm_shutdown_hhmm
+  vm_sqlha_shutdown_tz   = var.vm_shutdown_tz
+  tags                   = var.tags
+  depends_on = [
+    data.azurerm_subnet.snet_0064_db1,
+    data.azurerm_subnet.snet_0096_db1,
+    module.vm_addc,
+  ]
+}*/
