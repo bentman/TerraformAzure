@@ -116,13 +116,15 @@ resource "azurerm_virtual_machine_extension" "vm_addc_addsdns" {
 resource "null_resource" "wait_addc_adddns_reboot" {
   provisioner "local-exec" {
     command = <<EOT
-      for ((i = 0; i < 30; i++)); do
-        if ping -n 1 -w 1 ${azurerm_public_ip.vm_addc_pip.ip_address} > nul; then
+      powershell -nologo -noprofile -command '
+      for ($i = 0; $i -lt 30; $i++) {
+        if (Test-Connection -ComputerName ${azurerm_public_ip.vm_addc_pip.ip_address} -Count 1 -Quiet) {
           exit 0
-        fi
-        sleep 10
-      done
+        }
+        Start-Sleep -Seconds 10
+      }
       exit 1
+      '
     EOT
   }
   depends_on = [azurerm_virtual_machine_extension.vm_addc_addsdns]
@@ -150,22 +152,24 @@ resource "null_resource" "vm_addc_dcpromo" {
       "Restart-Computer -Delay 15s -Force"
     ]
   }
-  depends_on = [ null_resource.wait_addc_adddns_reboot ]
+  depends_on = [null_resource.wait_addc_adddns_reboot]
 }
 
 resource "null_resource" "wait_addc_dcpromo_reboot" {
   provisioner "local-exec" {
     command = <<EOT
-      for ((i = 0; i < 30; i++)); do
-        if ping -n 1 -w 1 ${azurerm_public_ip.vm_addc_pip.ip_address} > nul; then
+      powershell -nologo -noprofile -command '
+      for ($i = 0; $i -lt 30; $i++) {
+        if (Test-Connection -ComputerName ${azurerm_public_ip.vm_addc_pip.ip_address} -Count 1 -Quiet) {
           exit 0
-        fi
-        sleep 10
-      done
+        }
+        Start-Sleep -Seconds 10
+      }
       exit 1
+      '
     EOT
   }
-  depends_on = [ null_resource.vm_addc_dcpromo ]
+  depends_on = [null_resource.vm_addc_dcpromo]
 }
 
 # Create NSG server
