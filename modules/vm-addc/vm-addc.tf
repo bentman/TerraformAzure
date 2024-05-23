@@ -83,12 +83,12 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutown" {
 
 resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   name                       = "InstallOpenSSH"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vmexampl.id
+  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
   publisher                  = "Microsoft.Azure.OpenSSH"
   type                       = "WindowsOpenSSH"
   type_handler_version       = "3.0"
   auto_upgrade_minor_version = true
-  depends_on                 = [azurerm_windows_virtual_machine.vmexampl]
+  depends_on                 = [azurerm_windows_virtual_machine.vm_addc]
   lifecycle {
     ignore_changes = [tags]
   }
@@ -96,7 +96,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
 
 resource "azurerm_virtual_machine_extension" "vm_addc_addsdns" {
   name                       = "InstallAddsDns"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vmexampl.id
+  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
   publisher                  = "Microsoft.Compute"
   type                       = "CustomScriptExtension"
   type_handler_version       = "1.10"
@@ -137,7 +137,6 @@ resource "null_resource" "vm_addc_dcpromo" {
     target_platform = "windows"
     timeout         = "15m"
   }
-
   provisioner "remote-exec" {
     inline = [
       "Start-Transcript -Path 'c:\\BUILD\\02-adds_forest.log'",
@@ -166,7 +165,7 @@ resource "null_resource" "wait_addc_dcpromo_reboot" {
       exit 1
     EOT
   }
-  depends_on = [ azurerm_virtual_machine_extension.vm_addc_dcpromo ]
+  depends_on = [ null_resource.vm_addc_dcpromo ]
 }
 
 # Create NSG server
