@@ -81,42 +81,29 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutown" {
   }
 }
 
-# vm-addc extension to Open SSH
 resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   name                       = "InstallOpenSSH"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
+  virtual_machine_id         = azurerm_windows_virtual_machine.vmexampl.id
   publisher                  = "Microsoft.Azure.OpenSSH"
   type                       = "WindowsOpenSSH"
   type_handler_version       = "3.0"
   auto_upgrade_minor_version = true
-  depends_on                 = [azurerm_windows_virtual_machine.vm_addc]
+  depends_on                 = [azurerm_windows_virtual_machine.vmexampl]
   lifecycle {
     ignore_changes = [tags]
   }
 }
 
-# extension to install DNS and AD Forest
-resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
-  name                       = "InstallGPMC"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
+resource "azurerm_virtual_machine_extension" "vm_addc_addsdns" {
+  name                       = "InstallAddsDns"
+  virtual_machine_id         = azurerm_windows_virtual_machine.vmexampl.id
   publisher                  = "Microsoft.Compute"
   type                       = "CustomScriptExtension"
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
-  /*settings = <<SETTINGS
-    {
-    "commandToExecute": "powershell.exe -Command ${local.powershell_gpmc}"
-    }
-  SETTINGS*/
   settings = jsonencode({
-    "commandToExecute" : "powershell.exe -Command ${local.powershell_gpmc}"
+    "commandToExecute" : "powershell.exe -Command ${local.powershell_addsdns}"
   })
-  timeouts {
-    create = "30m" // default is '30m'
-    update = "15m" // default is '30m'
-    read   = "5m"  // default is '5m'
-    delete = "15m" // default is '30m'
-  }
   depends_on = [
     azurerm_windows_virtual_machine.vm_addc,
     azurerm_virtual_machine_extension.vm_addc_openssh
@@ -126,20 +113,60 @@ resource "azurerm_virtual_machine_extension" "vm_addc_gpmc" {
   }
 }
 
-# time delay after gpmc
-resource "time_sleep" "vm_addc_gpmc_sleep" {
-  create_duration = "150s"
-  depends_on      = [azurerm_virtual_machine_extension.vm_addc_gpmc]
+resource "null_resource" "wait_addc_adddns_reboot" {
+  provisioner "local-exec" {
+    command = <<EOT
+      for ((i = 0; i < 30; i++)); do
+        if ping -n 1 -w 1 ${azurerm_public_ip.vm_addc_pip.ip_address} > nul; then
+          exit 0
+        fi
+        sleep 10
+      done
+      exit 1
+    EOT
+  }
+  depends_on = [azurerm_virtual_machine_extension.vm_addc_addsdns]
 }
 
-# Azure AD technical users with remote-exec module to use PowerShell
-resource "terraform_data" "vm_addc_ad_user" {
-  triggers_replace = [
-    azurerm_virtual_machine_extension.vm_addc_openssh.id,
-    azurerm_virtual_machine_extension.vm_addc_gpmc.id,
-    time_sleep.vm_addc_gpmc_sleep.id
-  ]
+resource "null_resource" "vm_addc_dcpromo" {
+  connection {
+    type            = "ssh"
+    user            = var.vm_localadmin_user
+    password        = var.vm_localadmin_pswd
+    host            = azurerm_network_interface.vm_addc_nic.private_ip_address
+    target_platform = "windows"
+    timeout         = "15m"
+  }
 
+  provisioner "remote-exec" {
+    inline = [
+      "Start-Transcript -Path 'c:\\BUILD\\02-adds_forest.log'",
+      "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted",
+      "Import-Module -Name ADDSDeployment -Verbose",
+      "Import-Module -Name DnsServer -Verbose",
+      "Install-ADDSForest -DomainName '${var.domain_name}' -DomainNetBiosName '${var.domain_netbios_name}' -InstallDns -SafeModeAdministratorPassword (ConvertTo-SecureString '${var.safemode_admin_pswd}' -AsPlainText -Force) -NoRebootOnCompletion:$true -LogPath 'C:\\BUILD\\adpromo.log' -Confirm:$false -Force -Verbose",
+      "Set-NetFirewallProfile -Profile Domain -Enabled:false",
+      "Stop-Transcript",
+      "exit 0",
+      "Restart-Computer -Delay 15s -Force"
+    ]
+  }
+  depends_on = [ null_resource.wait_addc_adddns_reboot ]
+}
+
+resource "null_resource" "wait_addc_dcpromo_reboot" {
+  provisioner "local-exec" {
+    command = <<EOT
+      for ((i = 0; i < 30; i++)); do
+        if ping -n 1 -w 1 ${azurerm_public_ip.vm_addc_pip.ip_address} > nul; then
+          exit 0
+        fi
+        sleep 10
+      done
+      exit 1
+    EOT
+  }
+  depends_on = [ azurerm_virtual_machine_extension.vm_addc_dcpromo ]
 }
 
 # Create NSG server
@@ -212,3 +239,13 @@ resource "azurerm_network_security_group" "nsg_server" {
     ignore_changes = [tags]
   }
 }
+
+/*# Azure AD technical users with remote-exec module to use PowerShell
+resource "terraform_data" "vm_addc_ad_user" {
+  triggers_replace = [
+    azurerm_virtual_machine_extension.vm_addc_openssh.id,
+    azurerm_virtual_machine_extension.vm_addc_gpmc.id,
+    time_sleep.vm_addc_gpmc_sleep.id
+  ]
+
+}*/
