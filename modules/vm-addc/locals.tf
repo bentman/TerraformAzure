@@ -97,3 +97,13 @@ resource "time_sleep" "vm_addc_addsdns_sleep" {
   depends_on      = [azurerm_virtual_machine_extension.vm_addc_addsdns]
 }
 */
+
+/*# Azure AD technical users with remote-exec module to use PowerShell
+resource "terraform_data" "vm_addc_ad_user" {
+  triggers_replace = [
+    azurerm_virtual_machine_extension.vm_addc_openssh.id,
+    azurerm_virtual_machine_extension.vm_addc_gpmc.id,
+    time_sleep.vm_addc_gpmc_sleep.id
+  ]
+
+}*/
