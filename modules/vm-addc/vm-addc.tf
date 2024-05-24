@@ -158,29 +158,30 @@ resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
 }
 
 resource "time_sleep" "vm_addc_dcpromo_wait" {
-  create_duration = "120s"
+  create_duration = "180s"
   depends_on      = [azurerm_virtual_machine_extension.vm_addc_dcpromo]
 }
 
-resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo_restart" {
-  name                       = "RestartVM"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
-  publisher                  = "Microsoft.Compute"
-  type                       = "CustomScriptExtension"
-  type_handler_version       = "1.10"
-  auto_upgrade_minor_version = true
-  settings = jsonencode({
-    "commandToExecute" : "powershell.exe -command ${local.powershell_dcpromo_restart}"
-  })
-  depends_on = [time_sleep.vm_addc_dcpromo_wait]
-  lifecycle {
-    ignore_changes = [tags]
+resource "null_resource" "vm_addc_dcpromo_restart" {
+  connection {
+    type            = "ssh"
+    user            = var.vm_localadmin_user
+    password        = var.vm_localadmin_pswd
+    host            = azurerm_public_ip.vm_addc_pip.ip_address
+    target_platform = "windows"
+    timeout         = "120s"
   }
+  provisioner "remote-exec" {
+    inline = [
+      "powershell.exe -command ${local.powershell_dcpromo_restart}"
+    ]
+  }
+  depends_on = [time_sleep.vm_addc_dcpromo_wait]
 }
 
 resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
   create_duration = "120s"
-  depends_on      = [azurerm_virtual_machine_extension.vm_addc_dcpromo_restart]
+  depends_on      = [null_resource.vm_addc_dcpromo_restart]
 }
 
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
