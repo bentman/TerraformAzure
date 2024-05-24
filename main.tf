@@ -28,7 +28,7 @@ variable "module_vm_jumpbox_enable" {
   description = "A boolean flag to enable or disable the vm-jumpbox.tf module"
   type        = bool
   default     = false // true -or- false 
-  //caution: even 'terraform plan' produces 'changed state' after toggle
+  //caution: 'terraform plan' produces 'changed state' after toggle
   //         if exist, resources will be destroyed on next 'apply'
   //         false = '# to destroy' | true = '# to add ... # to destroy'
 }
@@ -57,8 +57,8 @@ module "vm_jumpbox" {
 variable "module_vm_addc_enable" {
   description = "A boolean flag to enable or disable the vm-addc.tf module"
   type        = bool
-  default     = false // true -or- false 
-  //caution: even 'terraform plan' produces 'changed state' after toggle
+  default     = true // true -or- false 
+  //caution: 'terraform plan' produces 'changed state' after toggle
   //         if exist, resources will be destroyed on next 'apply'
   //         false = '# to destroy' | true = '# to add ... # to destroy'
 }
@@ -90,7 +90,7 @@ variable "module_vm_sqlha_enable" {
   description = "A boolean flag to enable or disable the vm-addc.tf module"
   type        = bool
   default     = false // true -or- false 
-  //caution: even 'terraform plan' produces 'changed state' after toggle
+  //caution: 'terraform plan' produces 'changed state' after toggle
   //         if exist, resources will be destroyed on next 'apply'
   //         false = '# to destroy' | true = '# to add ... # to destroy'
 }
