@@ -1,5 +1,19 @@
 #################### LOCALS ####################
-##### locals.tf (vm-addc) Windows Server 2022-Datacenter
+locals {
+  # execute script to install first domain controller in active directory forest
+  scriptName     = "Install-DomainController.ps1"
+  scriptRendered = filebase64("${path.module}/${local.scriptName}")
+  # use templatefile() to parse script parameters
+  ifTemplateFile = base64encode(templatefile("${path.module}/${local.scriptName}", {}))
+  powershell_dcpromo = jsonencode({
+    commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${local.scriptRendered}')) | Out-File -filepath ${local.scriptName}\" && powershell -ExecutionPolicy Unrestricted -File ${local.scriptName}"
+  })
+  # PoSh command to restart over SSH 
+  restart6                   = "Restart-Computer -Force"
+  powershell_dcpromo_restart = local.restart6
+}
+
+/*##### locals.tf (vm-addc) Windows Server 2022-Datacenter
 locals {
   # Generate locals for domain join parameters
   split_domain    = split(".", var.domain_name)
@@ -31,8 +45,7 @@ locals {
 
   # PoSh commands over SSH to restart
   powershell_dcpromo_restart = "${local.restart6}; ${local.exit_hck}"
-}
-
+}/*
 /*# NOTE: Server 2019 EOL January 2024 ;-)
 ##### locals.tf (vm-addc) Windows Server 2019-Datacenter
 locals {
