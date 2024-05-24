@@ -25,11 +25,14 @@ locals {
   fw_disab = "Set-NetFirewallProfile -Profile Domain -Enabled:false"
   arc_disa = "Disable-WindowsOptionalFeature -Online -FeatureName AzureArcSetup -NoRestart -LogPath 'c:\\BUILD\\disableAzureArcSetup.log' -Verbose"
   stop_log = "Stop-Transcript"
-  restart6 = "Restart-Computer -Delay 30s -Force"
+  restart6 = "Restart-Computer -Force"
   exit_hck = "exit 0"
 
   # PoSh commands over SSH to install Active Directory & DNS Features
-  powershell_addsdns = "${local.log_path}; ${local.prov_log}; ${local.posh_ssh}; ${local.nugt_sec}; ${local.nugt_ins}; ${local.psrepo_1}; ${local.add_feat}; ${local.add_rsat}; ${local.add_modu}; ${local.dns_feat}; ${local.dns_rsat}; ${local.dns_modu}; ${local.ad_promo}; ${local.ssh_open}; ${local.nla_disa}; ${local.fw_disab}; ${local.arc_disa}; ${local.stop_log}; ${local.restart6}; ${local.exit_hck}"
+  powershell_dcpromo = "${local.log_path}; ${local.prov_log}; ${local.posh_ssh}; ${local.nugt_sec}; ${local.nugt_ins}; ${local.psrepo_1}; ${local.add_feat}; ${local.add_rsat}; ${local.add_modu}; ${local.dns_feat}; ${local.dns_rsat}; ${local.dns_modu}; ${local.ad_promo}; ${local.ssh_open}; ${local.nla_disa}; ${local.fw_disab}; ${local.arc_disa}; ${local.stop_log}; ${local.restart6}; ${local.exit_hck}"
+
+  # PoSh commands over SSH to restart
+  powershell_dcpromo_restart = "${local.restart6}; ${local.exit_hck}"
 }
 
 /*# NOTE: Server 2019 EOL January 2024 ;-)
@@ -57,8 +60,8 @@ locals {
   nla_disa = "Set-ItemProperty 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp' -Name 'UserAuthentication' -Value 0"
   stop_log = "Stop-Transcript"
   exit_hck = "exit 0"
-  restart6 = "Restart-Computer -Delay 15s -Force"
+  restart6 = "Restart-Computer -Force"
 
   # PoSh commands over SSH to install Active Directory & DNS Features
-  powershell_addsdns = "${local.log_path};${local.prov_log};${local.posh_ssh};${local.nugt_sec};${local.nugt_ins};${local.psrepo_1};${local.add_feat};${local.dns_feat};${local.add_rsat};${local.dns_rsat};${local.add_modu};${local.dns_modu};${local.adcpromo};${local.nla_disa};${local.stop_log};${local.exit_hck};${local.restart6}"
+  powershell_dcpromo = "${local.log_path};${local.prov_log};${local.posh_ssh};${local.nugt_sec};${local.nugt_ins};${local.psrepo_1};${local.add_feat};${local.dns_feat};${local.add_rsat};${local.dns_rsat};${local.add_modu};${local.dns_modu};${local.adcpromo};${local.nla_disa};${local.stop_log};${local.exit_hck};${local.restart6}"
 }*/

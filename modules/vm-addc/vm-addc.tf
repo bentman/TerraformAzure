@@ -13,7 +13,7 @@ resource "azurerm_public_ip" "vm_addc_pip" {
   }
 }
 
-# vm-addc primary NIC 
+# vm-addc Primary NIC 
 resource "azurerm_network_interface" "vm_addc_nic" {
   name                          = "vm-addc-nic"
   location                      = var.rg_location
@@ -137,11 +137,11 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   auto_upgrade_minor_version = true
   depends_on                 = [azurerm_windows_virtual_machine.vm_addc]
   lifecycle {
-    ignore_changes = [tags]
+    ignore_changes = [tags, protected_settings]
   }
 }
 
-resource "azurerm_virtual_machine_extension" "vm_addc_addsdns" {
+resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
   name                       = "InstallAddsDns"
   virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
   publisher                  = "Microsoft.Compute"
@@ -149,21 +149,41 @@ resource "azurerm_virtual_machine_extension" "vm_addc_addsdns" {
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
   settings = jsonencode({
-    "commandToExecute" : "powershell.exe -command ${local.powershell_addsdns}"
+    "commandToExecute" : "powershell.exe -command ${local.powershell_dcpromo}"
   })
   depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
   lifecycle {
-    ignore_changes = [tags, settings]
+    ignore_changes = [tags, settings, protected_settings]
   }
 }
 
-resource "time_sleep" "wait_addc_adddns_reboot" {
+resource "time_sleep" "vm_addc_dcpromo_wait" {
   create_duration = "120s"
-  depends_on      = [azurerm_virtual_machine_extension.vm_addc_addsdns]
+  depends_on      = [azurerm_virtual_machine_extension.vm_addc_dcpromo]
 }
 
-# vm-addc AUTOSHUTDOWN
-resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutown" {
+resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo_restart" {
+  name                       = "RestartVM"
+  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
+  publisher                  = "Microsoft.Compute"
+  type                       = "CustomScriptExtension"
+  type_handler_version       = "1.10"
+  auto_upgrade_minor_version = true
+  settings = jsonencode({
+    "commandToExecute" : "powershell.exe -command ${local.powershell_dcpromo_restart}"
+  })
+  depends_on = [time_sleep.vm_addc_dcpromo_wait]
+  lifecycle {
+    ignore_changes = [tags, settings, protected_settings]
+  }
+}
+
+resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
+  create_duration = "120s"
+  depends_on      = [azurerm_virtual_machine_extension.vm_addc_dcpromo_restart]
+}
+
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
   virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
   location              = var.rg_location
   enabled               = true
