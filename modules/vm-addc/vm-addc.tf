@@ -37,6 +37,7 @@ resource "azurerm_network_interface" "vm_addc_nic" {
 resource "azurerm_network_interface_security_group_association" "vm_addc_nsg_assoc" {
   network_interface_id      = azurerm_network_interface.vm_addc_nic.id
   network_security_group_id = azurerm_network_security_group.nsg_server.id
+  depends_on                = [azurerm_network_interface.vm_addc_nic]
 }
 
 resource "azurerm_windows_virtual_machine" "vm_addc" {
@@ -61,9 +62,7 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
     sku       = "2022-Datacenter"
     version   = "latest"
   }
-  network_interface_ids = [
-    azurerm_network_interface.vm_addc_nic.id,
-  ]
+  network_interface_ids = [azurerm_network_interface.vm_addc_nic.id]
   lifecycle {
     ignore_changes = [tags]
   }
@@ -89,7 +88,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
   type                       = "CustomScriptExtension"
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
-  protected_settings         = local.powershell_dcpromo
+  protected_settings         = local.posh_dcpromo
   depends_on                 = [azurerm_virtual_machine_extension.vm_addc_openssh]
   lifecycle {
     ignore_changes = [tags]
@@ -112,7 +111,7 @@ resource "null_resource" "vm_addc_dcpromo_restart" {
   }
   provisioner "remote-exec" {
     inline = [
-      "powershell.exe -command ${local.powershell_dcpromo_restart}"
+      "powershell.exe -command '${local.posh_dcpromo_restart}'"
     ]
   }
   depends_on = [time_sleep.vm_addc_dcpromo_wait]
@@ -129,6 +128,7 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
   enabled               = true
   daily_recurrence_time = var.vm_addc_shutdown_hhmm
   timezone              = var.vm_addc_shutdown_tz
+  depends_on            = [azurerm_windows_virtual_machine.vm_addc]
   notification_settings {
     enabled = false
   }
@@ -202,7 +202,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
   settings = jsonencode({
-    "commandToExecute" : "powershell.exe -command ${local.powershell_dcpromo}"
+    "commandToExecute" : "powershell.exe -command ${local.posh_dcpromo}"
   })
   depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
   lifecycle {
@@ -226,7 +226,7 @@ resource "null_resource" "vm_addc_dcpromo_restart" {
   }
   provisioner "remote-exec" {
     inline = [
-      "powershell.exe -command ${local.powershell_dcpromo_restart}"
+      "powershell.exe -command ${local.posh_dcpromo_restart}"
     ]
   }
   depends_on = [time_sleep.vm_addc_dcpromo_wait]
@@ -290,7 +290,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_addsdns" {
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
   settings = jsonencode({
-    "commandToExecute" : "powershell.exe -command ${local.powershell_addsdns}"
+    "commandToExecute" : "powershell.exe -command ${local.posh_addsdns}"
   })
   depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
   lifecycle {
