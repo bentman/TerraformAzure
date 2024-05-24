@@ -75,7 +75,6 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   type                       = "WindowsOpenSSH"
   type_handler_version       = "3.0"
   auto_upgrade_minor_version = true
-  depends_on                 = [azurerm_windows_virtual_machine.vm_addc]
   lifecycle {
     ignore_changes = [tags]
   }
@@ -88,8 +87,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
   type                       = "CustomScriptExtension"
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
-  protected_settings         = local.posh_dcpromo
-  depends_on                 = [azurerm_virtual_machine_extension.vm_addc_openssh]
+  settings                   = local.posh_dcpromo
   lifecycle {
     ignore_changes = [tags]
   }
@@ -111,15 +109,10 @@ resource "null_resource" "vm_addc_dcpromo_restart" {
   }
   provisioner "remote-exec" {
     inline = [
-      "powershell.exe -command '${local.posh_dcpromo_restart}'"
+      "powershell.exe -command 'Restart-Computer -Force'"
     ]
   }
   depends_on = [time_sleep.vm_addc_dcpromo_wait]
-}
-
-resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
-  create_duration = "120s"
-  depends_on      = [null_resource.vm_addc_dcpromo_restart]
 }
 
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {

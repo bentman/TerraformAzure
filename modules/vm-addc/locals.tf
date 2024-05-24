@@ -1,6 +1,14 @@
 #################### LOCALS ####################
 ##### locals.tf (vm-addc) Windows Server 2022-Datacenter
 locals {
+  dcPromoScript   = "Install-DomainController.ps1"
+  renderedScript  = base64encode(file("${path.module}/${local.dcPromoScript}"))
+  posh_dcpromo    = jsonencode({
+    commandToExecute = "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${local.renderedScript}')) | Out-File -filepath ${local.dcPromoScript}\" && powershell -ExecutionPolicy Unrestricted -File ${local.dcPromoScript} -domain_name '${var.domain_name}' -domain_netbios_name '${var.domain_netbios_name}' -safemode_admin_pswd '${var.safemode_admin_pswd}'"
+  })
+}
+
+/*locals {
   # execute script to install first domain controller in active directory forest
   scriptName     = "Install-DomainController.ps1"
   scriptRendered = filebase64("${path.module}/${local.scriptName}")
@@ -12,7 +20,7 @@ locals {
   # PoSh command to restart over SSH 
   restart6             = "Restart-Computer -Force"
   posh_dcpromo_restart = local.restart6
-}
+}*/
 
 /* # posh script variables
 -domain_name ${var.domain_name} -domain_netbios_name ${var.domain_netbios_name} -safemode_admin_pswd ${var.safemode_admin_pswd}
