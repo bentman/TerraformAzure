@@ -137,7 +137,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   auto_upgrade_minor_version = true
   depends_on                 = [azurerm_windows_virtual_machine.vm_addc]
   lifecycle {
-    ignore_changes = [tags, protected_settings]
+    ignore_changes = [tags]
   }
 }
 
@@ -153,7 +153,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
   })
   depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
   lifecycle {
-    ignore_changes = [tags, settings, protected_settings]
+    ignore_changes = [tags]
   }
 }
 
@@ -174,7 +174,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo_restart" {
   })
   depends_on = [time_sleep.vm_addc_dcpromo_wait]
   lifecycle {
-    ignore_changes = [tags, settings, protected_settings]
+    ignore_changes = [tags]
   }
 }
 
@@ -250,7 +250,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_addsdns" {
   })
   depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
   lifecycle {
-    ignore_changes = [tags, settings]
+    ignore_changes = [tags]
   }
 }
 
