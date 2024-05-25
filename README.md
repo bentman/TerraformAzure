@@ -2,49 +2,47 @@
 
 Build an Azure lab environment using Terraform. Journey into mastering infrastructure as code by creating a real-world cloud architecture that can also be used as a learning lab. Gain hands-on experience with tools like GitHub, Azure DevOps pipelines, and configuring virtual machines. This project focuses on incremental learning to develop skills one step at a time. 🚀🌐🧭
 
-**Step 1: Set Up Your Toolkit**
+## Step 1: Set Up Your Toolkit
 
 - [Install Terraform on Windows with Azure PowerShell](https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-windows-powershell)
 - [Write basic Terraform scripts to interact with Azure services.](https://developer.hashicorp.com/terraform/tutorials/azure-get-started)
 
-**Step 2: Deploy Network & Virtual Machines**
+## Step 2: Deploy Network & Virtual Machines
 
 - [Build your Azure network with Terraform, testing components like VNETs and subnets.](https://learn.microsoft.com/en-us/azure/developer/terraform/hub-spoke-on-prem)
 - [Quickstart: Use Terraform to create a Windows VM](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/quick-create-terraform)
-- Deploy "Spot" VMs for cost-efficiency, and manage them with Terraform (links below from Registry).
-    - [azurerm_windows_virtual_machine](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine)
-    - [azurerm_linux_virtual_machine](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine)
 
-**Step 3: Connect & Automate**
+## Step 3: Connect & Automate
 
 - Link your Azure account with your GitHub repository.
 - Set up GitHub Actions for automated workflows.
 - Connect your GitHub repository with Azure DevOps.
 - Prepare Azure DevOps for pipeline creation and Terraform integration.
 
-**Step 4: Build Your Foundation**
+## Step 4: Build Your Foundation
 
 - Write a YAML pipeline for Terraform deployments and test it.
 - Use Terraform to create and destroy a sub-tenant for controlled deployments.
-- Apply simple configurations like Azure AD, storage blobs, or basic applications (e.g., WordPress). 
+- Apply simple configurations like Azure AD, storage blobs, or basic applications (e.g., WordPress).
 - Destroy them afterwards for a solid foundation.
 
-**Step 5: Learn & Expand**
+## Step 5: Learn & Expand
 
 - With each apply/destroy cycle, build upon previous components, creating a more complex lab.
 - Use Git branches to manage different stages of your lab's evolution.
 - Continuously learn and add new features, exploring advanced Terraform techniques and community resources.
 
-**Bonus Tips:**
+## Bonus Tips
 
 - Start with smaller, independent modules for easier testing and debugging.
 - Utilize Terraform state management for consistent deployments.
 - Follow IaC best practices for clean and maintainable code.
 
-**Ready to Start?** 
+## Ready to Start?
 ... me too! <gulp>
 
-**Helpful Links**
+## Helpful Links
+
 - [Terraform Azure | HashiCorp](https://developer.hashicorp.com/terraform/tutorials/azure-get-started)
 - [Terraform Azure | Microsoft](https://learn.microsoft.com/en-us/azure/developer/terraform/)
 - [Create on-premises virtual network in Azure using Terraform](https://learn.microsoft.com/en-us/azure/developer/terraform/hub-spoke-on-prem)
@@ -61,6 +59,6 @@ Contributions are welcome. Please open an issue or submit a pull request if you 
 ### GNU General Public License
 This script is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with this script.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with this script. If not, see <https://www.gnu.org/licenses/>.
