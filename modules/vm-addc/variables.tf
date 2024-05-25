@@ -1,91 +1,105 @@
 #################### VARIABLES ####################
 ########## vm-addc 
+# Computername for domain controller
 variable "vm_addc_hostname" {
+  description = "Computername for domain controller"
   type        = string
   default     = "vmaddc"
-  description = "Computername for domain controller"
 }
 
-# vm-addc subnet
+# vm-server subnet
 variable "vm_server_snet_id" {
-  type        = string
   description = "vm-server subnet"
+  type        = string
 }
 
-# vm common Variables
+########## vm common Variables
+# vm local admin username - NOTE: becomes domain admin after dcpromo
 variable "vm_localadmin_user" {
+  description = "vm local admin username - NOTE: becomes domain admin after dcpromo"
   type        = string
   default     = "localadmin"
-  description = "vm local admin username - NOTE: becomes domain admin after dcpromo"
   sensitive   = true
 }
 
+# vm local admin password - NOTE: becomes domain admin after dcpromo
 variable "vm_localadmin_pswd" {
+  description = "vm local admin password - NOTE: becomes domain admin after dcpromo"
   type        = string
   default     = "P@ssw0rd!234"
-  description = "vm local admin password - NOTE: becomes domain admin after dcpromo"
   sensitive   = true
 }
 
+# The size of the Virtual Machine(s) type.
 variable "vm_addc_size" {
+  description = "The size of the Virtual Machine(s) type."
   type        = string
   default     = "Standard_D2s_v3"
-  description = "The size of the Virtual Machine(s) type."
 }
 
+# Time for VM Shutdown HHMM
 variable "vm_addc_shutdown_hhmm" {
+  description = "Time for VM Shutdown HHMM"
   type        = string
   default     = "0000" // midnight ;-)
-  description = "Time for VM Shutdown HHMM"
 }
 
+# Time Zone for VM Shutdown
 variable "vm_addc_shutdown_tz" {
+  description = "Time Zone for VM Shutdown"
   type        = string
   default     = "Pacific Standard Time"
-  description = "Time Zone for VM Shutdown"
 }
 
 ########## addc 
+# domain name
 variable "domain_name" {
+  description = "domain name"
   type        = string
   default     = "mylab.mytenant.onmicrosoft.com"
-  description = "domain name"
 }
 
+# domain netbios name
 variable "domain_netbios_name" {
+  description = "domain netbios name"
   type        = string
   default     = "MYLAB"
-  description = "domain netbios name"
 }
 
+# domain safemode password
 variable "safemode_admin_pswd" {
+  description = "domain safemode password"
   type        = string
   default     = "P@ssw0rd!234"
-  description = "domain safemode password"
   sensitive   = true
 }
 
 ##### RESOURCE VARIABLES
+# lab name (suggest 'lab', 'dev', 'qa', 'test', etc)
 variable "lab_name" {
+  description = "lab name (suggest 'lab', 'dev', 'qa', 'test', etc)"
   type        = string
   default     = "mylab"
-  description = "lab name (suggest 'lab', 'dev', 'qa', 'test', etc)"
 }
 
+# azure region for lab
 variable "rg_location" {
+  description = "azure region for lab"
   type        = string
   default     = "westus"
-  description = "azure region for lab"
 }
 
+# azure region for lab
 variable "rg_name" {
+  description = "resource group name (suggest 'lab', 'dev', 'qa', 'test', etc)"
   type        = string
   default     = "rg-mylab"
-  description = "azure region for lab"
 }
 
+# A map of tags to assign to the resources
 variable "tags" {
-  type = map(string)
+  description = "A map of tags to assign to the resources"
+  type        = map(string)
   default = {
     "source"      = "terraform"
     "project"     = "learning"

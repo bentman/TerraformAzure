@@ -1,5 +1,5 @@
 ########## vm-addc (domain controller)
-# vm-addc Publip IP with internet DNS hostname
+# vm-addc Public IP with internet DNS hostname
 resource "azurerm_public_ip" "vm_addc_pip" {
   name                = "vm-addc-pip"
   location            = var.rg_location
@@ -39,7 +39,7 @@ resource "azurerm_network_interface_security_group_association" "vm_addc_nsg_ass
   network_security_group_id = azurerm_network_security_group.nsg_server.id
 }
 
-# create vm-addc
+# Create vm-addc
 resource "azurerm_windows_virtual_machine" "vm_addc" {
   name                = "vm-addc"
   location            = var.rg_location
@@ -68,7 +68,7 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   }
 }
 
-# enable dev\test shut down schedule (to save $)
+# Enable dev\test shutdown schedule (to save $)
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
   virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
   location              = var.rg_location
@@ -81,7 +81,7 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
   }
 }
 
-# enable OpenSSH for remote administration
+# Enable OpenSSH for remote administration
 resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   name                       = "InstallOpenSSH"
   virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
@@ -94,6 +94,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   }
 }
 
+# Copy DCPromo script to VM
 resource "null_resource" "vm_addc_dcpromo_copy" {
   provisioner "file" {
     source      = "${path.module}/${local.dcPromoScript}"
@@ -107,9 +108,11 @@ resource "null_resource" "vm_addc_dcpromo_copy" {
       timeout         = "120s"
     }
   }
+
   depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
 }
 
+# Execute DCPromo script on VM
 resource "null_resource" "vm_addc_dcpromo_exec" {
   provisioner "remote-exec" {
     inline = [
@@ -127,11 +130,13 @@ resource "null_resource" "vm_addc_dcpromo_exec" {
   depends_on = [null_resource.vm_addc_dcpromo_copy]
 }
 
+# Wait for DCPromo to complete
 resource "time_sleep" "vm_addc_dcpromo_wait" {
   create_duration = "2m"
   depends_on      = [null_resource.vm_addc_dcpromo_exec]
 }
 
+# Restart VM after DCPromo
 resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
   name               = "RestartCommand"
   location           = var.rg_location
@@ -148,7 +153,7 @@ resource "azurerm_network_security_group" "nsg_server" {
   location            = var.rg_location
   resource_group_name = var.rg_name
   tags                = var.tags
-  # nsg-server to allow SSH
+  # NSG rule to allow SSH
   security_rule {
     name                       = "vnet-nsg-server-SSH"
     priority                   = 100
@@ -160,7 +165,7 @@ resource "azurerm_network_security_group" "nsg_server" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  # nsg-server to allow RDP
+  # NSG rule to allow RDP
   security_rule {
     name                       = "vnet-nsg-server-RDP"
     priority                   = 110
@@ -172,7 +177,7 @@ resource "azurerm_network_security_group" "nsg_server" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  # nsg-server to allow ping
+  # NSG rule to allow ping
   security_rule {
     name                       = "vnet-nsg-server-ping"
     priority                   = 900
@@ -184,7 +189,7 @@ resource "azurerm_network_security_group" "nsg_server" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  # nsg-server to allow ALL
+  # NSG rule to allow all internal traffic
   security_rule {
     name                       = "vnet-nsg-server-local-all"
     priority                   = 1000
