@@ -3,10 +3,12 @@
 # vm-addc OUTPUTS 
 output "vm_addc_public_name" {
   value = azurerm_public_ip.vm_addc_pip.fqdn
+  description = "The public DNS name of addc VM"
 }
 
 output "vm_addc_public_ip" {
   value = azurerm_public_ip.vm_addc_pip.ip_address
+  description = "The public IP address of addc VM"
 }
 
 output "addc_module_vars" {
