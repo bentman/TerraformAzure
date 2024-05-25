@@ -48,12 +48,12 @@ output "vm_jumplin_public_ip" {
 ##### vm-addc.tf outputs
 output "vm_addc_public_name" {
   value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_name : null
-  description = "The public DNS name of addc VM, if exists"
+  description = "The public DNS name of vm-addc, if exists"
 }
 
 output "vm_addc_public_ip" {
   value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_ip : null
-  description = "The public IP address of addc VM, if exists"
+  description = "The public IP address of vm-addc VM, if exists"
 }
 
 output "addc_module_vars" {

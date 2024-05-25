@@ -22,6 +22,4 @@ Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStat
 Set-NetFirewallProfile -Profile Domain -Enabled:false
 Disable-WindowsOptionalFeature -Online -FeatureName AzureArcSetup -NoRestart -LogPath 'c:\BUILD\disableAzureArcSetup.log' -Verbose
 Stop-Transcript
-Restart-Computer -Force
-# exit 0
-
+exit 0

@@ -68,6 +68,19 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   }
 }
 
+# enable dev\test shut down schedule (to save $)
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
+  virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
+  location              = var.rg_location
+  enabled               = true
+  daily_recurrence_time = var.vm_addc_shutdown_hhmm
+  timezone              = var.vm_addc_shutdown_tz
+  depends_on            = [azurerm_windows_virtual_machine.vm_addc]
+  notification_settings {
+    enabled = false
+  }
+}
+
 # enable OpenSSH for remote administration
 resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   name                       = "InstallOpenSSH"
@@ -81,34 +94,52 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   }
 }
 
-# setup vm-addc as first domain controller in active directory forest
-resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
-  name                       = "InstallAddsDns"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
-  publisher                  = "Microsoft.Compute"
-  type                       = "CustomScriptExtension"
-  type_handler_version       = "1.10"
-  auto_upgrade_minor_version = true
-  settings = jsonencode({
-    "commandToExecute" = "powershell.exe -EncodedCommand ${base64encode(data.template_file.dc_promo.rendered)}"
-  })
-  depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
-  lifecycle {
-    ignore_changes = [tags]
+resource "null_resource" "vm_addc_dcpromo_copy" {
+  provisioner "file" {
+    source      = "${path.module}/${local.dcPromoScript}"
+    destination = "C:\\${local.dcPromoScript}"
+    connection {
+      type            = "ssh"
+      user            = var.vm_localadmin_user
+      password        = var.vm_localadmin_pswd
+      host            = azurerm_public_ip.vm_addc_pip.ip_address
+      target_platform = "windows"
+      timeout         = "120s"
+    }
   }
+  depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
 }
 
-# enable dev\test shut down schedule (to save $)
-resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
-  virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
-  location              = var.rg_location
-  enabled               = true
-  daily_recurrence_time = var.vm_addc_shutdown_hhmm
-  timezone              = var.vm_addc_shutdown_tz
-  depends_on            = [azurerm_windows_virtual_machine.vm_addc]
-  notification_settings {
-    enabled = false
+resource "null_resource" "vm_addc_dcpromo_exec" {
+  provisioner "remote-exec" {
+    inline = [
+      "powershell.exe -ExecutionPolicy Unrestricted -File C:\\${local.dcPromoScript} -domain_name ${var.domain_name} -domain_netbios_name ${var.domain_netbios_name} -safemode_admin_pswd ${var.safemode_admin_pswd}"
+    ]
+    connection {
+      type            = "ssh"
+      user            = var.vm_localadmin_user
+      password        = var.vm_localadmin_pswd
+      host            = azurerm_public_ip.vm_addc_pip.ip_address
+      target_platform = "windows"
+      timeout         = "20m"
+    }
   }
+  depends_on = [null_resource.vm_addc_dcpromo_copy]
+}
+
+resource "time_sleep" "vm_addc_dcpromo_wait" {
+  create_duration = "2m"
+  depends_on      = [null_resource.vm_addc_dcpromo_exec]
+}
+
+resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
+  name               = "RestartCommand"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
+  source {
+    script = "Restart-Computer -Force"
+  }
+  depends_on = [time_sleep.vm_addc_dcpromo_wait]
 }
 
 ########## Create NSG for vm-addc (& other servers)
