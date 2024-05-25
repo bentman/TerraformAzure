@@ -1,16 +1,16 @@
 #################### OUTPUTS ####################
+
+# Outputs the name of the virtual network
 output "lab_network_vnet_name" {
   value = azurerm_virtual_network.azurerm_virtual_network.name
 }
 
+# Outputs the address space of the virtual network
 output "lab_network_vnet" {
   value = azurerm_virtual_network.azurerm_virtual_network.address_space[0]
 }
 
-/*output "lab_network_snet" {
-  value = { for s in azurerm_virtual_network.azurerm_virtual_network.subnets : s.name => s.address_prefix }
-}*/
-
+# Outputs the address prefixes of the subnets within the virtual network
 output "lab_network_snet" {
   value = {
     "snet-0.000-jumpbox" = azurerm_subnet.snet_0000_jumpbox.address_prefixes[0],
@@ -22,6 +22,7 @@ output "lab_network_snet" {
   }
 }
 
+# Outputs the public IP address of the NAT gateway
 output "lab_gw_pip" {
   value = azurerm_public_ip.vnet_gw_pip.ip_address
 }
