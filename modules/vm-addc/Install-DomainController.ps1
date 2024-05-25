@@ -8,6 +8,8 @@ param (
 $safe_admin_pswd = ConvertTo-SecureString $safemode_admin_pswd -AsPlainText -Force
 New-Item -Path 'c:\BUILD\' -ItemType Directory -Force -ea 0
 Start-Transcript -Path 'c:\BUILD\00-Provision.log'
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 Install-WindowsFeature -Name AD-Domain-Services -IncludeAllSubFeature -Verbose
 Install-WindowsFeature -Name RSAT-AD-Tools -Verbose
