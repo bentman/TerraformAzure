@@ -37,9 +37,9 @@ resource "azurerm_network_interface" "vm_addc_nic" {
 resource "azurerm_network_interface_security_group_association" "vm_addc_nsg_assoc" {
   network_interface_id      = azurerm_network_interface.vm_addc_nic.id
   network_security_group_id = azurerm_network_security_group.nsg_server.id
-  depends_on                = [azurerm_network_interface.vm_addc_nic]
 }
 
+# create vm-addc
 resource "azurerm_windows_virtual_machine" "vm_addc" {
   name                = "vm-addc"
   location            = var.rg_location
@@ -68,6 +68,7 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   }
 }
 
+# enable OpenSSH for remote administration
 resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   name                       = "InstallOpenSSH"
   virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
@@ -80,6 +81,7 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   }
 }
 
+# setup vm-addc as first domain controller in active directory forest
 resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
   name                       = "InstallAddsDns"
   virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
@@ -87,34 +89,16 @@ resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
   type                       = "CustomScriptExtension"
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
-  settings                   = local.posh_dcpromo
+  settings = jsonencode({
+    "commandToExecute" = "powershell.exe -EncodedCommand ${base64encode(data.template_file.dc_promo.rendered)}"
+  })
+  depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
   lifecycle {
     ignore_changes = [tags]
   }
 }
 
-resource "time_sleep" "vm_addc_dcpromo_wait" {
-  create_duration = "180s"
-  depends_on      = [azurerm_virtual_machine_extension.vm_addc_dcpromo]
-}
-
-resource "null_resource" "vm_addc_dcpromo_restart" {
-  connection {
-    type            = "ssh"
-    user            = var.vm_localadmin_user
-    password        = var.vm_localadmin_pswd
-    host            = azurerm_public_ip.vm_addc_pip.ip_address
-    target_platform = "windows"
-    timeout         = "120s"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "powershell.exe -command 'Restart-Computer -Force'"
-    ]
-  }
-  depends_on = [time_sleep.vm_addc_dcpromo_wait]
-}
-
+# enable dev\test shut down schedule (to save $)
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
   virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
   location              = var.rg_location
@@ -127,7 +111,7 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
   }
 }
 
-########## Create NSG for servers
+########## Create NSG for vm-addc (& other servers)
 resource "azurerm_network_security_group" "nsg_server" {
   name                = "vnet-nsg-server"
   location            = var.rg_location
@@ -185,113 +169,3 @@ resource "azurerm_network_security_group" "nsg_server" {
     ignore_changes = [tags]
   }
 }
-
-/*
-resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo" {
-  name                       = "InstallAddsDns"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
-  publisher                  = "Microsoft.Compute"
-  type                       = "CustomScriptExtension"
-  type_handler_version       = "1.10"
-  auto_upgrade_minor_version = true
-  settings = jsonencode({
-    "commandToExecute" : "powershell.exe -command ${local.posh_dcpromo}"
-  })
-  depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-
-resource "time_sleep" "vm_addc_dcpromo_wait" {
-  create_duration = "180s"
-  depends_on      = [azurerm_virtual_machine_extension.vm_addc_dcpromo]
-}
-
-resource "null_resource" "vm_addc_dcpromo_restart" {
-  connection {
-    type            = "ssh"
-    user            = var.vm_localadmin_user
-    password        = var.vm_localadmin_pswd
-    host            = azurerm_public_ip.vm_addc_pip.ip_address
-    target_platform = "windows"
-    timeout         = "120s"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "powershell.exe -command ${local.posh_dcpromo_restart}"
-    ]
-  }
-  depends_on = [time_sleep.vm_addc_dcpromo_wait]
-}
-
-resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
-  create_duration = "120s"
-  depends_on      = [null_resource.vm_addc_dcpromo_restart]
-}
-*/
-
-/*# NOTE: Server 2019 EOL January 2024 ;-)
-resource "azurerm_windows_virtual_machine" "vm_addc" {
-  name                = "vm-addc"
-  location            = var.rg_location
-  resource_group_name = var.rg_name
-  size                = var.vm_addc_size
-  computer_name       = var.vm_addc_hostname
-  admin_username      = var.vm_localadmin_user
-  admin_password      = var.vm_localadmin_pswd
-  license_type        = "Windows_Server"
-  tags                = var.tags
-  os_disk {
-    name                 = "vm-addc-dsk0os"
-    caching              = "ReadWrite"
-    disk_size_gb         = 127
-    storage_account_type = "Standard_LRS"
-  }
-  source_image_reference {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2019-Datacenter"
-    version   = "latest"
-  }
-  network_interface_ids = [
-    azurerm_network_interface.vm_addc_nic.id,
-  ]
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-
-resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
-  name                       = "InstallOpenSSH"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
-  publisher                  = "Microsoft.Azure.OpenSSH"
-  type                       = "WindowsOpenSSH"
-  type_handler_version       = "3.0"
-  auto_upgrade_minor_version = true
-  depends_on                 = [azurerm_windows_virtual_machine.vm_addc]
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-
-resource "azurerm_virtual_machine_extension" "vm_addc_addsdns" {
-  name                       = "InstallAddsDns"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
-  publisher                  = "Microsoft.Compute"
-  type                       = "CustomScriptExtension"
-  type_handler_version       = "1.10"
-  auto_upgrade_minor_version = true
-  settings = jsonencode({
-    "commandToExecute" : "powershell.exe -command ${local.posh_addsdns}"
-  })
-  depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-
-resource "time_sleep" "wait_addc_adddns_reboot" {
-  create_duration = "120s"
-  depends_on      = [azurerm_virtual_machine_extension.vm_addc_addsdns]
-}*/
