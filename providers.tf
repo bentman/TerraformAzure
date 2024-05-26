@@ -2,22 +2,22 @@
 # Define the required providers and Terraform version
 terraform {
   required_providers {
-    # AzureRM provider for managing Azure resources
+    # Provider for managing Azure resources
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 3.0"
     }
-    # Random provider for generating random values
+    # Provider for generating random values
     random = {
       source  = "hashicorp/random"
       version = "~> 3.0"
     }
-    # Null provider for using null resources
+    # Provider for using null resources
     null = {
       source  = "hashicorp/null"
       version = "~> 3.0"
     }
-    # TLS provider for managing TLS certificates
+    # Provider for managing TLS certificates
     tls = {
       source  = "hashicorp/tls"
       version = "~> 3.0"

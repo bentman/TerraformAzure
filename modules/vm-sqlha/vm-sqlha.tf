@@ -247,7 +247,6 @@ PROTECTED_SETTINGS
 
   depends_on = [
     azurerm_windows_virtual_machine.vm_sqlha,
-    null_resource.vm_addc_ad_user
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -312,7 +311,6 @@ resource "terraform_data" "sql_sysadmin" {
   }
   depends_on = [
     azurerm_virtual_machine_extension.openssh_sqlha,
-    null_resource.vm_addc_ad_user
   ]
 }
 
@@ -401,7 +399,6 @@ resource "terraform_data" "cluster_acl" {
   }
   depends_on = [
     azurerm_virtual_machine_extension.openssh_sqlha,
-    null_resource.vm_addc_ad_user
   ]
 }
 

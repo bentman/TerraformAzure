@@ -132,16 +132,15 @@ resource "null_resource" "vm_addc_dcpromo_exec" {
 
 # Wait for DCPromo to complete
 resource "time_sleep" "vm_addc_dcpromo_wait" {
-  create_duration = "2m"
+  create_duration = "3m"
   depends_on      = [null_resource.vm_addc_dcpromo_exec]
 }
 
 # SSH connection to create new OU and technical users for SQL installation
 resource "terraform_data" "vm_addc_add_users" {
   triggers_replace = [
-    azurerm_virtual_machine_extension.openssh.id,
-    azurerm_virtual_machine_extension.gpmc.id,
-    time_sleep.gpmc.id
+    azurerm_virtual_machine_extension.vm_addc_openssh,
+    time_sleep.vm_addc_dcpromo_wait
   ]
   provisioner "remote-exec" {
     connection {
