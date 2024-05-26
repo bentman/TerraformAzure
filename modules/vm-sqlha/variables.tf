@@ -6,16 +6,14 @@ variable "vm_sqlha_count" {
   default     = 2
 }
 
-variable "vm_sqlha_hostname" {
-  description = "Computername for vm-sqlha appended by vm_sqlha_count #"
+variable "sqlaag_name" {
+  description = "Name of the SQL AG (Availability Group)"
   type        = string
-  default     = "vm-sqlha" //  no more than a total of 14 char + vm_sqlha_count
 }
 
-variable "vm_sqlha_size" {
-  description = "The size of the Virtual Machine(s) type."
+variable "sqlcluster_name" {
+  description = "Name of the SQL cluster"
   type        = string
-  default     = "Standard_D2s_v3"
 }
 
 variable "snet_sqlha_0064_db1_id" {
@@ -38,6 +36,33 @@ variable "snet_sqlha_0096_db2_prefixes" {
   type        = list(string)
 }
 
+# vm common Variables
+variable "vm_localadmin_user" {
+  description = "vm local admin username - NOTE: becomes domain admin after dcpromo"
+  type        = string
+  default     = "localadmin"
+  sensitive   = true
+}
+
+variable "vm_localadmin_pswd" {
+  description = "vm local admin password - NOTE: becomes domain admin after dcpromo"
+  type        = string
+  default     = "P@ssw0rd!234"
+  sensitive   = true
+}
+
+variable "vm_sqlha_hostname" {
+  description = "Computername for vm-sqlha appended by vm_sqlha_count #"
+  type        = string
+  default     = "vm-sqlha" // maximum of 14 char
+}
+
+variable "vm_sqlha_size" {
+  description = "The size of the Virtual Machine(s) type."
+  type        = string
+  default     = "Standard_D2s_v3"
+}
+
 variable "vm_sqlha_shutdown_hhmm" {
   description = "Time for VM Shutdown (HHMM)"
   type        = string
@@ -48,16 +73,6 @@ variable "vm_sqlha_shutdown_tz" {
   description = "Time Zone for VM Shutdown"
   type        = string
   default     = "Pacific Standard Time"
-}
-
-variable "sqlcluster_name" {
-  description = "Name of the SQL cluster"
-  type        = string
-}
-
-variable "sqlaag_name" {
-  description = "Name of the SQL AG (Availability Group)"
-  type        = string
 }
 
 variable "sql_sysadmin_user" {
@@ -130,21 +145,6 @@ variable "sql_image_sku" {
   default     = "Developer"
 }
 
-# vm common Variables
-variable "vm_localadmin_user" {
-  description = "vm local admin username - NOTE: becomes domain admin after dcpromo"
-  type        = string
-  default     = "localadmin"
-  sensitive   = true
-}
-
-variable "vm_localadmin_pswd" {
-  description = "vm local admin password - NOTE: becomes domain admin after dcpromo"
-  type        = string
-  default     = "P@ssw0rd!234"
-  sensitive   = true
-}
-
 ########## addc 
 variable "domain_name" {
   description = "Domain name"
@@ -189,16 +189,16 @@ variable "lab_name" {
   default     = "mylab"
 }
 
-variable "rg_location" {
-  description = "azure region for lab"
-  type        = string
-  default     = "westus"
-}
-
 variable "rg_name" {
   description = "azure region for lab"
   type        = string
   default     = "rg-mylab"
+}
+
+variable "rg_location" {
+  description = "azure region for lab"
+  type        = string
+  default     = "westus"
 }
 
 variable "tags" {

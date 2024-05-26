@@ -42,9 +42,15 @@ variable "vm_localadmin_pswd" {
 
 ##### RESOURCE VARIABLES
 variable "lab_name" {
-  description = "The name of the lab environment ('lab', 'dev', 'qa', 'test', etc.)"
+  description = "lab name (suggest 'lab', 'dev', 'qa', 'test', etc)"
   type        = string
   default     = "mylab"
+}
+
+variable "rg_name" {
+  description = "resource group name (suggest 'lab', 'dev', 'qa', 'test', etc)"
+  type        = string
+  default     = "rg-mylab"
 }
 
 variable "rg_location" {
@@ -64,18 +70,18 @@ variable "tags" {
 }
 
 ########## vm-jumpBox
-# vm-jumpWin Hostname
-variable "vm_jumpwin_hostname" {
-  description = "Computer name for the Windows VM jumpbox"
-  type        = string
-  default     = "jumpwin007" // fail if not unique in public DNS
-}
-
 # vm-jumpLin Hostname
 variable "vm_jumplin_hostname" {
   description = "Computer name for the Linux VM jumpbox"
   type        = string
   default     = "jumplin008" // fail if not unique in public DNS
+}
+
+# vm-jumpWin Hostname
+variable "vm_jumpwin_hostname" {
+  description = "Computer name for the Windows VM jumpbox"
+  type        = string
+  default     = "jumpwin007" // fail if not unique in public DNS
 }
 
 # vm common Variables
@@ -157,10 +163,20 @@ variable "safemode_admin_pswd" {
 }
 
 ########## vm-sqlha 
+variable "sqlaag_name" {
+  description = "Name of the SQL AG (Availability Group)"
+  type        = string
+}
+
+variable "sqlcluster_name" {
+  description = "Name of the SQL cluster"
+  type        = string
+}
+
 variable "vm_sqlha_hostname" {
   description = "Computername for vm-sqlha appended by vm_sqlha_count #"
   type        = string
-  default     = "vm-sqlha" //  no more than a total of 14 char + vm_sqlha_count
+  default     = "vm-sqlha" // maximum of 14 char
 }
 
 variable "vm_sqlha_size" {
@@ -179,16 +195,6 @@ variable "vm_sqlha_shutdown_tz" {
   description = "Time Zone for VM Shutdown"
   type        = string
   default     = "Pacific Standard Time"
-}
-
-variable "sqlcluster_name" {
-  description = "Name of the SQL cluster"
-  type        = string
-}
-
-variable "sqlaag_name" {
-  description = "Name of the SQL AG (Availability Group)"
-  type        = string
 }
 
 variable "sql_sysadmin_user" {
@@ -212,3 +218,5 @@ variable "sql_svc_acct_pswd" {
   type        = string
   sensitive   = true
 }
+
+

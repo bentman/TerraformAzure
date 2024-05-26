@@ -2,7 +2,7 @@
 ##### RESOURCES
 # Create Lab Resource Group
 resource "azurerm_resource_group" "mylab" {
-  name     = "rg-${var.lab_name}-${var.rg_location}"
+  name     = var.rg_name
   location = var.rg_location
   tags     = var.tags
   lifecycle {
