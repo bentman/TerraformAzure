@@ -20,24 +20,6 @@ resource "azurerm_storage_container" "sqlha_quorum" {
   container_access_type = "private"
 }
 
-########## vm-addc
-# SSH connection to create new OU and technical users for SQL installation
-resource "null_resource" "vm_addc_ad_user" {
-  provisioner "remote-exec" {
-    connection {
-      type            = "ssh"
-      user            = var.domain_admin_user
-      password        = var.domain_admin_pswd
-      host            = var.vm_addc_public_ip
-      target_platform = "windows"
-      timeout         = "1m"
-    }
-    inline = [
-      "powershell.exe -Command \"${join(";", local.powershell_add_users)}\""
-    ]
-  }
-}
-
 ########## vm-sqlha
 # vm-sqlha Publip IP with internet DNS hostname
 resource "azurerm_public_ip" "vm_sqlha_pip" {
@@ -366,12 +348,12 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
   sql_virtual_machine_group_id     = azurerm_mssql_virtual_machine_group.sqlha_vmg.id
   sql_connectivity_port            = 1433
   sql_connectivity_type            = "PRIVATE"
-  sql_connectivity_update_password = var.sql_sysadmin_password
-  sql_connectivity_update_username = var.sql_sysadmin_login
+  sql_connectivity_update_password = var.sql_sysadmin_pswd
+  sql_connectivity_update_username = var.sql_sysadmin_user
   wsfc_domain_credential {
-    cluster_bootstrap_account_password = var.sql_service_account_password # install account
-    cluster_operator_account_password  = var.sql_service_account_password # install account
-    sql_service_account_password       = var.sql_service_account_password # sqlsvc account
+    cluster_bootstrap_account_password = var.sql_svc_acct_pswd # install account
+    cluster_operator_account_password  = var.sql_svc_acct_pswd # install account
+    sql_service_account_password       = var.sql_svc_acct_pswd # sqlsvc account
   }
   storage_configuration {
     disk_type             = "NEW"

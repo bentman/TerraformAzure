@@ -191,23 +191,23 @@ variable "sqlaag_name" {
   type        = string
 }
 
-variable "sql_sysadmin_login" {
+variable "sql_sysadmin_user" {
   description = "SQL sysadmin username"
   type        = string
 }
 
-variable "sql_sysadmin_password" {
+variable "sql_sysadmin_pswd" {
   description = "SQL sysadmin password"
   type        = string
   sensitive   = true
 }
 
-variable "sql_service_account_login" {
+variable "sql_svc_acct_user" {
   description = "SQL service account username"
   type        = string
 }
 
-variable "sql_service_account_password" {
+variable "sql_svc_acct_pswd" {
   description = "SQL service account password"
   type        = string
   sensitive   = true

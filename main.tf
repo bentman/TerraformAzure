@@ -80,6 +80,8 @@ module "vm_addc" {
   vm_localadmin_user    = var.domain_admin_user //NOTE: becomes domain admin after dcpromo
   vm_localadmin_pswd    = var.domain_admin_pswd //NOTE: becomes domain admin after dcpromo
   safemode_admin_pswd   = var.safemode_admin_pswd
+  sql_svc_acct_user     = var.sql_svc_acct_user
+  sql_svc_acct_pswd     = var.sql_svc_acct_pswd
   vm_addc_shutdown_hhmm = var.vm_shutdown_hhmm
   vm_addc_shutdown_tz   = var.vm_shutdown_tz
   tags                  = var.tags
@@ -92,7 +94,7 @@ module "vm_addc" {
 variable "module_vm_sqlha_enable" {
   description = "A boolean flag to enable or disable the vm-addc.tf module"
   type        = bool
-  default     = true // true -or- false 
+  default     = false // true -or- false 
   //caution: 'terraform plan' produces 'changed state' after toggle
   //         if exist, resources will be destroyed on next 'apply'
   //         false = '# to destroy' | true = '# to add ... # to destroy'
@@ -115,10 +117,10 @@ module "vm_sqlha" {
   vm_localadmin_pswd           = var.vm_localadmin_pswd
   vm_sqlha_shutdown_hhmm       = var.vm_shutdown_hhmm
   vm_sqlha_shutdown_tz         = var.vm_shutdown_tz
-  sql_sysadmin_login           = var.sql_service_account_login
-  sql_sysadmin_password        = var.sql_sysadmin_password
-  sql_service_account_login    = var.sql_service_account_login
-  sql_service_account_password = var.sql_service_account_password
+  sql_sysadmin_user            = var.sql_sysadmin_user
+  sql_sysadmin_pswd            = var.sql_sysadmin_pswd
+  sql_svc_acct_user            = var.sql_svc_acct_user
+  sql_svc_acct_pswd            = var.sql_svc_acct_pswd
   sqlaag_name                  = var.sqlaag_name
   sqlcluster_name              = var.sqlcluster_name
   vm_addc_public_ip            = module.vm_addc[0].vm_addc_public_ip

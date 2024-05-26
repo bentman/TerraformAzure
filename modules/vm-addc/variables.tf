@@ -74,6 +74,17 @@ variable "safemode_admin_pswd" {
   sensitive   = true
 }
 
+variable "sql_svc_acct_user" {
+  description = "SQL service account username"
+  type        = string
+}
+
+variable "sql_svc_acct_pswd" {
+  description = "SQL service account password"
+  type        = string
+  sensitive   = true
+}
+
 ##### RESOURCE VARIABLES
 # lab name (suggest 'lab', 'dev', 'qa', 'test', etc)
 variable "lab_name" {

@@ -6,27 +6,13 @@ locals {
   dn_path         = join(",", [for dc in local.split_domain : "DC=${dc}"])
   servers_ou_path = "OU=Servers,${join(",", [for dc in local.split_domain : "DC=${dc}"])}"
 
-  # Generate commands to create new Organization Unit and technical users for SQL installation
-  powershell_add_users = [
-    "if (!(test-path -Path C:\\BUILD\\)) {New-Item -Path C:\\BUILD\\ -ItemType Directory -Force}",
-    "Start-Transcript -Path C:\\BUILD\\transcript-add_users.txt",
-    "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
-    "Import-Module ActiveDirectory",
-    "New-ADOrganizationalUnit -Name 'Servers' -Path '${local.dn_path}' -Description 'Servers OU for new objects'",
-    "$secPass = ConvertTo-SecureString '${var.sql_service_account_password}' -AsPlainText -Force",
-    "New-ADUser -Name sqlinstall -GivenName sql -Surname install -UserPrincipalName 'sqlinstall@${var.domain_name}' -SamAccountName sqlinstall -AccountPassword $secPass -Enabled $true",
-    "Add-ADGroupMember -Identity 'Domain Admins' -Members sqlinstall",
-    "New-ADUser -Name '${var.sql_service_account_login}' -GivenName SQL -Surname SERVICE -UserPrincipalName '${var.sql_service_account_login}@${var.domain_name}' -SamAccountName '${var.sql_service_account_login}' -AccountPassword $secPass -Enabled $true",
-    "Stop-Transcript"
-  ]
-
   # Generate commands to add install domain account to local administrators group on SQL servers and to sysadmin roles on SQL
   powershell_local_admin = [
     "Start-Transcript -Path C:\\BUILD\\transcript-sql_local_admin.txt",
     "Get-LocalGroup",
     "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
     "Add-LocalGroupMember -Group 'Administrators' -Member 'sqlinstall@${var.domain_name}'",
-    "Add-LocalGroupMember -Group 'Administrators' -Member '${var.sql_service_account_login}@${var.domain_name}'",
+    "Add-LocalGroupMember -Group 'Administrators' -Member '${var.sql_svc_acct_user}@${var.domain_name}'",
     "Stop-Transcript"
   ]
 
@@ -55,3 +41,5 @@ locals {
     "Stop-Transcript"
   ]
 }
+
+/**/
