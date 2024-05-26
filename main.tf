@@ -13,6 +13,7 @@ resource "azurerm_resource_group" "mylab" {
 ##### MODULES
 # v-network.tf
 module "v_network" {
+  # module for creating lab network
   source      = "./modules/v-network"
   lab_name    = var.lab_name
   rg_location = azurerm_resource_group.mylab.location
@@ -34,6 +35,7 @@ variable "module_vm_jumpbox_enable" {
 }
 
 module "vm_jumpbox" {
+  # Module for deploying jumpbox vm's in their own subnet
   count               = var.module_vm_jumpbox_enable ? 1 : 0
   source              = "./modules/vm-jumpbox"
   lab_name            = var.lab_name
@@ -64,6 +66,7 @@ variable "module_vm_addc_enable" {
 }
 
 module "vm_addc" {
+  # Module for deploying first Active Directory Domain Controller in Forest
   count                 = var.module_vm_addc_enable ? 1 : 0
   source                = "./modules/vm-addc"
   lab_name              = var.lab_name
@@ -89,32 +92,44 @@ module "vm_addc" {
 variable "module_vm_sqlha_enable" {
   description = "A boolean flag to enable or disable the vm-addc.tf module"
   type        = bool
-  default     = false // true -or- false 
+  default     = true // true -or- false 
   //caution: 'terraform plan' produces 'changed state' after toggle
   //         if exist, resources will be destroyed on next 'apply'
   //         false = '# to destroy' | true = '# to add ... # to destroy'
 }
 
-/*module "vm_sqlha" {
-  count                  = var.module_vm_sqlha_enable ? 1 : 0
-  source                 = "./modules/vm-sqlha"
-  lab_name               = var.lab_name
-  rg_location            = azurerm_resource_group.mylab.location
-  rg_name                = azurerm_resource_group.mylab.name
-  snet_sqlha_0064_db1    = data.azurerm_subnet.snet_0064_db1.id
-  snet_sqlha_0096_db2    = data.azurerm_subnet.snet_0096_db2.id
-  vm_sqlha_hostname = var.vm_addc_size
-  vm_sqlha_size          = var.vm_sqlha_size
-  domain_name            = var.domain_name
-  domain_netbios_name    = var.domain_netbios_name
-  vm_localadmin_user     = var.vm_localadmin_user
-  vm_localadmin_pswd     = var.vm_localadmin_pswd
-  vm_sqlha_shutdown_hhmm = var.vm_shutdown_hhmm
-  vm_sqlha_shutdown_tz   = var.vm_shutdown_tz
-  tags                   = var.tags
+module "vm_sqlha" {
+  # Module for deploying SQL High Availability VMs
+  count                        = var.module_vm_sqlha_enable ? 1 : 0
+  source                       = "./modules/vm-sqlha"
+  lab_name                     = var.lab_name
+  rg_location                  = azurerm_resource_group.mylab.location
+  rg_name                      = azurerm_resource_group.mylab.name
+  snet_sqlha_0064_db1_id       = data.azurerm_subnet.snet_0064_db1.id
+  snet_sqlha_0096_db2_id       = data.azurerm_subnet.snet_0096_db2.id
+  snet_sqlha_0064_db1_prefixes = data.azurerm_subnet.snet_0064_db1.address_prefixes
+  snet_sqlha_0096_db2_prefixes = data.azurerm_subnet.snet_0096_db2.address_prefixes
+  vm_sqlha_hostname            = var.vm_sqlha_hostname
+  vm_sqlha_size                = var.vm_sqlha_size
+  vm_localadmin_user           = var.vm_localadmin_user
+  vm_localadmin_pswd           = var.vm_localadmin_pswd
+  vm_sqlha_shutdown_hhmm       = var.vm_shutdown_hhmm
+  vm_sqlha_shutdown_tz         = var.vm_shutdown_tz
+  sql_sysadmin_login           = var.sql_service_account_login
+  sql_sysadmin_password        = var.sql_sysadmin_password
+  sql_service_account_login    = var.sql_service_account_login
+  sql_service_account_password = var.sql_service_account_password
+  sqlaag_name                  = var.sqlaag_name
+  sqlcluster_name              = var.sqlcluster_name
+  vm_addc_public_ip            = data.azurerm_public_ip.vm_addc_public_ip
+  domain_name                  = var.domain_name
+  domain_netbios_name          = var.domain_netbios_name
+  domain_admin_user            = var.domain_admin_user
+  domain_admin_pswd            = var.domain_admin_pswd
+  tags                         = var.tags
   depends_on = [
-    data.azurerm_subnet.snet_0064_db1,
-    data.azurerm_subnet.snet_0096_db1,
     module.vm_addc,
+    data.azurerm_subnet.snet_0064_db1,
+    data.azurerm_subnet.snet_0096_db2,
   ]
-}*/
+}

@@ -98,7 +98,6 @@ variable "vm_shutdown_tz" {
 }
 
 ########## vm-addc
-# vm-addc Hostname
 variable "vm_addc_hostname" {
   description = "Computer name for the domain controller"
   type        = string
@@ -158,11 +157,10 @@ variable "safemode_admin_pswd" {
 }
 
 ########## vm-sqlha 
-/* Not yet implemented
 variable "vm_sqlha_hostname" {
-  description = "Computer name prefix for SQL HA cluster servers"
+  description = "Computername for vm-sqlha appended by vm_sqlha_count #"
   type        = string
-  default     = "vmsqlha"
+  default     = "vm-sqlha" //  no more than a total of 14 char + vm_sqlha_count
 }
 
 # vm-sqlha subnet-db1
@@ -226,4 +224,3 @@ variable "sql_service_account_password" {
   type        = string
   sensitive   = true
 }
-*/

@@ -12,14 +12,19 @@ data "http" "myip4" {
 }
 
 ##### Reference to jumpbox scripts (file-copy from repo, soon)
-# Fetches the Windows jumpbox script from the repository
+# Fetches the Windows jumpbox script from repository
 data "http" "jumpwin_stuff" {
   url = "https://raw.githubusercontent.com/bentman/TerraformAzure/main/modules/vm-jumpbox/vm-windows/get-mystuff.ps1"
 }
 
-# Fetches the Linux jumpbox script from the repository
+# Fetches the Linux jumpbox script from repository
 data "http" "jumplin_stuff" {
   url = "https://raw.githubusercontent.com/bentman/TerraformAzure/main/modules/vm-jumpbox/vm-linux/get-mystuff.bash"
+}
+
+# Fetches the Server vm script from repository
+data "http" "server_stuff" {
+  url = "https://raw.githubusercontent.com/bentman/TerraformAzure/main/modules/vm-addc/vm-server/get-serverstuff.ps1"
 }
 
 ##### Data from main.tf
@@ -83,4 +88,19 @@ data "azurerm_subnet" "snet_1000_client" {
   virtual_network_name = data.azurerm_virtual_network.azurerm_virtual_network.name
   resource_group_name  = data.azurerm_resource_group.mylab.name
   depends_on           = [module.v_network]
+}
+
+##### Data from vm-addc.tf
+data "azurerm_public_ip" "vm_addc_public_name" {
+  name                = module.vm_addc.vm_addc_public_name.fqdn
+  resource_group_name = azurerm_resource_group.mylab.name
+}
+
+data "azurerm_public_ip" "vm_addc_public_ip" {
+  name                = module.vm_addc.vm_addc_public_ip.ip_address
+  resource_group_name = azurerm_resource_group.mylab.name
+}
+
+data "terraform_data" "vm_addc_ad_user" {
+  
 }

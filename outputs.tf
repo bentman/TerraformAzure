@@ -1,6 +1,5 @@
 #################### OUTPUTS ####################
 ##### main.tf outputs
-
 # Outputs the name of the resource group
 output "resource_group_name" {
   description = "The name of the resource group"
@@ -14,7 +13,6 @@ output "resource_group_location" {
 }
 
 ##### v-network.tf outputs
-
 # Outputs the name of the virtual network
 output "lab_network_vnet_name" {
   description = "The name of the virtual network"
@@ -40,7 +38,6 @@ output "lab_gw_pip" {
 }
 
 ##### vm-jumpWin outputs
-
 # Outputs the public DNS name of the Windows jumpbox VM, if it exists
 output "vm_jumpwin_public_name" {
   description = "The public DNS name of Windows jumpbox VM, if exists - 'null' if not"
@@ -54,7 +51,6 @@ output "vm_jumpwin_public_ip" {
 }
 
 ##### vm-jumpLin outputs
-
 # Outputs the public DNS name of the Linux jumpbox VM, if it exists
 output "vm_jumplin_public_name" {
   description = "The public DNS name of Linux jumpbox VM, if exists - 'null' if not"
@@ -68,7 +64,6 @@ output "vm_jumplin_public_ip" {
 }
 
 ##### vm-addc.tf outputs
-
 # Outputs the public DNS name of the VM ADDC, if it exists
 output "vm_addc_public_name" {
   description = "The public DNS name of VM ADDC, if exists"
@@ -85,4 +80,10 @@ output "vm_addc_public_ip" {
 output "addc_module_vars" {
   description = "List of vars to verify on 'apply' - modify in vm-addc/outputs.tf"
   value       = length(module.vm_addc) > 0 ? module.vm_addc[0].addc_module_vars : null
+}
+
+##### vm-sqlha.tf outputs
+output "vm_sqlha_output" {
+  description = "Output from the vm-sqlha module, if it exists"
+  value       = length(module.vm_sqlha.vm_sqlha) > 0 ? module.vm_sqlha.vm_sqlha : null
 }
