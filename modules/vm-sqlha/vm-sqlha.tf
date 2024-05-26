@@ -87,7 +87,7 @@ resource "azurerm_network_interface" "vm_sqlha_nic" {
     private_ip_address            = cidrhost(count.index == 0 ? var.snet_sqlha_0064_db1_prefixes[0] : var.snet_sqlha_0096_db2_prefixes[0], 11)
   }
   # Must be set and restart the computer to reach the domain controller and DNS
-  dns_servers = [var.vm_addc_public_ip, "1.1.1.1", "8.8.8.8"]
+  dns_servers = [var.vm_addc_private_ip, "1.1.1.1", "8.8.8.8"]
 }
 
 ########## vm-sqlha

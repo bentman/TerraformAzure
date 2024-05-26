@@ -76,6 +76,12 @@ output "vm_addc_public_ip" {
   value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_ip : null
 }
 
+# Outputs the private IP address of the VM ADDC, if it exists
+output "vm_addc_private_ip" {
+  description = "The private IP address of VM ADDC, if exists"
+  value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_private_ip : null
+}
+
 # Outputs a list of variables to verify on 'apply' - modify in vm-addc/outputs.tf
 output "addc_module_vars" {
   description = "List of vars to verify on 'apply' - modify in vm-addc/outputs.tf"

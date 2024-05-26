@@ -13,6 +13,12 @@ output "vm_addc_public_ip" {
   value       = azurerm_public_ip.vm_addc_pip.ip_address
 }
 
+# Output the private IP address of vm-addc
+output "vm_addc_private_ip" {
+  description = "The private IP address of vm-addc"
+  value       = azurerm_network_interface.vm_addc_nic.private_ip_address
+}
+
 # Output a map of all variables used by the submodule
 output "addc_module_vars" {
   description = "A map of all variables used by the submodule."

@@ -174,7 +174,12 @@ variable "domain_admin_pswd" {
 
 variable "vm_addc_public_ip" {
   description = "Domain Controller Public IP"
-  type = string
+  type        = string
+}
+
+variable "vm_addc_private_ip" {
+  description = "Domain Controller Public IP"
+  type        = string
 }
 
 ##### RESOURCE VARIABLES
@@ -199,7 +204,7 @@ variable "rg_name" {
 variable "tags" {
   description = "A map of tags to assign to the resources"
   type        = map(string)
-  default     = {
+  default = {
     "source"      = "terraform"
     "project"     = "learning"
     "environment" = "lab"
