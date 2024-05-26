@@ -42,7 +42,7 @@ $winGet_Link = (Invoke-WebRequest -Uri $winGet_Repo).Content |
     Select-Object -ExpandProperty "assets" |
     Where-Object "browser_download_url" -Match '.msixbundle' |
     Select-Object -ExpandProperty "browser_download_url"
-$winGet_Name = "winget.msix"
+$winGet_Name = "winget.msixbundle"
 Invoke-WebRequest -Uri $winGet_Link -OutFile $winGet_Name -UseBasicParsing
 Unblock-File .\$winGet_Name
 Add-AppxProvisionedPackage -Online -PackagePath .\$winGet_Name -LicensePath .\$LicXml_Name -Verbose
