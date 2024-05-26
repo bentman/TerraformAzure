@@ -1,21 +1,3 @@
-# SSH connection to run posh script
-provisioner "remote-exec" {
-  connection {
-    type            = "ssh"
-    user            = var.domain_admin_user
-    password        = var.domain_admin_pswd
-    host            = azurerm_public_ip.vm_addc_pip.ip_address
-    target_platform = "windows"
-    timeout         = "1m"
-  }
-  inline = [
-    "powershell.exe -Command \"${join(";", local.powershell_add_users)}\""
-  ]
-}
-depends_on = [
-  time_sleep.vm_addc_gpmc_sleep,
-]
-
 #################### LOCALS ####################
 ##### locals.tf (vm-sqlha)
 locals {
