@@ -89,18 +89,3 @@ data "azurerm_subnet" "snet_1000_client" {
   resource_group_name  = data.azurerm_resource_group.mylab.name
   depends_on           = [module.v_network]
 }
-
-##### Data from vm-addc.tf
-data "azurerm_public_ip" "vm_addc_public_name" {
-  name                = module.vm_addc.vm_addc_public_name.fqdn
-  resource_group_name = azurerm_resource_group.mylab.name
-}
-
-data "azurerm_public_ip" "vm_addc_public_ip" {
-  name                = module.vm_addc.vm_addc_public_ip.ip_address
-  resource_group_name = azurerm_resource_group.mylab.name
-}
-
-data "terraform_data" "vm_addc_ad_user" {
-  
-}

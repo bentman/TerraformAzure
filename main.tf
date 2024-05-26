@@ -121,7 +121,7 @@ module "vm_sqlha" {
   sql_service_account_password = var.sql_service_account_password
   sqlaag_name                  = var.sqlaag_name
   sqlcluster_name              = var.sqlcluster_name
-  vm_addc_public_ip            = data.azurerm_public_ip.vm_addc_public_ip
+  vm_addc_public_ip            = module.vm_addc[0].vm_addc_public_ip
   domain_name                  = var.domain_name
   domain_netbios_name          = var.domain_netbios_name
   domain_admin_user            = var.domain_admin_user
