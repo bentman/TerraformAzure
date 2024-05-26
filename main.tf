@@ -16,8 +16,8 @@ module "v_network" {
   # module for creating lab network
   source      = "./modules/v-network"
   lab_name    = var.lab_name
-  rg_location = azurerm_resource_group.mylab.location
   rg_name     = azurerm_resource_group.mylab.name
+  rg_location = azurerm_resource_group.mylab.location
   tags        = var.tags
   depends_on = [
     azurerm_resource_group.mylab
@@ -39,8 +39,8 @@ module "vm_jumpbox" {
   count               = var.module_vm_jumpbox_enable ? 1 : 0
   source              = "./modules/vm-jumpbox"
   lab_name            = var.lab_name
-  rg_location         = azurerm_resource_group.mylab.location
   rg_name             = azurerm_resource_group.mylab.name
+  rg_location         = azurerm_resource_group.mylab.location
   vm_snet_id          = data.azurerm_subnet.snet_0000_jumpbox.id
   vm_jumpwin_hostname = var.vm_jumpwin_hostname
   vm_jumplin_hostname = var.vm_jumplin_hostname
@@ -70,8 +70,8 @@ module "vm_addc" {
   count                 = var.module_vm_addc_enable ? 1 : 0
   source                = "./modules/vm-addc"
   lab_name              = var.lab_name
-  rg_location           = azurerm_resource_group.mylab.location
   rg_name               = azurerm_resource_group.mylab.name
+  rg_location           = azurerm_resource_group.mylab.location
   vm_server_snet_id     = data.azurerm_subnet.snet_0128_server.id
   vm_addc_hostname      = var.vm_addc_hostname
   vm_addc_size          = var.vm_addc_size
@@ -105,8 +105,8 @@ module "vm_sqlha" {
   count                        = var.module_vm_sqlha_enable ? 1 : 0
   source                       = "./modules/vm-sqlha"
   lab_name                     = var.lab_name
-  rg_location                  = azurerm_resource_group.mylab.location
   rg_name                      = azurerm_resource_group.mylab.name
+  rg_location                  = azurerm_resource_group.mylab.location
   snet_sqlha_0064_db1_id       = data.azurerm_subnet.snet_0064_db1.id
   snet_sqlha_0096_db2_id       = data.azurerm_subnet.snet_0096_db2.id
   snet_sqlha_0064_db1_prefixes = data.azurerm_subnet.snet_0064_db1.address_prefixes

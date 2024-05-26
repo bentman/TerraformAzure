@@ -14,9 +14,9 @@ vm_localadmin_password = "YourAdminPassword"          // vm local admin password
 
 ########## VALUES ##########
 ##### main.tf values
-lab_name          = "mylab"             // defaults to 'mylab'
-rg_location       = "westus"            // defaults to 'westus'
-rg_name           = "rg-${var.lab_name} // defaults to 'rg-mylab
+lab_name          = "mylab"                             // defaults to 'mylab'
+rg_location       = "westus"                            // defaults to 'westus'
+rg_name           = data.azurerm_resource_group.rg_name // var.rg_name defaults to 'rg-lab'
 tags = {
     "source"      = "terraform"
     "project"     = "learning"
