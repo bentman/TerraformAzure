@@ -178,7 +178,7 @@ variable "vm_addc_public_ip" {
 }
 
 variable "vm_addc_private_ip" {
-  description = "Domain Controller Public IP"
+  description = "Domain Controller Private IP"
   type        = string
 }
 
