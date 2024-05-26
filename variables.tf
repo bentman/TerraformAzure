@@ -163,18 +163,6 @@ variable "vm_sqlha_hostname" {
   default     = "vm-sqlha" //  no more than a total of 14 char + vm_sqlha_count
 }
 
-# vm-sqlha subnet-db1
-variable "snet_sqlha_0064_db1" {
-  description = "Subnet for the first SQL HA server"
-  type        = string
-}
-
-# vm-sqlha subnet-db2
-variable "snet_sqlha_0096_db2" {
-  description = "Subnet for the second SQL HA server"
-  type        = string
-}
-
 variable "vm_sqlha_size" {
   description = "The size of the Virtual Machine(s) type."
   type        = string

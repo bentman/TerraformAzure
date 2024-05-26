@@ -85,5 +85,8 @@ output "addc_module_vars" {
 ##### vm-sqlha.tf outputs
 output "vm_sqlha_output" {
   description = "Output from the vm-sqlha module, if it exists"
-  value       = length(module.vm_sqlha) > 0 ? module.vm_sqlha[0].vm_sqlha_output : null
+  value = length(module.vm_sqlha) > 0 ? { 
+    for i in range(length(module.vm_sqlha)) : 
+    i => module.vm_sqlha[i].vm_sqlha 
+  } : null
 }
