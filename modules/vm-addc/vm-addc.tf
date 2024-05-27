@@ -136,28 +136,6 @@ resource "time_sleep" "vm_addc_dcpromo_wait" {
   depends_on      = [null_resource.vm_addc_dcpromo_exec]
 }
 
-# SSH connection to create new OU and technical users for SQL installation
-resource "terraform_data" "vm_addc_add_users" {
-  triggers_replace = [
-    azurerm_virtual_machine_extension.vm_addc_openssh,
-    time_sleep.vm_addc_dcpromo_wait
-  ]
-  provisioner "remote-exec" {
-    connection {
-      type            = "ssh"
-      user            = var.vm_localadmin_user
-      password        = var.vm_localadmin_pswd
-      host            = azurerm_public_ip.vm_addc_pip.ip_address
-      target_platform = "windows"
-      timeout         = "5m"
-    }
-    inline = [
-      "powershell.exe -Command \"${join(";", local.powershell_add_users)}\""
-    ]
-  }
-  depends_on = [time_sleep.vm_addc_dcpromo_wait]
-}
-
 # Restart VM after DCPromo
 resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
   name               = "RestartCommand"
