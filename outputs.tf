@@ -66,36 +66,36 @@ output "vm_jumplin_public_ip" {
   value       = length(module.vm_jumpbox) > 0 ? module.vm_jumpbox[0].vm_jumplin_public_ip : null
 }
 
-##### vm-addc.tf outputs
+##### vm-addc outputs
 # Outputs the public DNS name of the VM ADDC, if it exists
 output "vm_addc_public_name" {
   description = "The public DNS name of VM ADDC, if exists"
-  value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_name : null
+  value       = length(module.sql_ha) > 0 ? module.sql_ha[0].vm_addc_public_name : null
 }
 
 # Outputs the public IP address of the VM ADDC, if it exists
 output "vm_addc_public_ip" {
   description = "The public IP address of VM ADDC, if exists"
-  value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_public_ip : null
+  value       = length(module.sql_ha) > 0 ? module.sql_ha[0].vm_addc_public_ip : null
 }
 
 # Outputs the private IP address of the VM ADDC, if it exists
 output "vm_addc_private_ip" {
   description = "The private IP address of VM ADDC, if exists"
-  value       = length(module.vm_addc) > 0 ? module.vm_addc[0].vm_addc_private_ip : null
+  value       = length(module.sql_ha) > 0 ? module.sql_ha[0].vm_addc_private_ip : null
 }
 
 # Outputs a list of variables to verify on 'apply' - modify in vm-addc/outputs.tf
 output "addc_module_vars" {
   description = "List of vars to verify on 'apply' - modify in vm-addc/outputs.tf"
-  value       = length(module.vm_addc) > 0 ? module.vm_addc[0].addc_module_vars : null
+  value       = length(module.sql_ha) > 0 ? module.sql_ha[0].addc_module_vars : null
 }
 
-##### vm-sqlha.tf outputs
+##### vm-sqlha outputs
 output "vm_sqlha_output" {
   description = "Output from the vm-sqlha module, if it exists"
-  value = length(module.vm_sqlha) > 0 ? { 
-    for i in range(length(module.vm_sqlha)) : 
-    i => module.vm_sqlha[i].vm_sqlha 
+  value = length(module.sql_ha) > 0 ? { 
+    for i in range(length(module.sql_ha)) : 
+    i => module.sql_ha[i].vm_sqlha 
   } : null
 }

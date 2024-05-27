@@ -50,23 +50,23 @@ resource "azurerm_network_interface" "vm_sqlha_nic" {
   }
   ip_configuration {
     name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-ip" // "10.0.0.73" & "10.0.0.105"
-    subnet_id                     = count.index == 0 ? var.snet_sqlha_0064_db1_id : var.snet_sqlha_0096_db2_id
+    subnet_id                     = count.index == 0 ? var.snet_0064_db1_id : var.snet_0096_db2_id
     private_ip_address_allocation = "Static"
-    private_ip_address            = cidrhost(count.index == 0 ? var.snet_sqlha_0064_db1_prefixes[0] : var.snet_sqlha_0096_db2_prefixes[0], 9)
+    private_ip_address            = cidrhost(count.index == 0 ? var.snet_0064_db1_prefixes[0] : var.snet_0096_db2_prefixes[0], 9)
     public_ip_address_id          = azurerm_public_ip.vm_sqlha_pip[count.index].id
     primary                       = true
   }
   ip_configuration {
     name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-ip-cluster" // "10.0.0.74" & "10.0.0.106"
-    subnet_id                     = count.index == 0 ? var.snet_sqlha_0064_db1_id : var.snet_sqlha_0096_db2_id
+    subnet_id                     = count.index == 0 ? var.snet_0064_db1_id : var.snet_0096_db2_id
     private_ip_address_allocation = "Static"
-    private_ip_address            = cidrhost(count.index == 0 ? var.snet_sqlha_0064_db1_prefixes[0] : var.snet_sqlha_0096_db2_prefixes[0], 10)
+    private_ip_address            = cidrhost(count.index == 0 ? var.snet_0064_db1_prefixes[0] : var.snet_0096_db2_prefixes[0], 10)
   }
   ip_configuration {
     name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-ip-listener" // "10.0.0.75" & "10.0.0.107"
-    subnet_id                     = count.index == 0 ? var.snet_sqlha_0064_db1_id : var.snet_sqlha_0096_db2_id
+    subnet_id                     = count.index == 0 ? var.snet_0064_db1_id : var.snet_0096_db2_id
     private_ip_address_allocation = "Static"
-    private_ip_address            = cidrhost(count.index == 0 ? var.snet_sqlha_0064_db1_prefixes[0] : var.snet_sqlha_0096_db2_prefixes[0], 11)
+    private_ip_address            = cidrhost(count.index == 0 ? var.snet_0064_db1_prefixes[0] : var.snet_0096_db2_prefixes[0], 11)
   }
   # Must be set and restart the computer to reach the domain controller and DNS
   dns_servers = [var.vm_addc_private_ip, "1.1.1.1", "8.8.8.8"]
@@ -80,8 +80,8 @@ resource "azurerm_windows_virtual_machine" "vm_sqlha" {
   resource_group_name = var.rg_name
   size                = var.vm_sqlha_size
   computer_name       = "${var.vm_sqlha_hostname}0${count.index + 1}"
-  admin_username      = var.vm_localadmin_user
-  admin_password      = var.vm_localadmin_pswd
+  admin_username      = var.vm_sqlha_localadmin_user
+  admin_password      = var.vm_sqlha_localadmin_pswd
   license_type        = "Windows_Server"
   zone                = count.index + 1
   tags                = var.tags
@@ -112,20 +112,7 @@ resource "azurerm_windows_virtual_machine" "vm_sqlha" {
 resource "azurerm_network_interface_security_group_association" "vm_sqlha_nsg_assoc" {
   count                     = var.vm_sqlha_count
   network_interface_id      = azurerm_network_interface.vm_sqlha_nic[count.index].id
-  network_security_group_id = azurerm_network_security_group.nsg_sqlha.id
-}
-
-# vm-sqlha AUTOSHUTDOWN
-resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_sqlha_shutown" {
-  count                 = var.vm_sqlha_count
-  virtual_machine_id    = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
-  location              = var.rg_location
-  enabled               = true
-  daily_recurrence_time = var.vm_sqlha_shutdown_hhmm
-  timezone              = var.vm_sqlha_shutdown_tz
-  notification_settings {
-    enabled = false
-  }
+  network_security_group_id = azurerm_network_security_group.nsg_server.id
 }
 
 # vm-sqlha extension to Open SSH
@@ -247,6 +234,7 @@ PROTECTED_SETTINGS
 
   depends_on = [
     azurerm_windows_virtual_machine.vm_sqlha,
+    terraform_data.vm_addc_add_users,
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -255,10 +243,8 @@ PROTECTED_SETTINGS
 
 # time delay after SQL domain join
 resource "time_sleep" "vm_sqljoin" {
-  depends_on = [
-    azurerm_virtual_machine_extension.vm_sqlha_domain_join,
-  ]
-  create_duration = "180s"
+  create_duration = "3m"
+  depends_on      = [azurerm_virtual_machine_extension.vm_sqlha_domain_join, ]
 }
 
 # add 'domain\sqlinstall' account to local administrators group on SQL servers
@@ -276,7 +262,7 @@ resource "terraform_data" "sqlsvc_local_admin" {
       password        = var.domain_admin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
-      timeout         = "1m"
+      timeout         = "5m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_local_admin)}\""
@@ -303,19 +289,16 @@ resource "terraform_data" "sql_sysadmin" {
       password        = var.domain_admin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
-      timeout         = "1m"
+      timeout         = "5m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_sql_sysadmin)}\""
     ]
   }
   depends_on = [
-    azurerm_virtual_machine_extension.openssh_sqlha,
+    terraform_data.sqlsvc_local_admin,
   ]
 }
-
-# In that case you don't use Domain Admins highest elevated for install account
-# You should give special permission for install account on Builtin OU / Servers OU
 
 # Indicates the capability to manage a group of virtual machines specific to Microsoft SQL
 resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
@@ -334,6 +317,9 @@ resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
     storage_account_primary_key    = azurerm_storage_account.sqlha_stga.primary_access_key
     storage_account_url            = "${azurerm_storage_account.sqlha_stga.primary_blob_endpoint}${azurerm_storage_container.sqlha_quorum.name}"
   }
+  depends_on = [
+    terraform_data.sql_sysadmin,
+  ]
   lifecycle {
     ignore_changes = [tags]
   }
@@ -371,7 +357,6 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
   }
   depends_on = [
     azurerm_windows_virtual_machine.vm_sqlha,
-    terraform_data.sql_sysadmin
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -380,9 +365,7 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
 
 # Create special permission for base OU for Cluster computer object
 resource "terraform_data" "cluster_acl" {
-  triggers_replace = [
-    azurerm_mssql_virtual_machine.az_sqlha[*].id
-  ]
+  triggers_replace = [azurerm_mssql_virtual_machine.az_sqlha[*].id]
   # With SSH connection
   provisioner "remote-exec" {
     connection {
@@ -391,14 +374,14 @@ resource "terraform_data" "cluster_acl" {
       password        = var.domain_admin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
-      timeout         = "1m"
+      timeout         = "5m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_acl_commands)}\""
     ]
   }
   depends_on = [
-    azurerm_virtual_machine_extension.openssh_sqlha,
+    azurerm_mssql_virtual_machine.az_sqlha,
   ]
 }
 
@@ -408,19 +391,16 @@ resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
   availability_group_name      = "sqlhaaag"
   port                         = 1433
   sql_virtual_machine_group_id = azurerm_mssql_virtual_machine_group.sqlha_vmg.id
-
   multi_subnet_ip_configuration {
-    private_ip_address     = cidrhost(var.snet_sqlha_0064_db1_prefixes[0], 6)
+    private_ip_address     = cidrhost(var.snet_0064_db1_prefixes[0], 6)
     sql_virtual_machine_id = azurerm_mssql_virtual_machine.az_sqlha[0].id
-    subnet_id              = var.snet_sqlha_0064_db1_id
+    subnet_id              = var.snet_0064_db1_id
   } // "10.0.0.70"
-
   multi_subnet_ip_configuration {
-    private_ip_address     = cidrhost(var.snet_sqlha_0096_db2_prefixes[0], 6)
+    private_ip_address     = cidrhost(var.snet_0096_db2_prefixes[0], 6)
     sql_virtual_machine_id = azurerm_mssql_virtual_machine.az_sqlha[1].id
-    subnet_id              = var.snet_sqlha_0096_db2_id
+    subnet_id              = var.snet_0096_db2_id
   } // "10.0.0.102"
-
   replica {
     sql_virtual_machine_id = azurerm_mssql_virtual_machine.az_sqlha[0].id
     role                   = "Primary"
@@ -428,7 +408,6 @@ resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
     failover_mode          = "Automatic"
     readable_secondary     = "No"
   }
-
   replica {
     sql_virtual_machine_id = azurerm_mssql_virtual_machine.az_sqlha[1].id
     role                   = "Secondary"
@@ -436,67 +415,26 @@ resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
     failover_mode          = "Automatic"
     readable_secondary     = "No"
   }
-
   timeouts {
     create = "15m"
   }
+  depends_on = [
+    terraform_data.cluster_acl,
+  ]
 }
 
-########## Create NSG for vm-addc (& other servers)
-resource "azurerm_network_security_group" "nsg_sqlha" {
-  name                = "vnet-nsg-server"
-  location            = var.rg_location
-  resource_group_name = var.rg_name
-  tags                = var.tags
-  # NSG rule to allow SSH
-  security_rule {
-    name                       = "vnet-nsg-server-SSH"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-  # NSG rule to allow RDP
-  security_rule {
-    name                       = "vnet-nsg-server-RDP"
-    priority                   = 110
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "3389"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-  # NSG rule to allow ping
-  security_rule {
-    name                       = "vnet-nsg-server-ping"
-    priority                   = 900
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Icmp"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-  # NSG rule to allow all internal traffic
-  security_rule {
-    name                       = "vnet-nsg-server-local-all"
-    priority                   = 1000
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "10.0.0.0/23"
-    destination_address_prefix = "*"
-  }
-  lifecycle {
-    ignore_changes = [tags]
+# vm-sqlha AUTOSHUTDOWN
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_sqlha_shutown" {
+  count                 = var.vm_sqlha_count
+  virtual_machine_id    = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
+  location              = var.rg_location
+  enabled               = true
+  daily_recurrence_time = var.vm_sqlha_shutdown_hhmm
+  timezone              = var.vm_shutdown_tz
+  depends_on = [
+    azurerm_windows_virtual_machine.vm_sqlha,
+  ]
+  notification_settings {
+    enabled = false
   }
 }
