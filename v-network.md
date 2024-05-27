@@ -1,10 +1,10 @@
-# Lab Network Terraform Module
+# Lab Network
 
-This Terraform module creates a lab network in Azure, including virtual networks, subnets, public IP addresses, NAT gateways, and route tables.
+This Terraform code creates a lab network in Azure, including virtual networks, subnets, public IP addresses, NAT gateways, and route tables.
 
 ## Resources
 
-The module creates the following resources:
+Creates the following lab resources:
 
 - **Virtual Network** (`azurerm_virtual_network.azurerm_virtual_network`)
 - **Subnets** 
@@ -54,5 +54,4 @@ The module creates the following resources:
 
 ## Notes
 
-- This module assumes that the necessary resource group is already created and available.
 - Make sure to replace placeholders with your actual values.
