@@ -10,20 +10,6 @@ resource "azurerm_resource_group" "mylab" {
   }
 }
 
-##### MODULES
-# v-network.tf
-module "v_network" {
-  # module for creating lab network
-  source      = "./modules/v-network"
-  lab_name    = var.lab_name
-  rg_name     = azurerm_resource_group.mylab.name
-  rg_location = azurerm_resource_group.mylab.location
-  tags        = var.tags
-  depends_on = [
-    azurerm_resource_group.mylab
-  ]
-}
-
 # vm-jumpbox.tf
 variable "module_vm_jumpbox_enable" {
   description = "A boolean flag to enable or disable the vm-jumpbox.tf module"
@@ -41,7 +27,7 @@ module "vm_jumpbox" {
   lab_name            = var.lab_name
   rg_name             = azurerm_resource_group.mylab.name
   rg_location         = azurerm_resource_group.mylab.location
-  vm_snet_id          = data.azurerm_subnet.snet_0000_jumpbox.id
+  vm_snet_id          = azurerm_subnet.snet_0000_jumpbox.id
   vm_jumpwin_hostname = var.vm_jumpwin_hostname
   vm_jumplin_hostname = var.vm_jumplin_hostname
   vm_size             = var.vm_size
@@ -72,7 +58,7 @@ module "vm_addc" {
   lab_name              = var.lab_name
   rg_name               = azurerm_resource_group.mylab.name
   rg_location           = azurerm_resource_group.mylab.location
-  vm_server_snet_id     = data.azurerm_subnet.snet_0128_server.id
+  vm_server_snet_id     = azurerm_subnet.snet_0128_server.id
   vm_addc_hostname      = var.vm_addc_hostname
   vm_addc_size          = var.vm_addc_size
   domain_name           = var.domain_name
@@ -107,10 +93,10 @@ module "vm_sqlha" {
   lab_name                     = var.lab_name
   rg_name                      = azurerm_resource_group.mylab.name
   rg_location                  = azurerm_resource_group.mylab.location
-  snet_sqlha_0064_db1_id       = data.azurerm_subnet.snet_0064_db1.id
-  snet_sqlha_0096_db2_id       = data.azurerm_subnet.snet_0096_db2.id
-  snet_sqlha_0064_db1_prefixes = data.azurerm_subnet.snet_0064_db1.address_prefixes
-  snet_sqlha_0096_db2_prefixes = data.azurerm_subnet.snet_0096_db2.address_prefixes
+  snet_sqlha_0064_db1_id       = azurerm_subnet.snet_0064_db1.id
+  snet_sqlha_0096_db2_id       = azurerm_subnet.snet_0096_db2.id
+  snet_sqlha_0064_db1_prefixes = azurerm_subnet.snet_0064_db1.address_prefixes
+  snet_sqlha_0096_db2_prefixes = azurerm_subnet.snet_0096_db2.address_prefixes
   vm_sqlha_hostname            = var.vm_sqlha_hostname
   vm_sqlha_size                = var.vm_sqlha_size
   vm_localadmin_user           = var.vm_localadmin_user

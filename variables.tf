@@ -47,12 +47,6 @@ variable "lab_name" {
   default     = "mylab"
 }
 
-variable "rg_name" {
-  description = "resource group name (suggest 'lab', 'dev', 'qa', 'test', etc)"
-  type        = string
-  default     = "rg-mylab"
-}
-
 variable "rg_location" {
   description = "Azure region for lab"
   type        = string
@@ -74,14 +68,14 @@ variable "tags" {
 variable "vm_jumplin_hostname" {
   description = "Computer name for the Linux VM jumpbox"
   type        = string
-  default     = "jumplin008" // fail if not unique in public DNS
+  default     = "vm-jumplin008" // fail if not unique in public DNS
 }
 
 # vm-jumpWin Hostname
 variable "vm_jumpwin_hostname" {
   description = "Computer name for the Windows VM jumpbox"
   type        = string
-  default     = "jumpwin007" // fail if not unique in public DNS
+  default     = "vm-jumpwin007" // fail if not unique in public DNS
 }
 
 # vm common Variables
@@ -105,9 +99,9 @@ variable "vm_shutdown_tz" {
 
 ########## vm-addc
 variable "vm_addc_hostname" {
-  description = "Computer name for the domain controller"
+  description = "Hostname for the domain controller"
   type        = string
-  default     = "vmaddc"
+  default     = "vm-addc"
 }
 
 variable "vm_addc_size" {
@@ -218,5 +212,3 @@ variable "sql_svc_acct_pswd" {
   type        = string
   sensitive   = true
 }
-
-

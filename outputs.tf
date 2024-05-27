@@ -15,26 +15,29 @@ output "resource_group_location" {
 ##### v-network.tf outputs
 # Outputs the name of the virtual network
 output "lab_network_vnet_name" {
-  description = "The name of the virtual network"
-  value       = module.v_network.lab_network_vnet_name
+  value = azurerm_virtual_network.vnet_lab.name
 }
 
-# Outputs the virtual network resource
+# Outputs the address space of the virtual network
 output "lab_network_vnet" {
-  description = "The virtual network resource"
-  value       = module.v_network.lab_network_vnet
+  value = azurerm_virtual_network.vnet_lab.address_space[0]
 }
 
-# Outputs the subnet resource
+# Outputs the address prefixes of the subnets within the virtual network
 output "lab_network_snet" {
-  description = "The subnet resource"
-  value       = module.v_network.lab_network_snet
+  value = {
+    "snet-0.000-jumpbox" = azurerm_subnet.snet_0000_jumpbox.address_prefixes[0],
+    "snet-0.032-gateway" = azurerm_subnet.snet_0032_gateway.address_prefixes[0],
+    "snet-0.064-db1"     = azurerm_subnet.snet_0064_db1.address_prefixes[0],
+    "snet-0.096-db2"     = azurerm_subnet.snet_0096_db2.address_prefixes[0],
+    "snet-0.128-server"  = azurerm_subnet.snet_0128_server.address_prefixes[0],
+    "snet-1.000-client"  = azurerm_subnet.snet_1000_client.address_prefixes[0]
+  }
 }
 
-# Outputs the public IP of the gateway
+# Outputs the public IP address of the NAT gateway
 output "lab_gw_pip" {
-  description = "The public IP of the gateway"
-  value       = module.v_network.lab_gw_pip
+  value = azurerm_public_ip.vnet_gw_pip.ip_address
 }
 
 ##### vm-jumpWin outputs
