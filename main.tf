@@ -52,7 +52,7 @@ variable "module_sql_ha_enable" {
 }
 
 module "sql_ha" {
-  # Module for deploying SQL High Availability VMs
+  # Module for deploying SQL High Availability VMs (requires vm-addc AD Domain Controller)
   count                    = var.module_sql_ha_enable ? 1 : 0
   source                   = "./modules/sql-ha"
   lab_name                 = var.lab_name
