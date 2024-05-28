@@ -56,7 +56,7 @@ variable "rg_location" {
 variable "tags" {
   description = "A map of tags to assign to the resources"
   type        = map(string)
-  default     = {
+  default = {
     "source"      = "terraform"
     "project"     = "learning"
     "environment" = "lab"
@@ -211,7 +211,7 @@ variable "sql_svc_acct_pswd" {
 variable "vm_dc1_hostname" {
   description = "Hostname for the domain controller"
   type        = string
-  default     = "vm-dc1" // fail if not unique in public DNS
+  default     = "vm-dc170" // fail if not unique in public DNS
 }
 variable "vm_dc1_size" {
   description = "The size of the Virtual Machine(s) type."

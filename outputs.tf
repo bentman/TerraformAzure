@@ -13,12 +13,12 @@ output "resource_group_location" {
 ##### v-network.tf outputs
 output "lab_network_vnet_name" {
   description = "Name of the virtual network"
-  value = azurerm_virtual_network.vnet_lab.name
+  value       = azurerm_virtual_network.vnet_lab.name
 }
 
 output "lab_network_vnet" {
   description = "Address space of the virtual network"
-  value = azurerm_virtual_network.vnet_lab.address_space[0]
+  value       = azurerm_virtual_network.vnet_lab.address_space[0]
 }
 
 output "lab_network_snet" {
@@ -35,7 +35,7 @@ output "lab_network_snet" {
 
 output "lab_gw_pip" {
   description = "Public IP address of the NAT gateway"
-  value = azurerm_public_ip.vnet_gw_pip.ip_address
+  value       = azurerm_public_ip.vnet_gw_pip.ip_address
 }
 
 ##### vm-jumpWin outputs
@@ -87,9 +87,9 @@ output "sqlha_module_vars" {
 ##### vm-sqlha outputs
 output "vm_sqlha_output" {
   description = "Output from the vm-sqlha module, if it exists"
-  value = length(module.sql_ha) > 0 ? { 
-    for i in range(length(module.sql_ha)) : 
-    i => module.sql_ha[i].vm_sqlha 
+  value = length(module.sql_ha) > 0 ? {
+    for i in range(length(module.sql_ha)) :
+    i => module.sql_ha[i].vm_sqlha
   } : null
 }
 
