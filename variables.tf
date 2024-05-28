@@ -227,7 +227,7 @@ variable "vm_dc1_size" {
 variable "vm_dc1_shutdown_hhmm" {
   description = "Time for VM Shutdown (HHMM)"
   type        = string
-  default     = "0000" // midnight ;-)
+  default     = "0015" // midnight ;-)
 }
 
 variable "dc1_domain_name" {
