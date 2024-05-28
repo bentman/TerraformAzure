@@ -63,7 +63,7 @@ variable "tags" {
   }
 }
 
-########## vm-jumpBox
+########## vm-jumpBox VARIABLES
 # vm-jumpLin Hostname
 variable "vm_jumplin_hostname" {
   description = "Computer name for the Linux VM jumpbox"
@@ -97,7 +97,7 @@ variable "vm_shutdown_tz" {
   default     = "Pacific Standard Time"
 }
 
-########## vm-addc
+########## vm-addc VARIABLES
 variable "vm_addc_hostname" {
   description = "Hostname for the domain controller"
   type        = string
@@ -116,7 +116,7 @@ variable "vm_addc_shutdown_hhmm" {
   default     = "0015" // midnight ;-)
 }
 
-########## addc 
+########## addc VARIABLES
 variable "domain_name" {
   description = "Domain name"
   type        = string
@@ -150,7 +150,7 @@ variable "safemode_admin_pswd" {
   sensitive   = true
 }
 
-########## vm-sqlha 
+########## vm-sqlha VARIABLES
 variable "sqlaag_name" {
   description = "Name of the SQL AG (Availability Group)"
   type        = string
@@ -212,7 +212,7 @@ variable "sql_svc_acct_pswd" {
   sensitive   = true
 }
 
-########## vm-dc1
+########## vm-dc1 VARIABLES
 variable "vm_dc1_hostname" {
   description = "Hostname for the domain controller"
   type        = string
