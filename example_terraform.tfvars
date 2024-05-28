@@ -58,7 +58,7 @@ sql_sysadmin_pswd = "P@ssword!2024"   // sql sysadmin password
 ##### vm-dc1 module values
 vm_dc1_size             = "Standard_D2s_v3"               // vm dc1 size
 vm_dc1_hostname         = "vm-dc170"                      // vm dc1 hostname, 15 character max
-dc1_domain_name         = "anotherdomain.onmicrosoft.com" // another fqdn domain name
+dc1_domain_name         = "anotherdomain.onmicrosoft.lan" // another fqdn domain name
 dc1_domain_netbios_name = "anotherdomain"                 // another netbios domain name, 15 character max
 */
 #################### NOTES ####################
