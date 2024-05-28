@@ -101,7 +101,7 @@ variable "vm_shutdown_tz" {
 variable "vm_addc_hostname" {
   description = "Hostname for the domain controller"
   type        = string
-  default     = "vm-addc"
+  default     = "vm-addc" // fail if not unique in public DNS
 }
 
 variable "vm_addc_size" {
@@ -114,12 +114,6 @@ variable "vm_addc_shutdown_hhmm" {
   description = "Time for VM Shutdown (HHMM)"
   type        = string
   default     = "0000" // midnight ;-)
-}
-
-variable "vm_addc_shutdown_tz" {
-  description = "Time Zone for VM Shutdown"
-  type        = string
-  default     = "Pacific Standard Time"
 }
 
 ########## addc 
@@ -170,7 +164,7 @@ variable "sqlcluster_name" {
 variable "vm_sqlha_hostname" {
   description = "Computername for vm-sqlha appended by vm_sqlha_count #"
   type        = string
-  default     = "vm-sqlha" // maximum of 14 char
+  default     = "vm-sqlha" // maximum of 14 char // fail if not unique in public DNS
 }
 
 variable "vm_sqlha_size" {
@@ -211,4 +205,34 @@ variable "sql_svc_acct_pswd" {
   description = "SQL service account password"
   type        = string
   sensitive   = true
+}
+
+########## vm-dc1
+variable "vm_dc1_hostname" {
+  description = "Hostname for the domain controller"
+  type        = string
+  default     = "vm-dc1" // fail if not unique in public DNS
+}
+variable "vm_dc1_size" {
+  description = "The size of the Virtual Machine(s) type."
+  type        = string
+  default     = "Standard_D2s_v3"
+}
+
+variable "vm_dc1_shutdown_hhmm" {
+  description = "Time for VM Shutdown (HHMM)"
+  type        = string
+  default     = "0000" // midnight ;-)
+}
+
+variable "dc1_domain_name" {
+  description = "Domain name"
+  type        = string
+  default     = "mylab.mytenant.onmicrosoft.lan"
+}
+
+variable "dc1_domain_netbios_name" {
+  description = "Domain NetBIOS name"
+  type        = string
+  default     = "MYLAB"
 }

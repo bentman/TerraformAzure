@@ -71,8 +71,8 @@ module "sql_ha" {
   vm_addc_localadmin_user  = var.domain_admin_user //NOTE: becomes domain admin after dcpromo
   vm_addc_localadmin_pswd  = var.domain_admin_pswd //NOTE: becomes domain admin after dcpromo
   vm_addc_size             = var.vm_addc_size
-  vm_addc_public_ip        = module.vm_addc[0].vm_addc_public_ip
-  vm_addc_private_ip       = module.vm_addc[0].vm_addc_private_ip
+  vm_addc_public_ip        = module.sql_ha[0].vm_addc_public_ip
+  vm_addc_private_ip       = module.sql_ha[0].vm_addc_private_ip
   vm_sqlha_hostname        = var.vm_sqlha_hostname
   vm_sqlha_size            = var.vm_sqlha_size
   vm_sqlha_localadmin_user = var.vm_localadmin_user
@@ -103,7 +103,7 @@ variable "module_dc1_enable" {
 }
 
 module "vm_dc1" {
-  # Module for deploying first Active Directory Domain Controller in Forest
+  # Module for deploying first Active Directory Domain Controller in Forest (stand-alone)
   count                   = var.module_dc1_enable ? 1 : 0
   source                  = "./modules/vm-dc1"
   lab_name                = var.lab_name
@@ -113,11 +113,11 @@ module "vm_dc1" {
   vm_shutdown_tz          = var.vm_shutdown_tz
   vm_localadmin_user      = var.domain_admin_user //NOTE: becomes domain admin after dcpromo
   vm_localadmin_pswd      = var.domain_admin_pswd //NOTE: becomes domain admin after dcpromo
-  vm_dc1_hostname         = "vm-dc1"              // var.vm_addc_hostname
-  vm_dc1_size             = var.vm_addc_size
-  vm_dc1_shutdown_hhmm    = var.vm_shutdown_hhmm
-  dc1_domain_name         = "mylab.onmicrosoft.lan" // var.domain_name
-  dc1_domain_netbios_name = "MYLAB"                 // var.domain_netbios_name
+  vm_dc1_hostname         = var.vm_dc1_hostname
+  vm_dc1_size             = var.vm_dc1_size
+  vm_dc1_shutdown_hhmm    = var.vm_dc1_shutdown_hhmm
+  dc1_domain_name         = var.dc1_domain_name
+  dc1_domain_netbios_name = var.dc1_domain_netbios_name
   dc1_safemode_admin_pswd = var.safemode_admin_pswd
   tags                    = var.tags
   depends_on = [
