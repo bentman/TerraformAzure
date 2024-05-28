@@ -11,15 +11,6 @@ resource "azurerm_resource_group" "mylab" {
 }
 
 ##### MODULE vm-jumpbox
-variable "module_vm_jumpbox_enable" {
-  description = "A boolean flag to enable or disable the ./modules/vm-jumpbox"
-  type        = bool
-  default     = false // true -or- false 
-  //caution: 'terraform plan' produces 'changed state' after toggle
-  //         if exist, resources will be destroyed on next 'apply'
-  //         false = '# to destroy' | true = '# to add ... # to destroy'
-}
-
 module "vm_jumpbox" {
   # Module for deploying jumpbox vm's in their own subnet
   count               = var.module_vm_jumpbox_enable ? 1 : 0
@@ -42,15 +33,6 @@ module "vm_jumpbox" {
 }
 
 ##### MODULE sql-ha
-variable "module_sql_ha_enable" {
-  description = "A boolean flag to enable or disable the ./modules/sql-ha"
-  type        = bool
-  default     = false // true -or- false 
-  //caution: 'terraform plan' produces 'changed state' after toggle
-  //         if exist, resources will be destroyed on next 'apply'
-  //         false = '# to destroy' | true = '# to add ... # to destroy'
-}
-
 module "sql_ha" {
   # Module for deploying SQL High Availability VMs (requires vm-addc AD Domain Controller)
   count                    = var.module_sql_ha_enable ? 1 : 0
@@ -92,15 +74,6 @@ module "sql_ha" {
 }
 
 ##### MODULE vm-dc1
-variable "module_dc1_enable" {
-  description = "A boolean flag to enable or disable the ./modules/vm-addc"
-  type        = bool
-  default     = false // true -or- false 
-  //caution: 'terraform plan' produces 'changed state' after toggle
-  //         if exist, resources will be destroyed on next 'apply'
-  //         false = '# to destroy' | true = '# to add ... # to destroy'
-}
-
 module "vm_dc1" {
   # Module for deploying first Active Directory Domain Controller in Forest (stand-alone)
   count                   = var.module_dc1_enable ? 1 : 0
