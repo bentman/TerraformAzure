@@ -2,17 +2,17 @@
 ##### vm-dc1.tf outputs
 
 output "vm_dc1_public_name" {
-  description = "Public DNS name of vm-addc"
+  description = "Public DNS name of vm-dc1"
   value       = azurerm_public_ip.vm_dc1_pip.fqdn
 }
 
 output "vm_dc1_public_ip" {
-  description = "Public IP address of vm-addc"
+  description = "Public IP address of vm-dc1"
   value       = azurerm_public_ip.vm_dc1_pip.ip_address
 }
 
 output "vm_dc1_private_ip" {
-  description = "Private IP address of vm-addc"
+  description = "Private IP address of vm-dc1"
   value       = azurerm_network_interface.vm_dc1_nic.private_ip_address
 }
 
