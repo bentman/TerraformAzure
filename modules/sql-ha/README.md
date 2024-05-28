@@ -56,32 +56,6 @@ module "sql_ha" {
 }
 ```
 
-### Domain Controller Module
-
-```hcl
-module "vm_dc1" {
-  count                   = var.module_dc1_enable ? 1 : 0
-  source                  = "./modules/vm-dc1"
-  lab_name                = var.lab_name
-  rg_name                 = azurerm_resource_group.mylab.name
-  rg_location             = azurerm_resource_group.mylab.location
-  vm_server_snet_id       = azurerm_subnet.snet_0128_server.id
-  vm_shutdown_tz          = var.vm_shutdown_tz
-  vm_localadmin_user      = var.domain_admin_user //NOTE: becomes domain admin after dcpromo
-  vm_localadmin_pswd      = var.domain_admin_pswd //NOTE: becomes domain admin after dcpromo
-  vm_dc1_hostname         = var.vm_dc1_hostname
-  vm_dc1_size             = var.vm_dc1_size
-  vm_dc1_shutdown_hhmm    = var.vm_dc1_shutdown_hhmm
-  dc1_domain_name         = var.dc1_domain_name
-  dc1_domain_netbios_name = var.dc1_domain_netbios_name
-  dc1_safemode_admin_pswd = var.safemode_admin_pswd
-  tags                    = var.tags
-  depends_on = [
-    data.azurerm_subnet.snet_0128_server
-  ]
-}
-```
-
 ## Variables
 
 ### Common Variables
