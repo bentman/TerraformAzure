@@ -113,7 +113,7 @@ variable "vm_addc_size" {
 variable "vm_addc_shutdown_hhmm" {
   description = "Time for VM Shutdown (HHMM)"
   type        = string
-  default     = "0000" // midnight ;-)
+  default     = "0015" // midnight ;-)
 }
 
 ########## addc 
@@ -146,7 +146,7 @@ variable "domain_admin_pswd" {
 variable "safemode_admin_pswd" {
   description = "Domain Safe Mode password"
   type        = string
-  default     = "P@ssw0rd!"
+  default     = "P@ssw0rd!234"
   sensitive   = true
 }
 
@@ -154,11 +154,13 @@ variable "safemode_admin_pswd" {
 variable "sqlaag_name" {
   description = "Name of the SQL AG (Availability Group)"
   type        = string
+  default     = "sqlhaaoaag"
 }
 
 variable "sqlcluster_name" {
   description = "Name of the SQL cluster"
   type        = string
+  default     = "sqlcluster"
 }
 
 variable "vm_sqlha_hostname" {
@@ -188,11 +190,13 @@ variable "vm_sqlha_shutdown_tz" {
 variable "sql_sysadmin_user" {
   description = "SQL sysadmin username"
   type        = string
+  default     = "sqladmin"
 }
 
 variable "sql_sysadmin_pswd" {
   description = "SQL sysadmin password"
   type        = string
+  default     = "'P@ssw0rd!234'"
   sensitive   = true
 }
 
@@ -204,6 +208,7 @@ variable "sql_svc_acct_user" {
 variable "sql_svc_acct_pswd" {
   description = "SQL service account password"
   type        = string
+  default     = "'P@ssw0rd!234'"
   sensitive   = true
 }
 

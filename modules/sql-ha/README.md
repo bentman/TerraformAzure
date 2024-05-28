@@ -1,35 +1,39 @@
-Here is the combined README.md file for the merged module, using `***` instead of ` ``` ` for embedded code blocks:
+# Module for Domain Controller and SQL High Availability on Azure Virtual Machines
 
-***
+This Terraform module deploys an Active Directory Domain Controller along with a high availability SQL Server cluster in Azure.
+It is designed for creating a robust and scalable infrastructure for SQL Server and Active Directory services.
 
-# SQL High Availability with Active Directory Domain Controller Module
+## Overview
 
-This Terraform module creates an Active Directory Domain Controller (AD DC) and SQL High Availability (SQL HA) setup in Azure. The module handles the provisioning of necessary infrastructure components, including virtual networks, subnets, public IP addresses, NAT gateways, network security groups, and virtual machines configured for high availability.
+This module sets up the following:
+
+- **Active Directory Domain Controller (VM ADDC)**: Deploys a Windows Server configured as an Active Directory Domain Controller.
+- **SQL High Availability (SQL HA)**: Deploys SQL servers in a high availability configuration with necessary network, storage, and security settings.
 
 ## Usage
 
-To use this module, include it in your Terraform configuration and pass the required variables.
+### SQL HA Module
 
-***
+```hcl
 module "sql_ha" {
-  count                    = var.module_vm_addc_enable ? 1 : 0
+  count                    = var.module_sql_ha_enable ? 1 : 0
   source                   = "./modules/sql-ha"
   lab_name                 = var.lab_name
   rg_name                  = azurerm_resource_group.mylab.name
   rg_location              = azurerm_resource_group.mylab.location
-  snet_0128_server_id      = azurerm_subnet.snet_0128_server.id
-  snet_0064_db1_id         = azurerm_subnet.snet_0064_db1.id
-  snet_0096_db2_id         = azurerm_subnet.snet_0096_db2.id
-  snet_0064_db1_prefixes   = azurerm_subnet.snet_0064_db1.address_prefixes
-  snet_0096_db2_prefixes   = azurerm_subnet.snet_0096_db2.address_prefixes
+  snet_0128_server_id      = data.azurerm_subnet.snet_0128_server.id
+  snet_0064_db1_id         = data.azurerm_subnet.snet_0064_db1.id
+  snet_0096_db2_id         = data.azurerm_subnet.snet_0096_db2.id
+  snet_0064_db1_prefixes   = data.azurerm_subnet.snet_0064_db1.address_prefixes
+  snet_0096_db2_prefixes   = data.azurerm_subnet.snet_0096_db2.address_prefixes
   domain_name              = var.domain_name
   domain_netbios_name      = var.domain_netbios_name
   safemode_admin_pswd      = var.safemode_admin_pswd
   vm_shutdown_tz           = var.vm_shutdown_tz
   vm_addc_hostname         = var.vm_addc_hostname
-  vm_addc_size             = var.vm_addc_size
   vm_addc_localadmin_user  = var.domain_admin_user //NOTE: becomes domain admin after dcpromo
   vm_addc_localadmin_pswd  = var.domain_admin_pswd //NOTE: becomes domain admin after dcpromo
+  vm_addc_size             = var.vm_addc_size
   vm_addc_public_ip        = module.vm_addc[0].vm_addc_public_ip
   vm_addc_private_ip       = module.vm_addc[0].vm_addc_private_ip
   vm_sqlha_hostname        = var.vm_sqlha_hostname
@@ -50,89 +54,83 @@ module "sql_ha" {
     azurerm_subnet.snet_0096_db2,
   ]
 }
-***
+```
 
-## Resources
+### Domain Controller Module
 
-The module creates the following resources:
-
-- **Active Directory Domain Controller (AD DC)**
-  - Public IP
-  - Network Interface
-  - Windows Virtual Machine
-  - Domain Controller Promotion
-  - Dev/Test Auto Shutdown
-  - OpenSSH Extension
-  - Network Security Group (NSG)
-
-- **SQL High Availability (SQL HA)**
-  - Storage Account for Cloud SQL Witness
-  - Blob Container for Cloud SQL Quorum
-  - Public IPs for SQL VMs
-  - Network Interfaces for SQL VMs
-  - Windows Virtual Machines for SQL
-  - Managed Disks for SQL Data, Logs, and Temp
-  - Dev/Test Auto Shutdown for SQL VMs
-  - OpenSSH Extension for SQL VMs
-  - Domain Join for SQL VMs
-  - Local Admin Configuration on SQL VMs
-  - SQL Admin Configuration
-  - SQL Cluster Configuration
-  - Availability Group Listener
+```hcl
+module "vm_dc1" {
+  count                   = var.module_dc1_enable ? 1 : 0
+  source                  = "./modules/vm-dc1"
+  lab_name                = var.lab_name
+  rg_name                 = azurerm_resource_group.mylab.name
+  rg_location             = azurerm_resource_group.mylab.location
+  vm_server_snet_id       = azurerm_subnet.snet_0128_server.id
+  vm_shutdown_tz          = var.vm_shutdown_tz
+  vm_localadmin_user      = var.domain_admin_user //NOTE: becomes domain admin after dcpromo
+  vm_localadmin_pswd      = var.domain_admin_pswd //NOTE: becomes domain admin after dcpromo
+  vm_dc1_hostname         = var.vm_dc1_hostname
+  vm_dc1_size             = var.vm_dc1_size
+  vm_dc1_shutdown_hhmm    = var.vm_dc1_shutdown_hhmm
+  dc1_domain_name         = var.dc1_domain_name
+  dc1_domain_netbios_name = var.dc1_domain_netbios_name
+  dc1_safemode_admin_pswd = var.safemode_admin_pswd
+  tags                    = var.tags
+  depends_on = [
+    data.azurerm_subnet.snet_0128_server
+  ]
+}
+```
 
 ## Variables
 
-| Name                      | Type   | Description                                      | Default                     |
-|---------------------------|--------|--------------------------------------------------|-----------------------------|
-| `lab_name`                | string | The name of the lab environment                  | `mylab`                     |
-| `rg_name`                 | string | The name of the resource group                   | `rg-mylab`                  |
-| `rg_location`             | string | The location of the resource group               | `westus`                    |
-| `snet_0128_server_id`     | string | The ID of the subnet for server                  | n/a                         |
-| `snet_0064_db1_id`        | string | The ID of the subnet for database 1              | n/a                         |
-| `snet_0096_db2_id`        | string | The ID of the subnet for database 2              | n/a                         |
-| `snet_0064_db1_prefixes`  | list   | The address prefixes of the subnet for db1       | n/a                         |
-| `snet_0096_db2_prefixes`  | list   | The address prefixes of the subnet for db2       | n/a                         |
-| `domain_name`             | string | The domain name                                  | `mylab.mytenant.onmicrosoft.com` |
-| `domain_netbios_name`     | string | The NetBIOS name of the domain                   | `MYLAB`                     |
-| `safemode_admin_pswd`     | string | The safe mode admin password                     | `P@ssw0rd!234`              |
-| `vm_shutdown_tz`          | string | The time zone for VM shutdown                    | `Pacific Standard Time`     |
-| `vm_addc_hostname`        | string | The hostname for the AD DC                       | `vmaddc`                    |
-| `vm_addc_size`            | string | The size of the AD DC VM                         | `Standard_D2s_v3`           |
-| `vm_addc_localadmin_user` | string | The local admin username for AD DC               | `domain_admin_user`         |
-| `vm_addc_localadmin_pswd` | string | The local admin password for AD DC               | `domain_admin_pswd`         |
-| `vm_addc_public_ip`       | string | The public IP of the AD DC                       | n/a                         |
-| `vm_addc_private_ip`      | string | The private IP of the AD DC                      | n/a                         |
-| `vm_sqlha_hostname`       | string | The hostname for the SQL HA VMs                  | `vm-sqlha`                  |
-| `vm_sqlha_size`           | string | The size of the SQL HA VMs                       | `Standard_DS1_v2`           |
-| `vm_sqlha_localadmin_user`| string | The local admin username for SQL HA VMs          | `localadmin`                |
-| `vm_sqlha_localadmin_pswd`| string | The local admin password for SQL HA VMs          | `P@ssw0rd!234`              |
-| `vm_sqlha_shutdown_hhmm`  | string | The time for SQL HA VM shutdown                  | `0000`                      |
-| `sql_sysadmin_user`       | string | The SQL sysadmin username                        | `sqladmin`                  |
-| `sql_sysadmin_pswd`       | string | The SQL sysadmin password                        | `P@ssw0rd!234`              |
-| `sql_svc_acct_user`       | string | The SQL service account username                 | `sqlsvc`                    |
-| `sql_svc_acct_pswd`       | string | The SQL service account password                 | `P@ssw0rd!234`              |
-| `sqlaag_name`             | string | The name of the SQL Availability Group           | `sqlaag`                    |
-| `sqlcluster_name`         | string | The name of the SQL cluster                      | `sqlcluster`                |
-| `tags`                    | map    | A map of tags to assign to the resources         | `{ "source": "terraform", "project": "learning", "environment": "lab" }` |
+### Common Variables
 
-## Outputs
+| Name                  | Type     | Description                                         | Default                          |
+| --------------------- | -------- | --------------------------------------------------- | -------------------------------- |
+| `lab_name`            | `string` | The name of the lab environment                     | 'mylab'                          |
+| `rg_location`         | `string` | The location of the resource group                  | 'westus'                         |
+| `tags`                | `map`    | A map of tags to apply to the resources             | `{}`                             |
+| `vm_shutdown_tz`      | `string` | The timezone for VM shutdown                        | 'Pacific Standard Time"          |
+| `domain_name`         | `string` | The domain name for Active Directory                | 'mylab.mytenant.onmicrosoft.lan' |
+| `domain_netbios_name` | `string` | The NetBIOS name for the domain                     | 'MYLAB'                          |
+| `safemode_admin_pswd` | `string` | The password for the safemode administrator account | 'P@ssw0rd!234'                      |
+| `vm_localadmin_user`  | `string` | The local admin username for the VMs                | 'localadmin'                     |
+| `vm_localadmin_pswd`  | `string` | The local admin password for the VMs                | 'P@ssw0rd!234'                   |
 
-| Name                      | Description                                      |
-|---------------------------|--------------------------------------------------|
-| `vm_addc_public_name`     | The public DNS name of vm-addc                   |
-| `vm_addc_public_ip`       | The public IP address of vm-addc                 |
-| `vm_sqlha_output`         | Output from the vm-sqlha module, if it exists    |
+### SQL HA Module Variables
+
+| Name                     | Type     | Description                                      | Default           |
+| ------------------------ | -------- | ------------------------------------------------ | ----------------- |
+| `vm_sqlha_hostname`      | `string` | The hostname for the SQL HA VMs                  | 'vm-sqlha'        |
+| `vm_sqlha_size`          | `string` | The size of the SQL HA VMs                       | 'Standard_D2s_v3' |
+| `vm_sqlha_shutdown_hhmm` | `string` | The time for VM shutdown in HHMM format          | '0000'            |
+| `sqlaag_name`            | `string` | The name of the SQL Always-On Availability Group | 'sqlhaaoaag'      |
+| `sqlcluster_name`        | `string` | The name of the SQL cluster                      | 'sqlcluster'      |
+| `sql_sysadmin_user`      | `string` | The SQL sysadmin username                        | 'sqladmin'        |
+| `sql_sysadmin_pswd`      | `string` | The SQL sysadmin password                        | 'P@ssw0rd!234'    |
+| `sql_svc_acct_user`      | `string` | The SQL service account username                 | 'sqlsvc'          |
+| `sql_svc_acct_pswd`      | `string` | The SQL service account password                 | 'P@ssw0rd!234'    |
+
+### Domain Controller Module Variables
+
+| Name                    | Type     | Description                               | Default           |
+| ----------------------- | -------- | ----------------------------------------- | ----------------- |
+| `vm_addc_hostname`      | `string` | The hostname for the Domain Controller VM | 'vm-addc'         |
+| `vm_addc_size`          | `string` | The size of the Domain Controller VM      | 'Standard_D2s_v3' |
+| `vm_addc_shutdown_hhmm` | `string` | The time for VM shutdown in HHMM format   | '0015'            |
 
 ## Notes
 
 - This module assumes that the necessary resource group is already created and available.
-- Ensure you replace all placeholders with your actual values.
+- Ensure you replace all placeholders with your actual values in `terraform.tfvars`.
 
 ## Contributions
 
 Contributions are welcome. Please open an issue or submit a pull request if you have any suggestions, questions, or would like to contribute to the project.
 
 ### GNU General Public License
+
 This script is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 This script is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
