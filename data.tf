@@ -36,7 +36,7 @@ data "azurerm_resource_group" "lab_resource_group" {
 
 ##### Data from v-network.tf
 # References the virtual network created in v-network.tf
-data "azurerm_virtual_network" "azurerm_virtual_network" {
+data "azurerm_virtual_network" "vnet_lab" {
   name                = "net-0.000-${var.lab_name}"
   resource_group_name = data.azurerm_resource_group.lab_resource_group.name
   depends_on          = [
@@ -47,47 +47,47 @@ data "azurerm_virtual_network" "azurerm_virtual_network" {
 # References the jumpbox subnet within the virtual network
 data "azurerm_subnet" "snet_0000_jumpbox" {
   name                 = "snet-0.000-jumpbox"
-  virtual_network_name = data.azurerm_virtual_network.azurerm_virtual_network.name
+  virtual_network_name = data.azurerm_virtual_network.vnet_lab.name
   resource_group_name  = data.azurerm_resource_group.lab_resource_group.name
-  depends_on           = [azurerm_virtual_network.vnet_lab]
+  depends_on           = [azurerm_subnet.snet_0000_jumpbox]
 }
 
 # References the gateway subnet within the virtual network
 data "azurerm_subnet" "snet_0032_gateway" {
   name                 = "snet-0.032-gateway"
-  virtual_network_name = data.azurerm_virtual_network.azurerm_virtual_network.name
+  virtual_network_name = data.azurerm_virtual_network.vnet_lab.name
   resource_group_name  = data.azurerm_resource_group.lab_resource_group.name
-  depends_on           = [azurerm_virtual_network.vnet_lab]
+  depends_on           = [azurerm_subnet.snet_0032_gateway]
 }
 
 # References the first database subnet within the virtual network
 data "azurerm_subnet" "snet_0064_db1" {
   name                 = "snet-0.064-db1"
-  virtual_network_name = data.azurerm_virtual_network.azurerm_virtual_network.name
+  virtual_network_name = data.azurerm_virtual_network.vnet_lab.name
   resource_group_name  = data.azurerm_resource_group.lab_resource_group.name
-  depends_on           = [azurerm_virtual_network.vnet_lab]
+  depends_on           = [azurerm_subnet.snet_0064_db1]
 }
 
 # References the second database subnet within the virtual network
 data "azurerm_subnet" "snet_0096_db2" {
   name                 = "snet-0.096-db2"
-  virtual_network_name = data.azurerm_virtual_network.azurerm_virtual_network.name
+  virtual_network_name = data.azurerm_virtual_network.vnet_lab.name
   resource_group_name  = data.azurerm_resource_group.lab_resource_group.name
-  depends_on           = [azurerm_virtual_network.vnet_lab]
+  depends_on           = [azurerm_subnet.snet_0096_db2]
 }
 
 # References the server subnet within the virtual network
 data "azurerm_subnet" "snet_0128_server" {
   name                 = "snet-0.128-server"
-  virtual_network_name = data.azurerm_virtual_network.azurerm_virtual_network.name
+  virtual_network_name = data.azurerm_virtual_network.vnet_lab.name
   resource_group_name  = data.azurerm_resource_group.lab_resource_group.name
-  depends_on           = [azurerm_virtual_network.vnet_lab]
+  depends_on           = [azurerm_subnet.snet_0128_server]
 }
 
 # References the client subnet within the virtual network
 data "azurerm_subnet" "snet_1000_client" {
   name                 = "snet-1.000-client"
-  virtual_network_name = data.azurerm_virtual_network.azurerm_virtual_network.name
+  virtual_network_name = data.azurerm_virtual_network.vnet_lab.name
   resource_group_name  = data.azurerm_resource_group.lab_resource_group.name
-  depends_on           = [azurerm_virtual_network.vnet_lab]
+  depends_on           = [azurerm_subnet.snet_1000_client]
 }
