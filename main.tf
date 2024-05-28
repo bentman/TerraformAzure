@@ -41,6 +41,8 @@ module "vm_jumpbox" {
   ]
 }
 
+##############################################################
+########## Cannot be applied with vm-addc module!!! ##########
 variable "module_sql_ha_enable" {
   description = "A boolean flag to enable or disable the ./modules/sql-ha module"
   type        = bool
@@ -52,7 +54,7 @@ variable "module_sql_ha_enable" {
 
 module "sql_ha" {
   # Module for deploying SQL High Availability VMs
-  count                    = var.module_vm_addc_enable ? 1 : 0
+  count                    = var.module_sql_ha_enable ? 1 : 0
   source                   = "./modules/sql-ha"
   lab_name                 = var.lab_name
   rg_name                  = azurerm_resource_group.mylab.name
@@ -91,8 +93,10 @@ module "sql_ha" {
   ]
 }
 
+##############################################################
+########## Cannot be applied with sql_ha module!!!! ##########
 # vm-addc.tf
-variable "module_vm_addc_enable" {
+variable "module_addc_enable" {
   description = "A boolean flag to enable or disable the ./modules/vm-addc module"
   type        = bool
   default     = false // true -or- false 
@@ -103,7 +107,7 @@ variable "module_vm_addc_enable" {
 
 module "vm_addc" {
   # Module for deploying first Active Directory Domain Controller in Forest
-  count                 = var.module_vm_addc_enable ? 1 : 0
+  count                 = var.module_addc_enable ? 1 : 0
   source                = "./modules/vm-addc"
   lab_name              = var.lab_name
   rg_name               = azurerm_resource_group.mylab.name

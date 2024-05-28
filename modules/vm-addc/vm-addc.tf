@@ -94,6 +94,17 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   }
 }
 
+# Set VM timezone
+resource "azurerm_virtual_machine_run_command" "vm_addc_timezone" {
+  name               = "SetTimeZone"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
+  source {
+    script = "Set-TimeZone -Name ${var.vm_addc_shutdown_tz} -Confirm:$false"
+  }
+  depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
+}
+
 # Copy DCPromo script to VM
 resource "null_resource" "vm_addc_dcpromo_copy" {
   provisioner "file" {
@@ -109,7 +120,7 @@ resource "null_resource" "vm_addc_dcpromo_copy" {
     }
   }
 
-  depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
+  depends_on = [azurerm_virtual_machine_run_command.vm_addc_timezone]
 }
 
 # Execute DCPromo script on VM
