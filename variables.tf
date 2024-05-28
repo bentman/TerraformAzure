@@ -126,7 +126,7 @@ variable "vm_addc_shutdown_tz" {
 variable "domain_name" {
   description = "Domain name"
   type        = string
-  default     = "mylab.onmicrosoft.lan"
+  default     = "mylab.mytenant.onmicrosoft.lan"
 }
 
 variable "domain_netbios_name" {

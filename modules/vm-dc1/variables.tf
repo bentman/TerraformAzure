@@ -1,20 +1,11 @@
 #################### VARIABLES ####################
-########## vm-addc 
-# Computername for domain controller
-variable "vm_addc_hostname" {
-  description = "Computername for domain controller"
-  type        = string
-  default     = "vmaddc"
-}
-
-# vm-server subnet
-variable "vm_server_snet_id" {
-  description = "vm-server subnet"
-  type        = string
-}
-
 ########## vm common Variables
-# vm local admin username - NOTE: becomes domain admin after dcpromo
+variable "vm_shutdown_tz" {
+  description = "Time Zone for VM Shutdown"
+  type        = string
+  default     = "Pacific Standard Time"
+}
+
 variable "vm_localadmin_user" {
   description = "vm local admin username - NOTE: becomes domain admin after dcpromo"
   type        = string
@@ -22,7 +13,6 @@ variable "vm_localadmin_user" {
   sensitive   = true
 }
 
-# vm local admin password - NOTE: becomes domain admin after dcpromo
 variable "vm_localadmin_pswd" {
   description = "vm local admin password - NOTE: becomes domain admin after dcpromo"
   type        = string
@@ -30,58 +20,50 @@ variable "vm_localadmin_pswd" {
   sensitive   = true
 }
 
-# The size of the Virtual Machine(s) type.
-variable "vm_addc_size" {
+variable "vm_server_snet_id" {
+  description = "vm-server subnet"
+  type        = string
+}
+
+########## vm-addc 
+variable "vm_dc1_hostname" {
+  description = "Computername for domain controller"
+  type        = string
+  default     = "vm-dc1"
+}
+
+variable "vm_dc1_size" {
   description = "The size of the Virtual Machine(s) type."
   type        = string
   default     = "Standard_D2s_v3"
 }
 
-# Time for VM Shutdown HHMM
-variable "vm_addc_shutdown_hhmm" {
+variable "vm_dc1_shutdown_hhmm" {
   description = "Time for VM Shutdown HHMM"
   type        = string
   default     = "0000" // midnight ;-)
 }
 
-# Time Zone for VM Shutdown
-variable "vm_addc_shutdown_tz" {
-  description = "Time Zone for VM Shutdown"
-  type        = string
-  default     = "Pacific Standard Time"
-}
-
 ########## addc 
 # domain name
-variable "domain_name" {
+variable "dc1_domain_name" {
   description = "domain name"
   type        = string
-  default     = "mylab.mytenant.onmicrosoft.com"
+  default     = "lab.tenant.onmicrosoft.lan"
 }
 
 # domain netbios name
-variable "domain_netbios_name" {
+variable "dc1_domain_netbios_name" {
   description = "domain netbios name"
   type        = string
-  default     = "MYLAB"
+  default     = "LAB"
 }
 
 # domain safemode password
-variable "safemode_admin_pswd" {
+variable "dc1_safemode_admin_pswd" {
   description = "domain safemode password"
   type        = string
   default     = "P@ssw0rd!234"
-  sensitive   = true
-}
-
-variable "sql_svc_acct_user" {
-  description = "SQL service account username"
-  type        = string
-}
-
-variable "sql_svc_acct_pswd" {
-  description = "SQL service account password"
-  type        = string
   sensitive   = true
 }
 

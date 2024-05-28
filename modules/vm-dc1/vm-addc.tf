@@ -1,10 +1,10 @@
-########## vm-addc (domain controller)
-# vm-addc Public IP with internet DNS hostname
+########## vm-dc1 (domain controller)
+# vm-dc1 Public IP with internet DNS hostname
 resource "azurerm_public_ip" "vm_addc_pip" {
-  name                = "vm-addc-pip"
+  name                = "vm-dc1-pip"
   location            = var.rg_location
   resource_group_name = var.rg_name
-  domain_name_label   = var.vm_addc_hostname
+  domain_name_label   = var.vm_dc1_hostname
   allocation_method   = "Static"
   sku                 = "Standard"
   tags                = var.tags
@@ -13,18 +13,18 @@ resource "azurerm_public_ip" "vm_addc_pip" {
   }
 }
 
-# vm-addc Primary NIC 
+# vm-dc1 Primary NIC 
 resource "azurerm_network_interface" "vm_addc_nic" {
-  name                          = "vm-addc-nic"
+  name                          = "vm-dc1-nic"
   location                      = var.rg_location
   resource_group_name           = var.rg_name
   enable_accelerated_networking = true
   tags                          = var.tags
   ip_configuration {
-    name                          = "vm-addc-ip"
+    name                          = "vm-dc1-ip"
     subnet_id                     = var.vm_server_snet_id
     private_ip_address_allocation = "Static"
-    private_ip_address            = cidrhost("10.0.0.128/25", 22) // "10.0.0.150"
+    private_ip_address            = cidrhost("10.0.0.128/25", 42) // "10.0.0.170"
     primary                       = true
     public_ip_address_id          = azurerm_public_ip.vm_addc_pip.id
   }
@@ -33,25 +33,25 @@ resource "azurerm_network_interface" "vm_addc_nic" {
   }
 }
 
-# vm-addc associate NIC with NSG
+# vm-dc1 associate NIC with NSG
 resource "azurerm_network_interface_security_group_association" "vm_addc_nsg_assoc" {
   network_interface_id      = azurerm_network_interface.vm_addc_nic.id
   network_security_group_id = azurerm_network_security_group.nsg_server.id
 }
 
-# Create vm-addc
+# Create vm-dc1
 resource "azurerm_windows_virtual_machine" "vm_addc" {
-  name                = "vm-addc"
+  name                = "vm-dc1"
   location            = var.rg_location
   resource_group_name = var.rg_name
-  size                = var.vm_addc_size
-  computer_name       = var.vm_addc_hostname
+  size                = var.vm_dc1_size
+  computer_name       = var.vm_dc1_hostname
   admin_username      = var.vm_localadmin_user
   admin_password      = var.vm_localadmin_pswd
   license_type        = "Windows_Server"
   tags                = var.tags
   os_disk {
-    name                 = "vm-addc-dsk0os"
+    name                 = "vm-dc1-dsk0os"
     caching              = "ReadWrite"
     disk_size_gb         = 127
     storage_account_type = "Standard_LRS"
@@ -73,8 +73,8 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
   virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
   location              = var.rg_location
   enabled               = true
-  daily_recurrence_time = var.vm_addc_shutdown_hhmm
-  timezone              = var.vm_addc_shutdown_tz
+  daily_recurrence_time = var.vm_dc1_shutdown_hhmm
+  timezone              = var.vm_shutdown_tz
   depends_on            = [azurerm_windows_virtual_machine.vm_addc]
   notification_settings {
     enabled = false
@@ -100,7 +100,7 @@ resource "azurerm_virtual_machine_run_command" "vm_addc_timezone" {
   location           = var.rg_location
   virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
   source {
-    script = "Set-TimeZone -Name ${var.vm_addc_shutdown_tz} -Confirm:$false"
+    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
   }
   depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
 }
@@ -127,7 +127,7 @@ resource "null_resource" "vm_addc_dcpromo_copy" {
 resource "null_resource" "vm_addc_dcpromo_exec" {
   provisioner "remote-exec" {
     inline = [
-      "powershell.exe -ExecutionPolicy Unrestricted -File C:\\${local.dcPromoScript} -domain_name ${var.domain_name} -domain_netbios_name ${var.domain_netbios_name} -safemode_admin_pswd ${var.safemode_admin_pswd}"
+      "powershell.exe -ExecutionPolicy Unrestricted -File C:\\${local.dcPromoScript} -domain_name ${var.dc1_domain_name} -domain_netbios_name ${var.dc1_domain_netbios_name} -safemode_admin_pswd ${var.dc1_safemode_admin_pswd}"
     ]
     connection {
       type            = "ssh"
@@ -158,7 +158,7 @@ resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
   depends_on = [time_sleep.vm_addc_dcpromo_wait]
 }
 
-########## Create NSG for vm-addc (& other servers)
+########## Create NSG for vm-dc1 (& other servers)
 resource "azurerm_network_security_group" "nsg_server" {
   name                = "vnet-nsg-server"
   location            = var.rg_location
