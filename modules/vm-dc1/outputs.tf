@@ -16,7 +16,7 @@ output "vm_dc1_private_ip" {
   value       = azurerm_network_interface.vm_dc1_nic.private_ip_address
 }
 
-output "addc_module_vars" {
+output "dc1_module_vars" {
   description = "Map of all variables used by submodule."
   value = {
     vm_dc1_hostname     = var.vm_dc1_hostname
