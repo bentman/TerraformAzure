@@ -11,7 +11,13 @@ arm_client_secret      = "YourServicePrincipalSecret" // azure service principal
 vm_localadmin_username = "YourAdminUsername"          // vm local admin username 'localadmin'
 vm_localadmin_password = "YourAdminPassword"          // vm local admin password 'P@ssw0rd!234'
 
-########## VALUES ##########
+########## MODULES ##########
+# RECOMMENDED: run all 'module = false' to setup root/v-network.tf
+module_vm_jumpbox_enable = false
+module_sql_ha_enable     = false
+module_dc1_enable        = false
+
+########## MODULE VALUES ##########
 ##### main.tf values
 lab_name    = "mylab"  // defaults to 'mylab'
 rg_location = "westus" // defaults to 'westus'
