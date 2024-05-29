@@ -59,6 +59,10 @@ Invoke-WebRequest -Uri $term_Link -OutFile .\$term_Name -Verbose
 Unblock-File .\$term_Name
 Add-AppPackage -Path .\$term_Name -Verbose
 
+####################################################
+### NOTE: This now requires a windows restart!!! ###
+####################################################
+
 # WinGet look for pwsh.exe versions (may prompt to accept terms)
 winget search Microsoft.PowerShell
 

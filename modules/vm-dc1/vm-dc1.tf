@@ -126,7 +126,7 @@ resource "null_resource" "vm_dc1_dcpromo_copy" {
 resource "null_resource" "vm_server_stuff_copy" {
   provisioner "file" {
     source      = "${path.module}/../../content/vm-server/${local.server_stuff}"
-    destination = "C:\\Users\\Documents\\${local.server_stuff}"
+    destination = "C:\\Users\\Public\\Documents\\${local.server_stuff}"
     connection {
       type            = "ssh"
       user            = var.vm_localadmin_user
@@ -136,7 +136,7 @@ resource "null_resource" "vm_server_stuff_copy" {
       timeout         = "120s"
     }
   }
-  depends_on = [azurerm_virtual_machine_run_command.vm_dc1_timezone]
+  depends_on = [azurerm_virtual_machine_run_command.vm_dc1_dcpromo_copy]
 }
 
 # Execute DCPromo script on VM
