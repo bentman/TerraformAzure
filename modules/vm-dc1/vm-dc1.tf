@@ -125,7 +125,7 @@ resource "null_resource" "vm_dc1_dcpromo_copy" {
 # Copy DCPromo script to VM
 resource "null_resource" "vm_server_stuff_copy" {
   provisioner "file" {
-    source      = "${path.module}/../../content/vm-windows/${local.server_stuff}"
+    source      = "${path.module}/../../content/vm-server/${local.server_stuff}"
     destination = "C:\\Users\\Documents\\${local.server_stuff}"
     connection {
       type            = "ssh"
