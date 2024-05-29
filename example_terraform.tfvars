@@ -12,7 +12,7 @@ vm_localadmin_username = "YourAdminUsername"          // vm local admin username
 vm_localadmin_password = "YourAdminPassword"          // vm local admin password 'P@ssw0rd!234'
 
 ########## MODULES ##########
-# RECOMMENDED: run all 'module = false' to setup root/v-network.tf
+# RECOMMENDED: all 'module = false' to apply root/v-network.tf before any 'module = true'
 enable_module_vm_jumpbox = false
 enable_module_sql_ha     = false
 enable_module_dc1        = false
