@@ -13,9 +13,9 @@ vm_localadmin_password = "YourAdminPassword"          // vm local admin password
 
 ########## MODULES ##########
 # RECOMMENDED: run all 'module = false' to setup root/v-network.tf
-module_vm_jumpbox_enable = false
-module_sql_ha_enable     = false
-module_dc1_enable        = false
+enable_module_vm_jumpbox = false
+enable_module_sql_ha     = false
+enable_module_dc1        = false
 
 ########## MODULE VALUES ##########
 ##### main.tf values

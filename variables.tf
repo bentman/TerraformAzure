@@ -43,19 +43,19 @@ variable "vm_localadmin_pswd" {
 ##### MODULE VARIABLES
 # caution: 'terraform plan' produces 'changed state' after toggle
 #          if exist, resources may be destroyed on next 'apply'
-variable "module_vm_jumpbox_enable" {
+variable "enable_module_vm_jumpbox" {
   description = "Boolean flag to enable or disable the ./modules/vm-jumpbox"
   type        = bool
   default     = false // true -or- false 
 }
 
-variable "module_sql_ha_enable" {
+variable "enable_module_sql_ha" {
   description = "Boolean flag to enable or disable the ./modules/sql-ha"
   type        = bool
   default     = false // true -or- false 
 }
 
-variable "module_dc1_enable" {
+variable "enable_module_dc1" {
   description = "Boolean flag to enable or disable the ./modules/vm-addc"
   type        = bool
   default     = false // true -or- false 

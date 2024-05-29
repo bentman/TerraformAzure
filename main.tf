@@ -13,7 +13,7 @@ resource "azurerm_resource_group" "mylab" {
 ##### MODULE vm-jumpbox
 module "vm_jumpbox" {
   # Module for deploying jumpbox vm's in their own subnet
-  count               = var.module_vm_jumpbox_enable ? 1 : 0
+  count               = var.enable_module_vm_jumpbox ? 1 : 0
   source              = "./modules/vm-jumpbox"
   lab_name            = var.lab_name
   rg_name             = azurerm_resource_group.mylab.name
@@ -35,7 +35,7 @@ module "vm_jumpbox" {
 ##### MODULE sql-ha
 module "sql_ha" {
   # Module for deploying SQL High Availability VMs (requires vm-addc AD Domain Controller)
-  count                    = var.module_sql_ha_enable ? 1 : 0
+  count                    = var.enable_module_sql_ha ? 1 : 0
   source                   = "./modules/sql-ha"
   lab_name                 = var.lab_name
   rg_name                  = azurerm_resource_group.mylab.name
@@ -76,7 +76,7 @@ module "sql_ha" {
 ##### MODULE vm-dc1
 module "vm_dc1" {
   # Module for deploying first Active Directory Domain Controller in Forest (stand-alone)
-  count                   = var.module_dc1_enable ? 1 : 0
+  count                   = var.enable_module_dc1 ? 1 : 0
   source                  = "./modules/vm-dc1"
   lab_name                = var.lab_name
   rg_name                 = azurerm_resource_group.mylab.name
