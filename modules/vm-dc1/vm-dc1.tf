@@ -136,7 +136,7 @@ resource "null_resource" "vm_server_stuff_copy" {
       timeout         = "120s"
     }
   }
-  depends_on = [azurerm_virtual_machine_run_command.vm_dc1_dcpromo_copy]
+  depends_on = [null_resource.vm_dc1_dcpromo_copy]
 }
 
 # Execute DCPromo script on VM
