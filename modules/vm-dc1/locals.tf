@@ -3,4 +3,5 @@
 # Local variable for the DCPromo script
 locals {
   dcPromoScript = "Install-DomainController.ps1"
+  server_stuff = "get-mystuff.ps1"
 }

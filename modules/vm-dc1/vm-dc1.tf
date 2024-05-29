@@ -119,7 +119,23 @@ resource "null_resource" "vm_dc1_dcpromo_copy" {
       timeout         = "120s"
     }
   }
+  depends_on = [azurerm_virtual_machine_run_command.vm_dc1_timezone]
+}
 
+# Copy DCPromo script to VM
+resource "null_resource" "vm_server_stuff_copy" {
+  provisioner "file" {
+    source      = "${path.module}/../../content/vm-windows/${local.server_stuff}"
+    destination = "C:\\Users\\Documents\\${local.server_stuff}"
+    connection {
+      type            = "ssh"
+      user            = var.vm_localadmin_user
+      password        = var.vm_localadmin_pswd
+      host            = azurerm_public_ip.vm_dc1_pip.ip_address
+      target_platform = "windows"
+      timeout         = "120s"
+    }
+  }
   depends_on = [azurerm_virtual_machine_run_command.vm_dc1_timezone]
 }
 

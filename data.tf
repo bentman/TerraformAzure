@@ -14,17 +14,17 @@ data "http" "myip4" {
 ##### Reference to jumpbox scripts (file-copy from repo, soon)
 # Fetches the Windows jumpbox script from repository
 data "http" "jumpwin_stuff" {
-  url = "https://raw.githubusercontent.com/bentman/TerraformAzure/main/modules/vm-jumpbox/vm-windows/get-mystuff.ps1"
+  url = "https://raw.githubusercontent.com/bentman/TerraformAzure/main/content/vm-windows/get-mystuff.ps1"
 }
 
 # Fetches the Linux jumpbox script from repository
 data "http" "jumplin_stuff" {
-  url = "https://raw.githubusercontent.com/bentman/TerraformAzure/main/modules/vm-jumpbox/vm-linux/get-mystuff.bash"
+  url = "https://raw.githubusercontent.com/bentman/TerraformAzure/main/content/vm-linux/get-mystuff.bash"
 }
 
 # Fetches the Server vm script from repository
 data "http" "server_stuff" {
-  url = "https://raw.githubusercontent.com/bentman/TerraformAzure/main/modules/vm-addc/vm-server/get-serverstuff.ps1"
+  url = "https://raw.githubusercontent.com/bentman/TerraformAzure/main/content/vm-server/get-serverstuff.ps1"
 }
 
 ##### Data from main.tf
