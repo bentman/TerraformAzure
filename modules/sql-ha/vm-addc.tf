@@ -82,14 +82,14 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
 }
 
 # Set VM timezone
-resource "azurerm_virtual_machine_run_command" "vm_timezone" {
+resource "azurerm_virtual_machine_run_command" "vm_timezone_addc" {
   name               = "SetTimeZone"
   location           = var.rg_location
   virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
   source {
     script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
   }
-  depends_on = [azurerm_virtual_machine_extension.vm_dc1_openssh]
+  depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh]
 }
 
 # Copy DCPromo script to VM

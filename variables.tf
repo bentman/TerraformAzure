@@ -184,6 +184,12 @@ variable "sqlcluster_name" {
   default     = "sqlcluster"
 }
 
+variable "vm_sqlha_count" {
+  description = "The number of SQL HA virtual machine - Currently only supported 2!"
+  type        = number
+  default     = 2
+}
+
 variable "vm_sqlha_hostname" {
   description = "Computername for vm-sqlha appended by vm_sqlha_count #"
   type        = string
