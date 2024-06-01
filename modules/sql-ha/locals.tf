@@ -3,6 +3,7 @@
 locals {
   # Script for seting up first Active Directory Domain Controller in Forest
   dcPromoScript = "Install-DomainController.ps1"
+  server_stuff  = "get-serverstuff.ps1"
 
   # Generate locals for domain join parameters
   split_domain    = split(".", var.domain_name)

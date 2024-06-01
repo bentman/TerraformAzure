@@ -41,7 +41,7 @@ resource "azurerm_network_interface_security_group_association" "vm_dc1_nsg_asso
 
 # Create vm-dc1
 resource "azurerm_windows_virtual_machine" "vm_addc" {
-  name                = "${var.vm_dc1_hostname}"
+  name                = var.vm_dc1_hostname
   location            = var.rg_location
   resource_group_name = var.rg_name
   size                = var.vm_dc1_size
@@ -65,19 +65,6 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   network_interface_ids = [azurerm_network_interface.vm_dc1_nic.id]
   lifecycle {
     ignore_changes = [tags]
-  }
-}
-
-# Enable dev\test shutdown schedule (to save $)
-resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_dc1_shutdown" {
-  virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
-  location              = var.rg_location
-  enabled               = true
-  daily_recurrence_time = var.vm_dc1_shutdown_hhmm
-  timezone              = var.vm_shutdown_tz
-  depends_on            = [azurerm_windows_virtual_machine.vm_addc]
-  notification_settings {
-    enabled = false
   }
 }
 
@@ -119,7 +106,7 @@ resource "null_resource" "vm_dc1_dcpromo_copy" {
       timeout         = "120s"
     }
   }
-  depends_on = [azurerm_virtual_machine_run_command.vm_dc1_timezone]
+  depends_on = [azurerm_virtual_machine_run_command.vm_dc1_timezone, ]
 }
 
 # Copy DCPromo script to VM
@@ -154,13 +141,13 @@ resource "null_resource" "vm_dc1_dcpromo_exec" {
       timeout         = "20m"
     }
   }
-  depends_on = [null_resource.vm_dc1_dcpromo_copy]
+  depends_on = [null_resource.vm_dc1_dcpromo_copy, ]
 }
 
 # Wait for DCPromo to complete
 resource "time_sleep" "vm_dc1_dcpromo_wait" {
   create_duration = "3m"
-  depends_on      = [null_resource.vm_dc1_dcpromo_exec]
+  depends_on      = [null_resource.vm_dc1_dcpromo_exec, ]
 }
 
 # Restart VM after DCPromo
@@ -171,7 +158,7 @@ resource "azurerm_virtual_machine_run_command" "vm_dc1_restart" {
   source {
     script = "Restart-Computer -Force"
   }
-  depends_on = [time_sleep.vm_dc1_dcpromo_wait]
+  depends_on = [time_sleep.vm_dc1_dcpromo_wait, ]
 }
 
 ########## Create NSG for vm-dc1 (& other servers)
@@ -230,5 +217,18 @@ resource "azurerm_network_security_group" "nsg_dc1" {
   }
   lifecycle {
     ignore_changes = [tags]
+  }
+}
+
+# Enable dev\test shutdown schedule (to save $)
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_dc1_shutdown" {
+  virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
+  location              = var.rg_location
+  enabled               = true
+  daily_recurrence_time = var.vm_dc1_shutdown_hhmm
+  timezone              = var.vm_shutdown_tz
+  depends_on            = [azurerm_windows_virtual_machine.vm_addc, ]
+  notification_settings {
+    enabled = false
   }
 }

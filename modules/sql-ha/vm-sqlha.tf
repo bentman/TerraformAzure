@@ -132,6 +132,17 @@ resource "azurerm_virtual_machine_extension" "openssh_sqlha" {
   }
 }
 
+# Set VM timezone
+resource "azurerm_virtual_machine_run_command" "vm_timezone" {
+  name               = "SetTimeZone"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
+  source {
+    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
+  }
+  depends_on = [azurerm_virtual_machine_extension.openssh_sqlha]
+}
+
 # vm-sqlha managed disk - data
 resource "azurerm_managed_disk" "vm_sqlha_data" {
   count                = var.vm_sqlha_count
