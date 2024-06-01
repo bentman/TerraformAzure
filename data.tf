@@ -39,9 +39,9 @@ data "azurerm_resource_group" "lab_resource_group" {
 data "azurerm_virtual_network" "vnet_lab" {
   name                = "net-0.000-${var.lab_name}"
   resource_group_name = data.azurerm_resource_group.lab_resource_group.name
-  depends_on          = [
-    data.azurerm_resource_group.lab_resource_group, 
-    azurerm_virtual_network.vnet_lab]
+  depends_on = [
+    data.azurerm_resource_group.lab_resource_group,
+  azurerm_virtual_network.vnet_lab]
 }
 
 # References the jumpbox subnet within the virtual network

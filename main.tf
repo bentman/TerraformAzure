@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "mylab" {
   location = var.rg_location
   tags     = var.tags
   lifecycle {
-    ignore_changes = [tags,]
+    ignore_changes = [tags, ]
   }
 }
 
