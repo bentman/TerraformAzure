@@ -102,7 +102,7 @@ resource "null_resource" "jumpwin_copy_file" {
     timeout  = "2m"
   }
   provisioner "file" {
-    source      = "../../content/vm-windows/get-mystuff.ps1"
+    source      = "${path.module}/../../content/vm-windows/get-mystuff.ps1"
     destination = "c:\\users\\public\\documents\\get-mystuff.ps1"
   }
   depends_on = [

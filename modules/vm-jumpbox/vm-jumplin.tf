@@ -85,7 +85,7 @@ resource "null_resource" "jumplin_copy_file" {
     timeout  = "2m"
   }
   provisioner "file" {
-    source      = "../../content/vm-linux/get-mystuff.bash"
+    source      = "${path.module}/../../content/vm-linux/get-mystuff.bash"
     destination = "/home/get-mystuff.bash"
   }
   depends_on = [
