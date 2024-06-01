@@ -133,7 +133,7 @@ resource "azurerm_virtual_machine_extension" "openssh_sqlha" {
 }
 
 # Set VM timezone
-resource "azurerm_virtual_machine_run_command" "vm_timezone" {
+resource "azurerm_virtual_machine_run_command" "vm_timezone_sqlha" {
   name               = "SetTimeZone"
   location           = var.rg_location
   virtual_machine_id = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
