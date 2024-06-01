@@ -56,12 +56,12 @@ resource "azurerm_windows_virtual_machine" "vm_jumpwin" {
     sku       = "win11-23h2-pro"
     version   = "latest"
   }
-  custom_data = base64encode(<<EOF
+  /*custom_data = base64encode(<<EOF
     <powershell>
     "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"    
     </powershell>
   EOF
-  )
+  )*/
   network_interface_ids = [
     azurerm_network_interface.vm_jumpwin_nic.id,
   ]
@@ -92,6 +92,7 @@ resource "azurerm_virtual_machine_extension" "vm_jumpwin_openssh" {
   ]
 }
 
+/* Work in progress
 resource "null_resource" "jumpwin_copy_file" {
   connection {
     type     = "ssh"
@@ -109,7 +110,7 @@ resource "null_resource" "jumpwin_copy_file" {
     azurerm_virtual_machine_extension.vm_jumpwin_openssh,
     azurerm_network_interface_security_group_association.vm_jumpwin_nsg_assoc,
   ]
-}
+}*/
 
 # vm-jumpWin AUTOSHUTDOWN
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumpwin_shutdown" {

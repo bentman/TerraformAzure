@@ -56,11 +56,11 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
     sku       = "22_04-lts"
     version   = "latest"
   }
-  custom_data = base64encode(<<EOF
+  /*custom_data = base64encode(<<EOF
     #!/bin/bash
     sudo timedatectl set-timezone '${var.vm_shutdown_tz}'
   EOF
-  )
+  )*/
   network_interface_ids = [
     azurerm_network_interface.vm_jumplin_nic.id,
   ]
@@ -75,6 +75,7 @@ resource "azurerm_network_interface_security_group_association" "vm_jumplin_nsg_
   network_security_group_id = azurerm_network_security_group.nsg_jumpbox.id
 }
 
+/* Work in progress
 resource "null_resource" "jumplin_copy_file" {
   connection {
     type     = "ssh"
@@ -89,9 +90,9 @@ resource "null_resource" "jumplin_copy_file" {
     destination = "/home/get-mystuff.bash"
   }
   depends_on = [
-    azurerm_network_interface_security_group_association.vm_jumplin_nsg_assoc,
+    azurerm_linux_virtual_machine.vm_jumplin,
   ]
-}
+}*/
 
 # vm-jumpLin AUTOSHUTDOWN
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumplin_shutdown" {
