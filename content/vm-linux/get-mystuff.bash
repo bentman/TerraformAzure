@@ -7,6 +7,8 @@ sudo adduser $newUsr
 sudo usermod -aG sudo $newUsr
 # add local user to sudo
 su $newUsr
+# set timezone
+sudo timedatectl set-timezone America/Chicago
 
 #############################################################
 
@@ -44,12 +46,9 @@ sudo apt install -y conky conky-all
 
 # Remove Games & Open Office
 sudo apt remove -y --purge xscreensaver gnome-screensaver gnome-games
-sudo apt remove -y --purge libreoffice-math
-sudo apt remove -y --purge libreoffice-writer
-sudo apt remove -y --purge libreoffice-impress
-sudo apt remove -y --purge libreoffice-draw
-sudo apt remove -y --purge libreoffice-calc
+sudo apt remove -y --purge libreoffice-math libreoffice-writer libreoffice-impress libreoffice-draw libreoffice-calc
 sudo apt remove -y --purge libreoffice-base
+sudo apt autoremove -y
 
 #############################################################
 
