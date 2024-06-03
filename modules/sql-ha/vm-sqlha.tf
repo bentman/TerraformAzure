@@ -291,19 +291,16 @@ PROTECTED_SETTINGS
   }
 }
 
-# time delay after SQL domain join
+# Time delay after SQL domain join
 resource "time_sleep" "vm_sqljoin" {
   create_duration = "5m"
-  depends_on      = [azurerm_virtual_machine_extension.vm_sqlha_domain_join, ]
+  depends_on      = [azurerm_virtual_machine_extension.vm_sqlha_domain_join]
 }
 
-# add 'domain\sqlinstall' account to local administrators group on SQL servers
+# Add 'domain\sqlinstall' account to local administrators group on SQL servers
 resource "terraform_data" "sqlsvc_local_admin" {
   count = var.vm_sqlha_count
-  triggers_replace = [
-    azurerm_virtual_machine_extension.vm_sqlha_domain_join[count.index].id,
-    time_sleep.vm_sqljoin.id
-  ]
+
   # SSH connection to target SQL server with domain admin account
   provisioner "remote-exec" {
     connection {
@@ -322,22 +319,20 @@ resource "terraform_data" "sqlsvc_local_admin" {
     azurerm_virtual_machine_extension.openssh_sqlha,
     terraform_data.vm_addc_add_users,
     time_sleep.vm_sqljoin,
+    azurerm_virtual_machine_extension.vm_sqlha_domain_join
   ]
 }
 
-# time delay after SQL accounts
+# Time delay after SQL accounts
 resource "time_sleep" "vm_sql_accts" {
   create_duration = "10m"
-  depends_on      = [terraform_data.sqlsvc_local_admin, ]
+  depends_on      = [terraform_data.sqlsvc_local_admin]
 }
 
 # Add the 'domain\sqlinstall' account to sysadmin roles on SQL servers
 resource "terraform_data" "sql_sysadmin" {
   count = var.vm_sqlha_count
-  triggers_replace = [
-    azurerm_virtual_machine_extension.vm_sqlha_domain_join[count.index].id,
-    terraform_data.sqlsvc_local_admin[count.index].id
-  ]
+
   # SSH connection to target SQL server with local admin account
   provisioner "remote-exec" {
     connection {
@@ -356,6 +351,7 @@ resource "terraform_data" "sql_sysadmin" {
     terraform_data.vm_addc_add_users,
     terraform_data.sqlsvc_local_admin,
     time_sleep.vm_sql_accts,
+    azurerm_virtual_machine_extension.vm_sqlha_domain_join
   ]
 }
 
@@ -377,7 +373,7 @@ resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
     storage_account_url            = "${azurerm_storage_account.sqlha_stga.primary_blob_endpoint}${azurerm_storage_container.sqlha_quorum.name}"
   }
   depends_on = [
-    terraform_data.sql_sysadmin,
+    terraform_data.sql_sysadmin
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -386,7 +382,7 @@ resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
 
 # Create special permission for base OU for Cluster computer object
 resource "terraform_data" "cluster_acl" {
-  triggers_replace = [azurerm_mssql_virtual_machine.az_sqlha[*].id]
+
   # With SSH connection
   provisioner "remote-exec" {
     connection {
@@ -402,7 +398,7 @@ resource "terraform_data" "cluster_acl" {
     ]
   }
   depends_on = [
-    azurerm_mssql_virtual_machine.az_sqlha,
+    azurerm_mssql_virtual_machine.az_sqlha
   ]
 }
 

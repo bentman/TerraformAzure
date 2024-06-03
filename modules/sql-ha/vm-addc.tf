@@ -132,7 +132,7 @@ resource "null_resource" "vm_addc_dcpromo_exec" {
 # Wait for DCPromo to complete
 resource "time_sleep" "vm_addc_dcpromo_wait" {
   create_duration = "5m"
-  depends_on      = [null_resource.vm_addc_dcpromo_exec, ]
+  depends_on      = [null_resource.vm_addc_dcpromo_exec]
 }
 
 # Restart VM after DCPromo
@@ -143,7 +143,7 @@ resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
   source {
     script = "Restart-Computer -Force"
   }
-  depends_on = [time_sleep.vm_addc_dcpromo_wait, ]
+  depends_on = [time_sleep.vm_addc_dcpromo_wait]
 }
 
 # Wait for vm-addc restart
@@ -156,10 +156,6 @@ resource "time_sleep" "vm_addc_restart_wait" {
 
 # SSH connection to create new OU and technical users for SQL installation
 resource "terraform_data" "vm_addc_add_users" {
-  triggers_replace = [
-    azurerm_virtual_machine_extension.vm_addc_openssh,
-    time_sleep.vm_addc_dcpromo_wait
-  ]
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
@@ -173,7 +169,11 @@ resource "terraform_data" "vm_addc_add_users" {
       "powershell.exe -Command \"${join(";", local.powershell_add_users)}\""
     ]
   }
-  depends_on = [time_sleep.vm_addc_restart_wait, ]
+  depends_on = [
+    time_sleep.vm_addc_restart_wait,
+    azurerm_virtual_machine_extension.vm_addc_openssh,
+    time_sleep.vm_addc_dcpromo_wait
+  ]
 }
 
 # Copy serverstuff script to VM
