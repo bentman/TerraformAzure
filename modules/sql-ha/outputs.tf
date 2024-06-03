@@ -29,7 +29,7 @@ output "vm_addc_private_ip" {
 }
 
 # Output a map of all variables used by the submodule
-output "addc_module_vars" {
+output "addc_vars" {
   description = "A map of all variables used by the submodule."
   value = {
     vm_addc_hostname    = var.vm_addc_hostname

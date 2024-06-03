@@ -219,6 +219,44 @@ resource "azurerm_virtual_machine_data_disk_attachment" "vm_sqlha_temp" {
   caching            = "ReadWrite"
 }
 
+resource "azurerm_mssql_virtual_machine" "az_sqlha" {
+  count                            = var.vm_sqlha_count
+  virtual_machine_id               = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
+  sql_license_type                 = "PAYG"
+  sql_virtual_machine_group_id     = azurerm_mssql_virtual_machine_group.sqlha_vmg.id
+  sql_connectivity_port            = 1433
+  sql_connectivity_type            = "PRIVATE"
+  sql_connectivity_update_password = var.sql_sysadmin_pswd
+  sql_connectivity_update_username = var.sql_sysadmin_user
+  wsfc_domain_credential {
+    cluster_bootstrap_account_password = var.sql_svc_acct_pswd # install account
+    cluster_operator_account_password  = var.sql_svc_acct_pswd # install account
+    sql_service_account_password       = var.sql_svc_acct_pswd # sqlsvc account
+  }
+  storage_configuration {
+    disk_type             = "NEW"
+    storage_workload_type = "GENERAL"
+    data_settings {
+      default_file_path = var.sqldatafilepath
+      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_data[count.index].lun]
+    }
+    log_settings {
+      default_file_path = var.sqllogfilepath
+      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_log[count.index].lun]
+    }
+    temp_db_settings {
+      default_file_path = var.sqltempfilepath
+      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_temp[count.index].lun]
+    }
+  }
+  depends_on = [
+    azurerm_windows_virtual_machine.vm_sqlha,
+  ]
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
 # extension to domain join SQL servers
 resource "azurerm_virtual_machine_extension" "vm_sqlha_domain_join" {
   count                = var.vm_sqlha_count
@@ -270,8 +308,8 @@ resource "terraform_data" "sqlsvc_local_admin" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = var.domain_admin_user
-      password        = var.domain_admin_pswd
+      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
       timeout         = "5m"
@@ -282,7 +320,8 @@ resource "terraform_data" "sqlsvc_local_admin" {
   }
   depends_on = [
     azurerm_virtual_machine_extension.openssh_sqlha,
-    time_sleep.vm_sqljoin
+    terraform_data.vm_addc_add_users,
+    time_sleep.vm_sqljoin,
   ]
 }
 
@@ -297,8 +336,8 @@ resource "terraform_data" "sql_sysadmin" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = var.domain_admin_user
-      password        = var.domain_admin_pswd
+      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
       timeout         = "5m"
@@ -308,6 +347,7 @@ resource "terraform_data" "sql_sysadmin" {
     ]
   }
   depends_on = [
+    terraform_data.vm_addc_add_users,
     terraform_data.sqlsvc_local_admin,
   ]
 }
@@ -337,44 +377,6 @@ resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
   }
 }
 
-resource "azurerm_mssql_virtual_machine" "az_sqlha" {
-  count                            = var.vm_sqlha_count
-  virtual_machine_id               = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
-  sql_license_type                 = "PAYG"
-  sql_virtual_machine_group_id     = azurerm_mssql_virtual_machine_group.sqlha_vmg.id
-  sql_connectivity_port            = 1433
-  sql_connectivity_type            = "PRIVATE"
-  sql_connectivity_update_password = var.sql_sysadmin_pswd
-  sql_connectivity_update_username = var.sql_sysadmin_user
-  wsfc_domain_credential {
-    cluster_bootstrap_account_password = var.sql_svc_acct_pswd # install account
-    cluster_operator_account_password  = var.sql_svc_acct_pswd # install account
-    sql_service_account_password       = var.sql_svc_acct_pswd # sqlsvc account
-  }
-  storage_configuration {
-    disk_type             = "NEW"
-    storage_workload_type = "GENERAL"
-    data_settings {
-      default_file_path = var.sqldatafilepath
-      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_data[count.index].lun]
-    }
-    log_settings {
-      default_file_path = var.sqllogfilepath
-      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_log[count.index].lun]
-    }
-    temp_db_settings {
-      default_file_path = var.sqltempfilepath
-      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_temp[count.index].lun]
-    }
-  }
-  depends_on = [
-    azurerm_windows_virtual_machine.vm_sqlha,
-  ]
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-
 # Create special permission for base OU for Cluster computer object
 resource "terraform_data" "cluster_acl" {
   triggers_replace = [azurerm_mssql_virtual_machine.az_sqlha[*].id]
@@ -382,8 +384,8 @@ resource "terraform_data" "cluster_acl" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = var.domain_admin_user
-      password        = var.domain_admin_pswd
+      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
       timeout         = "5m"

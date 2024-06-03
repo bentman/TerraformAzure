@@ -109,23 +109,6 @@ resource "null_resource" "vm_addc_dcpromo_copy" {
   depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh, ]
 }
 
-# Copy DCPromo script to VM
-resource "null_resource" "vm_server_stuff_copy" {
-  provisioner "file" {
-    source      = "${path.module}/../../content/vm-server/${local.server_stuff}"
-    destination = "C:\\Users\\Public\\Documents\\${local.server_stuff}"
-    connection {
-      type            = "ssh"
-      user            = var.domain_admin_user
-      password        = var.domain_admin_pswd
-      host            = azurerm_public_ip.vm_addc_pip.ip_address
-      target_platform = "windows"
-      timeout         = "120s"
-    }
-  }
-  depends_on = [null_resource.vm_addc_dcpromo_copy]
-}
-
 # Execute DCPromo script on VM
 resource "null_resource" "vm_addc_dcpromo_exec" {
   provisioner "remote-exec" {
@@ -180,8 +163,8 @@ resource "terraform_data" "vm_addc_add_users" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = var.domain_admin_user
-      password        = var.domain_admin_pswd
+      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      password        = var.vm_addc_localadmin_user
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
       timeout         = "5m"
@@ -191,6 +174,23 @@ resource "terraform_data" "vm_addc_add_users" {
     ]
   }
   depends_on = [time_sleep.vm_addc_restart_wait, ]
+}
+
+# Copy serverstuff script to VM
+resource "null_resource" "vm_server_stuff_copy" {
+  provisioner "file" {
+    source      = "${path.module}/${local.server_stuff}"
+    destination = "C:\\Users\\Public\\Documents\\${local.server_stuff}"
+    connection {
+      type            = "ssh"
+      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      password        = var.vm_addc_localadmin_user
+      host            = azurerm_public_ip.vm_addc_pip.ip_address
+      target_platform = "windows"
+      timeout         = "120s"
+    }
+  }
+  depends_on = [terraform_data.vm_addc_add_users, ]
 }
 
 # Enable dev\test shutdown schedule (to save $)

@@ -38,7 +38,7 @@ locals {
   powershell_sql_sysadmin = [
     "Start-Transcript -Path C:\\BUILD\\transcript-sql_sysadmin.txt",
     "Test-NetConnection -Computername $env:COMPUTERNAME -Port 1433",
-    "Invoke-Sqlcmd -ServerInstance 'localhost' -Database 'master' -Query 'CREATE LOGIN [${var.domain_netbios_name}\\sqlinstall] FROM WINDOWS WITH DEFAULT_DATABASE=[master]; EXEC master..sp_addsrvrolemember @loginame = ''${var.domain_netbios_name}\\sqlinstall'', @rolename = ''sysadmin'';' -QueryTimeout '10'",
+    "Invoke-Sqlcmd -Username '${var.sql_svc_acct_user}' -Password '${var.sql_svc_acct_pswd}' -ServerInstance 'localhost' -Database 'master' -Query 'CREATE LOGIN [${var.domain_netbios_name}\\sqlinstall] FROM WINDOWS WITH DEFAULT_DATABASE=[master]; EXEC master..sp_addsrvrolemember @loginame = ''${var.domain_netbios_name}\\sqlinstall'', @rolename = ''sysadmin'';' -QueryTimeout '10'",
     "Stop-Transcript"
   ]
 
