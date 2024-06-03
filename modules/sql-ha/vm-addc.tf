@@ -103,7 +103,7 @@ resource "null_resource" "vm_addc_dcpromo_copy" {
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
-      timeout         = "120s"
+      timeout         = "5m"
     }
   }
   depends_on = [azurerm_virtual_machine_extension.vm_addc_openssh, ]
@@ -121,7 +121,7 @@ resource "null_resource" "vm_addc_dcpromo_exec" {
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
-      timeout         = "20m"
+      timeout         = "30m"
     }
   }
   depends_on = [
@@ -131,7 +131,7 @@ resource "null_resource" "vm_addc_dcpromo_exec" {
 
 # Wait for DCPromo to complete
 resource "time_sleep" "vm_addc_dcpromo_wait" {
-  create_duration = "3m"
+  create_duration = "5m"
   depends_on      = [null_resource.vm_addc_dcpromo_exec, ]
 }
 
@@ -148,7 +148,7 @@ resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
 
 # Wait for vm-addc restart
 resource "time_sleep" "vm_addc_restart_wait" {
-  create_duration = "5m"
+  create_duration = "10m"
   depends_on = [
     azurerm_virtual_machine_run_command.vm_addc_restart
   ]
@@ -167,7 +167,7 @@ resource "terraform_data" "vm_addc_add_users" {
       password        = var.vm_addc_localadmin_user
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
-      timeout         = "5m"
+      timeout         = "10m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_add_users)}\""
@@ -187,7 +187,7 @@ resource "null_resource" "vm_server_stuff_copy" {
       password        = var.vm_addc_localadmin_user
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
-      timeout         = "120s"
+      timeout         = "5m"
     }
   }
   depends_on = [terraform_data.vm_addc_add_users, ]

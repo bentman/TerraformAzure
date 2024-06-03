@@ -293,7 +293,7 @@ PROTECTED_SETTINGS
 
 # time delay after SQL domain join
 resource "time_sleep" "vm_sqljoin" {
-  create_duration = "3m"
+  create_duration = "5m"
   depends_on      = [azurerm_virtual_machine_extension.vm_sqlha_domain_join, ]
 }
 
@@ -325,6 +325,12 @@ resource "terraform_data" "sqlsvc_local_admin" {
   ]
 }
 
+# time delay after SQL accounts
+resource "time_sleep" "vm_sql_accts" {
+  create_duration = "10m"
+  depends_on      = [terraform_data.sqlsvc_local_admin, ]
+}
+
 # Add the 'domain\sqlinstall' account to sysadmin roles on SQL servers
 resource "terraform_data" "sql_sysadmin" {
   count = var.vm_sqlha_count
@@ -340,7 +346,7 @@ resource "terraform_data" "sql_sysadmin" {
       password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
-      timeout         = "5m"
+      timeout         = "10m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_sql_sysadmin)}\""
@@ -349,6 +355,7 @@ resource "terraform_data" "sql_sysadmin" {
   depends_on = [
     terraform_data.vm_addc_add_users,
     terraform_data.sqlsvc_local_admin,
+    time_sleep.vm_sql_accts,
   ]
 }
 
@@ -388,7 +395,7 @@ resource "terraform_data" "cluster_acl" {
       password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
-      timeout         = "5m"
+      timeout         = "10m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_acl_commands)}\""
