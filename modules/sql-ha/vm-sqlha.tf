@@ -21,7 +21,7 @@ resource "azurerm_storage_container" "sqlha_quorum" {
 }
 
 ########## vm-sqlha
-# vm-sqlha Publip IP with internet DNS hostname
+# vm-sqlha Public IP with internet DNS hostname
 resource "azurerm_public_ip" "vm_sqlha_pip" {
   count               = var.vm_sqlha_count
   name                = "${var.vm_sqlha_hostname}0${count.index + 1}-pip"
@@ -72,7 +72,7 @@ resource "azurerm_network_interface" "vm_sqlha_nic" {
   dns_servers = [var.vm_addc_private_ip, "1.1.1.1", "8.8.8.8"]
 }
 
-########## vm-sqlha
+# Create vm-sqlha
 resource "azurerm_windows_virtual_machine" "vm_sqlha" {
   count               = var.vm_sqlha_count
   name                = "${var.vm_sqlha_hostname}0${count.index + 1}"
@@ -115,7 +115,117 @@ resource "azurerm_network_interface_security_group_association" "vm_sqlha_nsg_as
   network_security_group_id = azurerm_network_security_group.nsg_server.id
 }
 
-# vm-sqlha extension to Open SSH
+# vm-sqlha extension to OpenSSH
+resource "azurerm_virtual_machine_extension" "openssh_sqlha" {
+  count                      = var.vm_sqlha_count
+  name                       = "InstallOpenSSH"
+  virtual_machine_id         = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
+  publisher                  = "Microsoft.Azure.OpenSSH"
+  type                       = "WindowsOpenSSH"
+  type_handler_version       = "3.0"
+  auto_upgrade_minor_version = true
+  depends_on = [    azurerm_windows_virtual_machine.vm_sqlha,  ]
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+########## vm-sqlha
+# vm-sqlha Public IP with internet DNS hostname
+resource "azurerm_public_ip" "vm_sqlha_pip" {
+  count               = var.vm_sqlha_count
+  name                = "${var.vm_sqlha_hostname}0${count.index + 1}-pip"
+  location            = var.rg_location
+  resource_group_name = var.rg_name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  domain_name_label   = "${var.vm_sqlha_hostname}0${count.index + 1}"
+  zones               = ["${count.index + 1}"]
+  tags                = var.tags
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+# vm-sqlha primary NIC 
+resource "azurerm_network_interface" "vm_sqlha_nic" {
+  count                         = var.vm_sqlha_count
+  name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-nic"
+  location                      = var.rg_location
+  resource_group_name           = var.rg_name
+  enable_accelerated_networking = true
+  tags                          = var.tags
+  lifecycle {
+    ignore_changes = [tags]
+  }
+  ip_configuration {
+    name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-ip" // "10.0.0.73" & "10.0.0.105"
+    subnet_id                     = count.index == 0 ? var.snet_0064_db1_id : var.snet_0096_db2_id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = cidrhost(count.index == 0 ? var.snet_0064_db1_prefixes[0] : var.snet_0096_db2_prefixes[0], 9)
+    public_ip_address_id          = azurerm_public_ip.vm_sqlha_pip[count.index].id
+    primary                       = true
+  }
+  ip_configuration {
+    name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-ip-cluster" // "10.0.0.74" & "10.0.0.106"
+    subnet_id                     = count.index == 0 ? var.snet_0064_db1_id : var.snet_0096_db2_id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = cidrhost(count.index == 0 ? var.snet_0064_db1_prefixes[0] : var.snet_0096_db2_prefixes[0], 10)
+  }
+  ip_configuration {
+    name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-ip-listener" // "10.0.0.75" & "10.0.0.107"
+    subnet_id                     = count.index == 0 ? var.snet_0064_db1_id : var.snet_0096_db2_id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = cidrhost(count.index == 0 ? var.snet_0064_db1_prefixes[0] : var.snet_0096_db2_prefixes[0], 11)
+  }
+  # Must be set and restart the computer to reach the domain controller and DNS
+  dns_servers = [var.vm_addc_private_ip, "1.1.1.1", "8.8.8.8"]
+}
+
+# Create vm-sqlha
+resource "azurerm_windows_virtual_machine" "vm_sqlha" {
+  count               = var.vm_sqlha_count
+  name                = "${var.vm_sqlha_hostname}0${count.index + 1}"
+  location            = var.rg_location
+  resource_group_name = var.rg_name
+  size                = var.vm_sqlha_size
+  computer_name       = "${var.vm_sqlha_hostname}0${count.index + 1}"
+  admin_username      = var.vm_sqlha_localadmin_user
+  admin_password      = var.vm_sqlha_localadmin_pswd
+  license_type        = "Windows_Server"
+  zone                = count.index + 1
+  tags                = var.tags
+  network_interface_ids = [
+    azurerm_network_interface.vm_sqlha_nic[count.index].id
+  ]
+  source_image_reference {
+    publisher = var.vm_sqlha_image_publisher
+    offer     = var.vm_sqlha_image_offer
+    sku       = var.vm_sqlha_image_sku
+    version   = "latest"
+  }
+  identity {
+    type = "SystemAssigned"
+  }
+  os_disk {
+    name                 = "${var.vm_sqlha_hostname}0${count.index + 1}-dsk-0S"
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
+    disk_size_gb         = 127
+  }
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+# vm-sqlha associate NICs with NSG
+resource "azurerm_network_interface_security_group_association" "vm_sqlha_nsg_assoc" {
+  count                     = var.vm_sqlha_count
+  network_interface_id      = azurerm_network_interface.vm_sqlha_nic[count.index].id
+  network_security_group_id = azurerm_network_security_group.nsg_server.id
+}
+
+# vm-sqlha extension to OpenSSH
 resource "azurerm_virtual_machine_extension" "openssh_sqlha" {
   count                      = var.vm_sqlha_count
   name                       = "InstallOpenSSH"
@@ -141,7 +251,7 @@ resource "azurerm_virtual_machine_run_command" "vm_timezone_sqlha" {
   source {
     script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
   }
-  depends_on = [azurerm_virtual_machine_extension.openssh_sqlha]
+  depends_on = [azurerm_virtual_machine_extension.openssh_sqlha,]
 }
 
 # vm-sqlha managed disk - data
@@ -219,6 +329,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "vm_sqlha_temp" {
   caching            = "ReadWrite"
 }
 
+# vm-sqlha MSSQL configuration
 resource "azurerm_mssql_virtual_machine" "az_sqlha" {
   count                            = var.vm_sqlha_count
   virtual_machine_id               = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
@@ -249,15 +360,13 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
       luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_temp[count.index].lun]
     }
   }
-  depends_on = [
-    azurerm_windows_virtual_machine.vm_sqlha,
-  ]
+  depends_on = [    azurerm_windows_virtual_machine.vm_sqlha,  ]
   lifecycle {
     ignore_changes = [tags]
   }
 }
 
-# extension to domain join SQL servers
+# Extension to domain join SQL servers
 resource "azurerm_virtual_machine_extension" "vm_sqlha_domain_join" {
   count                = var.vm_sqlha_count
   name                 = "SQL${count.index + 1}DomainJoin"
@@ -294,7 +403,7 @@ PROTECTED_SETTINGS
 # Time delay after SQL domain join
 resource "time_sleep" "vm_sqljoin" {
   create_duration = "5m"
-  depends_on      = [azurerm_virtual_machine_extension.vm_sqlha_domain_join]
+  depends_on      = [azurerm_virtual_machine_extension.vm_sqlha_domain_join,]
 }
 
 # Add 'domain\sqlinstall' account to local administrators group on SQL servers
@@ -326,7 +435,7 @@ resource "terraform_data" "sqlsvc_local_admin" {
 # Time delay after SQL accounts
 resource "time_sleep" "vm_sql_accts" {
   create_duration = "10m"
-  depends_on      = [terraform_data.sqlsvc_local_admin]
+  depends_on      = [terraform_data.sqlsvc_local_admin,]
 }
 
 # Add the 'domain\sqlinstall' account to sysadmin roles on SQL servers
@@ -372,9 +481,7 @@ resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
     storage_account_primary_key    = azurerm_storage_account.sqlha_stga.primary_access_key
     storage_account_url            = "${azurerm_storage_account.sqlha_stga.primary_blob_endpoint}${azurerm_storage_container.sqlha_quorum.name}"
   }
-  depends_on = [
-    terraform_data.sql_sysadmin
-  ]
+  depends_on = [    terraform_data.sql_sysadmin  ]
   lifecycle {
     ignore_changes = [tags]
   }
@@ -397,9 +504,7 @@ resource "terraform_data" "cluster_acl" {
       "powershell.exe -Command \"${join(";", local.powershell_acl_commands)}\""
     ]
   }
-  depends_on = [
-    azurerm_mssql_virtual_machine.az_sqlha
-  ]
+  depends_on = [    azurerm_mssql_virtual_machine.az_sqlha  ]
 }
 
 # Create Always-On availability listener for SQL cluster with multi-subnet configuration
@@ -435,22 +540,18 @@ resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
   timeouts {
     create = "15m"
   }
-  depends_on = [
-    terraform_data.cluster_acl,
-  ]
+  depends_on = [    terraform_data.cluster_acl,  ]
 }
 
 # vm-sqlha AUTOSHUTDOWN
-resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_sqlha_shutown" {
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_sqlha_shutdown" {
   count                 = var.vm_sqlha_count
   virtual_machine_id    = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
   location              = var.rg_location
   enabled               = true
   daily_recurrence_time = var.vm_sqlha_shutdown_hhmm
   timezone              = var.vm_shutdown_tz
-  depends_on = [
-    azurerm_windows_virtual_machine.vm_sqlha,
-  ]
+  depends_on = [    azurerm_windows_virtual_machine.vm_sqlha,  ]
   notification_settings {
     enabled = false
   }
