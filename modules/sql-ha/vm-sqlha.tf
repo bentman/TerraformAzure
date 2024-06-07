@@ -302,7 +302,7 @@ resource "terraform_data" "sqlsvc_local_admin" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      user            = "${var.vm_addc_localadmin_user}"
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
@@ -334,7 +334,7 @@ resource "terraform_data" "sql_sysadmin" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      user            = "${var.vm_addc_localadmin_user}"
       password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
@@ -382,7 +382,7 @@ resource "terraform_data" "cluster_acl" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      user            = "${var.vm_addc_localadmin_user}"
       password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"

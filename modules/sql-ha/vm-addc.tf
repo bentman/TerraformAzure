@@ -168,7 +168,7 @@ resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
 
 # Wait for vm-addc
 resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
-  create_duration = "2m"
+  create_duration = "5m"
   depends_on      = [azurerm_virtual_machine_run_command.vm_addc_restart]
 }
 
@@ -177,7 +177,7 @@ resource "terraform_data" "vm_addc_add_users" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      user            = "${var.vm_addc_localadmin_user}"
       password        = var.vm_addc_localadmin_user
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
@@ -197,7 +197,7 @@ resource "null_resource" "vm_server_stuff_copy" {
     destination = "C:\\Users\\Public\\Documents\\${local.server_stuff}"
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      user            = "${var.vm_addc_localadmin_user}"
       password        = var.vm_addc_localadmin_user
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
