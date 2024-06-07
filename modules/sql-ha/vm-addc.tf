@@ -177,7 +177,7 @@ resource "terraform_data" "vm_addc_add_users" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.vm_addc_localadmin_user}"
+      user            = var.vm_addc_localadmin_user
       password        = var.vm_addc_localadmin_user
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
@@ -197,7 +197,7 @@ resource "null_resource" "vm_server_stuff_copy" {
     destination = "C:\\Users\\Public\\Documents\\${local.server_stuff}"
     connection {
       type            = "ssh"
-      user            = "${var.vm_addc_localadmin_user}"
+      user            = var.vm_addc_localadmin_user
       password        = var.vm_addc_localadmin_user
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
