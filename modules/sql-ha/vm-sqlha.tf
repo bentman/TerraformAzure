@@ -1,25 +1,4 @@
 #################### vm-sqlha ####################
-########## vm-sqlha cluster storage
-# storage account for cloud sql-witness
-resource "azurerm_storage_account" "sqlha_stga" {
-  name                     = "sqlstgwitnes"
-  location                 = var.rg_location
-  resource_group_name      = var.rg_name
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  tags                     = var.tags
-  lifecycle {
-    ignore_changes = [tags]
-  }
-}
-
-# blob container cloud sql-quorum
-resource "azurerm_storage_container" "sqlha_quorum" {
-  name                  = "sqlstgquorum"
-  storage_account_name  = azurerm_storage_account.sqlha_stga.name
-  container_access_type = "private"
-}
-
 ########## vm-sqlha
 # vm-sqlha Public IP with internet DNS hostname
 resource "azurerm_public_ip" "vm_sqlha_pip" {
@@ -45,9 +24,6 @@ resource "azurerm_network_interface" "vm_sqlha_nic" {
   resource_group_name           = var.rg_name
   enable_accelerated_networking = true
   tags                          = var.tags
-  lifecycle {
-    ignore_changes = [tags]
-  }
   ip_configuration {
     name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-ip" // "10.0.0.73" & "10.0.0.105"
     subnet_id                     = count.index == 0 ? var.snet_0064_db1_id : var.snet_0096_db2_id
@@ -69,10 +45,22 @@ resource "azurerm_network_interface" "vm_sqlha_nic" {
     private_ip_address            = cidrhost(count.index == 0 ? var.snet_0064_db1_prefixes[0] : var.snet_0096_db2_prefixes[0], 11)
   }
   # Must be set and restart the computer to reach the domain controller and DNS
-  dns_servers = [var.vm_addc_private_ip, "1.1.1.1", "8.8.8.8"]
+  dns_servers = [
+    azurerm_network_interface.vm_addc_nic.ip_configuration[0].private_ip_address, "1.1.1.1", "8.8.8.8",
+  ]
+  lifecycle {
+    ignore_changes = [tags, ip_configuration]
+  }
 }
 
 # Create vm-sqlha
+# vm-sqlha associate NICs with NSG
+resource "azurerm_network_interface_security_group_association" "vm_sqlha_nsg_assoc" {
+  count                     = var.vm_sqlha_count
+  network_interface_id      = azurerm_network_interface.vm_sqlha_nic[count.index].id
+  network_security_group_id = azurerm_network_security_group.nsg_server.id
+}
+
 resource "azurerm_windows_virtual_machine" "vm_sqlha" {
   count               = var.vm_sqlha_count
   name                = "${var.vm_sqlha_hostname}0${count.index + 1}"
@@ -108,13 +96,6 @@ resource "azurerm_windows_virtual_machine" "vm_sqlha" {
   }
 }
 
-# vm-sqlha associate NICs with NSG
-resource "azurerm_network_interface_security_group_association" "vm_sqlha_nsg_assoc" {
-  count                     = var.vm_sqlha_count
-  network_interface_id      = azurerm_network_interface.vm_sqlha_nic[count.index].id
-  network_security_group_id = azurerm_network_security_group.nsg_server.id
-}
-
 # vm-sqlha extension to OpenSSH
 resource "azurerm_virtual_machine_extension" "openssh_sqlha" {
   count                      = var.vm_sqlha_count
@@ -128,18 +109,6 @@ resource "azurerm_virtual_machine_extension" "openssh_sqlha" {
   lifecycle {
     ignore_changes = [tags]
   }
-}
-
-# Set VM timezone
-resource "azurerm_virtual_machine_run_command" "vm_timezone_sqlha" {
-  count              = var.vm_sqlha_count
-  name               = "SetTimeZone"
-  location           = var.rg_location
-  virtual_machine_id = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
-  source {
-    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
-  }
-  depends_on = [azurerm_virtual_machine_extension.openssh_sqlha, ]
 }
 
 # vm-sqlha managed disk - data
@@ -168,9 +137,9 @@ resource "azurerm_virtual_machine_data_disk_attachment" "vm_sqlha_data" {
 }
 
 # vm-sqlha managed disk - logs
-resource "azurerm_managed_disk" "vm_sqlha_log" {
+resource "azurerm_managed_disk" "vm_sqlha_logs" {
   count                = var.vm_sqlha_count
-  name                 = "${var.vm_sqlha_hostname}0${count.index + 1}-dsk-log"
+  name                 = "${var.vm_sqlha_hostname}0${count.index + 1}-dsk-logs"
   location             = var.rg_location
   resource_group_name  = var.rg_name
   storage_account_type = "Premium_LRS"
@@ -184,9 +153,9 @@ resource "azurerm_managed_disk" "vm_sqlha_log" {
 }
 
 # vm-sqlha managed disk attachment - logs = LUN-1
-resource "azurerm_virtual_machine_data_disk_attachment" "vm_sqlha_log" {
+resource "azurerm_virtual_machine_data_disk_attachment" "vm_sqlha_logs" {
   count              = var.vm_sqlha_count
-  managed_disk_id    = azurerm_managed_disk.vm_sqlha_log[count.index].id
+  managed_disk_id    = azurerm_managed_disk.vm_sqlha_logs[count.index].id
   virtual_machine_id = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
   lun                = "1"
   caching            = "ReadWrite"
@@ -217,41 +186,27 @@ resource "azurerm_virtual_machine_data_disk_attachment" "vm_sqlha_temp" {
   caching            = "ReadWrite"
 }
 
-# vm-sqlha MSSQL configuration
-resource "azurerm_mssql_virtual_machine" "az_sqlha" {
-  count                            = var.vm_sqlha_count
-  virtual_machine_id               = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
-  sql_license_type                 = "PAYG"
-  sql_virtual_machine_group_id     = azurerm_mssql_virtual_machine_group.sqlha_vmg.id
-  sql_connectivity_port            = 1433
-  sql_connectivity_type            = "PRIVATE"
-  sql_connectivity_update_password = var.sql_sysadmin_pswd
-  sql_connectivity_update_username = var.sql_sysadmin_user
-  wsfc_domain_credential {
-    cluster_bootstrap_account_password = var.sql_svc_acct_pswd # install account
-    cluster_operator_account_password  = var.sql_svc_acct_pswd # install account
-    sql_service_account_password       = var.sql_svc_acct_pswd # sqlsvc account
+resource "azurerm_virtual_machine_run_command" "vm_sqlha_restart" {
+  count              = var.vm_sqlha_count
+  name               = "RestartCommand"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
+  source {
+    script = "Restart-Computer -Force"
   }
-  storage_configuration {
-    disk_type             = "NEW"
-    storage_workload_type = "GENERAL"
-    data_settings {
-      default_file_path = var.sqldatafilepath
-      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_data[count.index].lun]
-    }
-    log_settings {
-      default_file_path = var.sqllogfilepath
-      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_log[count.index].lun]
-    }
-    temp_db_settings {
-      default_file_path = var.sqltempfilepath
-      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_temp[count.index].lun]
-    }
-  }
-  depends_on = [azurerm_windows_virtual_machine.vm_sqlha, ]
-  lifecycle {
-    ignore_changes = [tags]
-  }
+  depends_on = [
+    azurerm_virtual_machine_data_disk_attachment.vm_sqlha_data,
+    azurerm_virtual_machine_data_disk_attachment.vm_sqlha_logs,
+    azurerm_virtual_machine_data_disk_attachment.vm_sqlha_temp,
+  ]
+}
+
+resource "time_sleep" "vm_sqlha_restart_wait" {
+  count           = var.vm_sqlha_count
+  create_duration = "5m"
+  depends_on = [
+    azurerm_virtual_machine_run_command.vm_sqlha_restart,
+  ]
 }
 
 # Extension to domain join SQL servers
@@ -280,7 +235,7 @@ SETTINGS
 PROTECTED_SETTINGS
 
   depends_on = [
-    azurerm_windows_virtual_machine.vm_sqlha,
+    time_sleep.vm_sqlha_restart_wait,
     terraform_data.vm_addc_add_users,
   ]
   lifecycle {
@@ -290,33 +245,34 @@ PROTECTED_SETTINGS
 
 # Time delay after SQL domain join
 resource "time_sleep" "vm_sqljoin" {
-  create_duration = "10m"
+  create_duration = "2m"
   depends_on      = [azurerm_virtual_machine_extension.vm_sqlha_domain_join, ]
 }
 
 # Add 'domain\sqlinstall' account to local administrators group on SQL servers
 resource "terraform_data" "sqlsvc_local_admin" {
   count = var.vm_sqlha_count
-
+  triggers_replace = {
+    domainjoin = azurerm_virtual_machine_extension.vm_sqlha_domain_join[count.index].id,
+    dj_sleep   = time_sleep.vm_sqljoin.id
+  }
   # SSH connection to target SQL server with domain admin account
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = var.vm_addc_localadmin_user
+      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
-      timeout         = "10m"
+      timeout         = "2m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_local_admin)}\""
     ]
   }
   depends_on = [
-    azurerm_virtual_machine_extension.openssh_sqlha,
-    terraform_data.vm_addc_add_users,
     time_sleep.vm_sqljoin,
-    azurerm_virtual_machine_extension.vm_sqlha_domain_join
+    terraform_data.vm_addc_add_users,
   ]
 }
 
@@ -333,23 +289,19 @@ resource "terraform_data" "sql_sysadmin" {
   # SSH connection to target SQL server with local admin account
   provisioner "remote-exec" {
     connection {
-      type            = "ssh"
-      user            = var.vm_addc_localadmin_user
+      type = "ssh"
+      user = var.vm_addc_localadmin_user
+      //user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
       password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
-      timeout         = "10m"
+      timeout         = "2m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_sql_sysadmin)}\""
     ]
   }
-  depends_on = [
-    terraform_data.vm_addc_add_users,
-    terraform_data.sqlsvc_local_admin,
-    time_sleep.vm_sql_accts,
-    azurerm_virtual_machine_extension.vm_sqlha_domain_join
-  ]
+  depends_on = [terraform_data.sqlsvc_local_admin, ]
 }
 
 # Indicates the capability to manage a group of virtual machines specific to Microsoft SQL
@@ -369,30 +321,75 @@ resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
     storage_account_primary_key    = azurerm_storage_account.sqlha_stga.primary_access_key
     storage_account_url            = "${azurerm_storage_account.sqlha_stga.primary_blob_endpoint}${azurerm_storage_container.sqlha_quorum.name}"
   }
-  depends_on = [terraform_data.sql_sysadmin]
+  depends_on = [
+    terraform_data.sql_sysadmin,
+  ]
   lifecycle {
     ignore_changes = [tags]
   }
 }
 
+# vm-sqlha MSSQL configuration
+resource "azurerm_mssql_virtual_machine" "az_sqlha" {
+  count                            = var.vm_sqlha_count
+  virtual_machine_id               = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
+  sql_license_type                 = "PAYG"
+  sql_virtual_machine_group_id     = azurerm_mssql_virtual_machine_group.sqlha_vmg.id
+  sql_connectivity_port            = 1433
+  sql_connectivity_type            = "PRIVATE"
+  sql_connectivity_update_password = var.sql_sysadmin_pswd
+  sql_connectivity_update_username = var.sql_sysadmin_user
+  wsfc_domain_credential {
+    cluster_bootstrap_account_password = var.sql_svc_acct_pswd # install account
+    cluster_operator_account_password  = var.sql_svc_acct_pswd # install account
+    sql_service_account_password       = var.sql_svc_acct_pswd # sqlsvc account
+  }
+  storage_configuration {
+    disk_type             = "NEW"
+    storage_workload_type = "GENERAL"
+    data_settings {
+      default_file_path = var.sqldatafilepath
+      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_data[count.index].lun]
+    }
+    log_settings {
+      default_file_path = var.sqllogfilepath
+      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_logs[count.index].lun]
+    }
+    temp_db_settings {
+      default_file_path = var.sqltempfilepath
+      luns              = [azurerm_virtual_machine_data_disk_attachment.vm_sqlha_temp[count.index].lun]
+    }
+  }
+  depends_on = [
+    azurerm_windows_virtual_machine.vm_sqlha,
+    terraform_data.sql_sysadmin,
+  ]
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
 # Create special permission for base OU for Cluster computer object
 resource "terraform_data" "cluster_acl" {
-
+  triggers_replace = {
+    sqlha_vm_ids = join(",", azurerm_mssql_virtual_machine.az_sqlha[*].id)
+  }
   # With SSH connection
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = var.vm_addc_localadmin_user
+      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
       password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
-      timeout         = "10m"
+      timeout         = "2m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_acl_commands)}\""
     ]
   }
-  depends_on = [azurerm_mssql_virtual_machine.az_sqlha]
+  depends_on = [
+    azurerm_mssql_virtual_machine_group.sqlha_vmg,
+  ]
 }
 
 # Create Always-On availability listener for SQL cluster with multi-subnet configuration
@@ -428,7 +425,9 @@ resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
   timeouts {
     create = "15m"
   }
-  depends_on = [terraform_data.cluster_acl, ]
+  depends_on = [
+    terraform_data.cluster_acl,
+  ]
 }
 
 # vm-sqlha AUTOSHUTDOWN
@@ -439,8 +438,24 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_sqlha_shutdown" {
   enabled               = true
   daily_recurrence_time = var.vm_sqlha_shutdown_hhmm
   timezone              = var.vm_shutdown_tz
-  depends_on            = [azurerm_windows_virtual_machine.vm_sqlha, ]
   notification_settings {
     enabled = false
   }
+  depends_on = [
+    azurerm_mssql_virtual_machine_availability_group_listener.aag,
+  ]
+}
+
+# Set VM timezone
+resource "azurerm_virtual_machine_run_command" "vm_timezone_sqlha" {
+  count              = var.vm_sqlha_count
+  name               = "SetTimeZone"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
+  source {
+    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
+  }
+  depends_on = [
+    azurerm_dev_test_global_vm_shutdown_schedule.vm_sqlha_shutdown,
+  ]
 }

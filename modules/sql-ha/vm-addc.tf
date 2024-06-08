@@ -28,7 +28,9 @@ resource "azurerm_network_interface" "vm_addc_nic" {
     primary                       = true
     public_ip_address_id          = azurerm_public_ip.vm_addc_pip.id
   }
-  depends_on = [azurerm_public_ip.vm_addc_pip]
+  depends_on = [
+    azurerm_public_ip.vm_addc_pip,
+  ]
   lifecycle {
     ignore_changes = [tags]
   }
@@ -38,7 +40,6 @@ resource "azurerm_network_interface" "vm_addc_nic" {
 resource "azurerm_network_interface_security_group_association" "vm_addc_nsg_assoc" {
   network_interface_id      = azurerm_network_interface.vm_addc_nic.id
   network_security_group_id = azurerm_network_security_group.nsg_server.id
-  depends_on                = [azurerm_network_interface.vm_addc_nic]
 }
 
 # Create vm-addc
@@ -52,29 +53,30 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   admin_password      = var.vm_addc_localadmin_pswd
   license_type        = "Windows_Server"
   tags                = var.tags
-  os_disk {
-    name                 = "vm-addc-dsk0os"
-    caching              = "ReadWrite"
-    disk_size_gb         = 127
-    storage_account_type = "Standard_LRS"
-  }
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
     sku       = "2022-Datacenter"
     version   = "latest"
   }
-  network_interface_ids = [azurerm_network_interface.vm_addc_nic.id]
-  depends_on            = [azurerm_network_interface_security_group_association.vm_addc_nsg_assoc]
+  os_disk {
+    name                 = "vm-addc-dsk0os"
+    caching              = "ReadWrite"
+    disk_size_gb         = 127
+    storage_account_type = "Standard_LRS"
+  }
+  network_interface_ids = [
+    azurerm_network_interface.vm_addc_nic.id
+  ]
+  depends_on = [
+    azurerm_network_interface_security_group_association.vm_addc_nsg_assoc,
+  ]
+  winrm_listener {
+    protocol = "Http"
+  }
   lifecycle {
     ignore_changes = [tags]
   }
-}
-
-# Wait for vm-addc
-resource "time_sleep" "vm_addc_wait" {
-  create_duration = "2m"
-  depends_on      = [azurerm_windows_virtual_machine.vm_addc]
 }
 
 # Enable OpenSSH for remote administration
@@ -85,33 +87,12 @@ resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   type                       = "WindowsOpenSSH"
   type_handler_version       = "3.0"
   auto_upgrade_minor_version = true
-  depends_on                 = [time_sleep.vm_addc_wait]
+  depends_on = [
+    azurerm_windows_virtual_machine.vm_addc
+  ]
   lifecycle {
     ignore_changes = [tags]
   }
-}
-
-# Wait for vm-addc
-resource "time_sleep" "vm_addc_openssh_wait" {
-  create_duration = "2m"
-  depends_on      = [azurerm_virtual_machine_extension.vm_addc_openssh]
-}
-
-# Set VM timezone
-resource "azurerm_virtual_machine_run_command" "vm_timezone_addc" {
-  name               = "SetTimeZone"
-  location           = var.rg_location
-  virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
-  source {
-    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
-  }
-  depends_on = [time_sleep.vm_addc_openssh_wait]
-}
-
-# Wait for vm-addc
-resource "time_sleep" "vm_addc_tz_wait" {
-  create_duration = "2m"
-  depends_on      = [azurerm_virtual_machine_run_command.vm_timezone_addc]
 }
 
 # Copy DCPromo script to VM
@@ -128,7 +109,10 @@ resource "null_resource" "vm_addc_dcpromo_copy" {
       timeout         = "3m"
     }
   }
-  depends_on = [time_sleep.vm_addc_tz_wait]
+  depends_on = [
+    azurerm_windows_virtual_machine.vm_addc,
+    azurerm_virtual_machine_extension.vm_addc_openssh,
+  ]
 }
 
 # Execute DCPromo script on VM
@@ -146,13 +130,9 @@ resource "null_resource" "vm_addc_dcpromo_exec" {
       timeout         = "30m"
     }
   }
-  depends_on = [null_resource.vm_addc_dcpromo_copy]
-}
-
-# Wait for vm-addc
-resource "time_sleep" "vm_addc_dcpromo_wait" {
-  create_duration = "2m"
-  depends_on      = [null_resource.vm_addc_dcpromo_exec]
+  depends_on = [
+    null_resource.vm_addc_dcpromo_copy,
+  ]
 }
 
 # Restart VM after DCPromo
@@ -163,17 +143,26 @@ resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
   source {
     script = "Restart-Computer -Force"
   }
-  depends_on = [time_sleep.vm_addc_dcpromo_wait]
+  depends_on = [
+    null_resource.vm_addc_dcpromo_exec,
+  ]
 }
 
 # Wait for vm-addc
 resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
   create_duration = "5m"
-  depends_on      = [azurerm_virtual_machine_run_command.vm_addc_restart]
+  depends_on = [
+    azurerm_virtual_machine_run_command.vm_addc_restart,
+  ]
 }
 
 # SSH connection to create new OU and technical users for SQL installation
 resource "terraform_data" "vm_addc_add_users" {
+  triggers_replace = {
+    openssh  = azurerm_virtual_machine_extension.vm_addc_openssh.id,
+    dcpromo  = null_resource.vm_addc_dcpromo_exec.id,
+    dc_sleep = time_sleep.vm_addc_dcpromo_restart_wait.id,
+  }
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
@@ -181,16 +170,46 @@ resource "terraform_data" "vm_addc_add_users" {
       password        = var.vm_addc_localadmin_user
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
-      timeout         = "10m"
+      timeout         = "5m"
     }
     inline = [
       "powershell.exe -Command \"${join(";", local.powershell_add_users)}\""
     ]
   }
-  depends_on = [time_sleep.vm_addc_dcpromo_restart_wait]
+  depends_on = [
+    time_sleep.vm_addc_dcpromo_restart_wait,
+  ]
 }
 
-# Copy serverstuff script to VM
+# Enable dev\test shutdown schedule (to save $)
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
+  virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
+  location              = var.rg_location
+  enabled               = true
+  daily_recurrence_time = var.vm_addc_shutdown_hhmm
+  timezone              = var.vm_shutdown_tz
+  notification_settings {
+    enabled = false
+  }
+  depends_on = [
+    terraform_data.vm_addc_add_users,
+  ]
+}
+
+# Set VM timezone
+resource "azurerm_virtual_machine_run_command" "vm_timezone_addc" {
+  name               = "SetTimeZone"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
+  source {
+    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
+  }
+  depends_on = [
+    azurerm_virtual_machine_run_command.vm_timezone_sqlha,
+  ]
+}
+
+/*# Copy serverstuff script to VM
 resource "null_resource" "vm_server_stuff_copy" {
   provisioner "file" {
     source      = "${path.module}/${local.server_stuff}"
@@ -204,18 +223,6 @@ resource "null_resource" "vm_server_stuff_copy" {
       timeout         = "5m"
     }
   }
-  depends_on = [terraform_data.vm_addc_add_users]
-}
+  depends_on = [azurerm_virtual_machine_run_command.vm_timezone_sqlha,]
+}*/
 
-# Enable dev\test shutdown schedule (to save $)
-resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
-  virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
-  location              = var.rg_location
-  enabled               = true
-  daily_recurrence_time = var.vm_addc_shutdown_hhmm
-  timezone              = var.vm_shutdown_tz
-  depends_on            = [azurerm_windows_virtual_machine.vm_addc]
-  notification_settings {
-    enabled = false
-  }
-}
