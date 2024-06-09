@@ -281,7 +281,7 @@ PROTECTED_SETTINGS
 
   depends_on = [
     time_sleep.vm_sqlha_restart_wait,
-    null_resource.vm_addc_add_users,
+    terraform_data.vm_addc_add_users,
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -311,7 +311,7 @@ resource "terraform_data" "sqlsvc_local_admin" {
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
-      timeout         = "3m"
+      timeout         = "5m"
     }
     inline = [
       "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.sqlAddLocalAdmin} -domain_name ${var.domain_name} -sql_svc_acct_user ${var.sql_svc_acct_user}"
@@ -319,23 +319,22 @@ resource "terraform_data" "sqlsvc_local_admin" {
   }
   depends_on = [
     time_sleep.vm_sqljoin,
-    null_resource.vm_addc_add_users,
+    terraform_data.vm_addc_add_users,
   ]
 }
 
 # Add the 'domain\sqlinstall' account to sysadmin roles on SQL servers
 resource "terraform_data" "sql_sysadmin" {
   count = var.vm_sqlha_count
-
   # SSH connection to target SQL server with local admin account
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      user            = var.vm_addc_localadmin_user
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
-      timeout         = "3m"
+      timeout         = "5m"
     }
     inline = [
       "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.sqlAddSysAdmins} -domain_netbios_name ${var.domain_netbios_name} -sql_sysadmin_user ${var.sql_sysadmin_user} -sql_sysadmin_pswd ${var.sql_sysadmin_pswd}"
@@ -419,7 +418,7 @@ resource "terraform_data" "cluster_acl" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      user            = var.vm_addc_localadmin_user
       password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"

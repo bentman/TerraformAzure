@@ -143,7 +143,7 @@ resource "null_resource" "vm_addc_add_users_copy" {
     }
   }
   depends_on = [
-    null_resource.vm_addc_dcpromo_exec
+    null_resource.vm_addc_dcpromo_copy,
   ]
 }
 
@@ -162,31 +162,28 @@ resource "null_resource" "vm_addc_sqlAddAcl_copy" {
     }
   }
   depends_on = [
-    null_resource.vm_addc_dcpromo_exec
+    null_resource.vm_addc_add_users_copy,
   ]
 }
 
 # Execute DCPromo script on VM
-resource "null_resource" "vm_addc_dcpromo_exec" {
-  provisioner "remote-exec" {
-    inline = [
-      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.dcPromoScript} -domain_name ${var.domain_name} -domain_netbios_name ${var.domain_netbios_name} -safemode_admin_pswd ${var.safemode_admin_pswd}"
-    ]
-    connection {
-      type            = "ssh"
-      user            = var.vm_addc_localadmin_user
-      password        = var.vm_addc_localadmin_pswd
-      host            = azurerm_public_ip.vm_addc_pip.ip_address
-      target_platform = "windows"
-      timeout         = "30m"
+resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo_exec" {
+  name                       = "InstallGPMC"
+  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
+  publisher                  = "Microsoft.Compute"
+  type                       = "CustomScriptExtension"
+  type_handler_version       = "1.10"
+  auto_upgrade_minor_version = true
+  settings = <<SETTINGS
+    {
+    "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.dcPromoScript} -domain_name ${var.domain_name} -domain_netbios_name ${var.domain_netbios_name} -safemode_admin_pswd ${var.safemode_admin_pswd}"
     }
-  }
+  SETTINGS
+
   depends_on = [
-    null_resource.vm_addc_dcpromo_copy,
+    null_resource.vm_addc_sqlAddAcl_copy,
   ]
 }
-
-# SSH connection to create new OU and technical users for SQL installation
 
 # Restart VM after DCPromo
 resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
@@ -197,7 +194,7 @@ resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
     script = "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -Command Restart-Computer -Force"
   }
   depends_on = [
-    null_resource.vm_addc_dcpromo_exec,
+    azurerm_virtual_machine_extension.vm_addc_dcpromo_exec,
   ]
 }
 
@@ -209,20 +206,20 @@ resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
   ]
 }
 
-# Execute script to add users on VM
-resource "null_resource" "vm_addc_add_users" {
+# Execute script to add users on domain
+resource "terraform_data" "vm_addc_add_users" {
   provisioner "remote-exec" {
-    inline = [
-      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.dcAddUsers} -domain_name ${var.domain_name} -sql_svc_acct_user ${var.sql_svc_acct_user} -sql_svc_acct_pswd ${var.sql_svc_acct_pswd}"
-    ]
     connection {
       type            = "ssh"
-      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      user            = var.vm_addc_localadmin_user
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
       timeout         = "5m"
     }
+    inline = [
+      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.dcAddUsers} -domain_name ${var.domain_name} -sql_svc_acct_user ${var.sql_svc_acct_user} -sql_svc_acct_pswd ${var.sql_svc_acct_pswd}"
+    ]
   }
   depends_on = [
     time_sleep.vm_addc_dcpromo_restart_wait,
@@ -240,7 +237,7 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
     enabled = false
   }
   depends_on = [
-    null_resource.vm_addc_add_users,
+    terraform_data.vm_addc_add_users,
   ]
 }
 

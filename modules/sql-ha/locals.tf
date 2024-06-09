@@ -4,7 +4,7 @@ locals {
   # Script for seting up first Active Directory Domain Controller in Forest
   dcPromoScript    = "Install-DomainController.ps1"
   dcAddUsers       = "Add-Users.ps1"
-  sqlAddLocalAdmin = "Add-SqlLocalAdmins"
+  sqlAddLocalAdmin = "Add-SqlLocalAdmins.ps1"
   sqlAddSysAdmins  = "Add-SqlSysAdmins.ps1"
   sqlAddAcl        = "Add-SqlAcl.ps1"
   server_stuff     = "get-serverstuff.ps1"
