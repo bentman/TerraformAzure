@@ -73,18 +73,25 @@ resource "azurerm_windows_virtual_machine" "vm_sqlha" {
   license_type        = "Windows_Server"
   zone                = count.index + 1
   tags                = var.tags
+  eviction_policy     = "Deallocate"
+  priority            = "Spot"
+  max_bid_price       = -1
+
   network_interface_ids = [
     azurerm_network_interface.vm_sqlha_nic[count.index].id
   ]
+
   source_image_reference {
     publisher = var.vm_sqlha_image_publisher
     offer     = var.vm_sqlha_image_offer
     sku       = var.vm_sqlha_image_sku
     version   = "latest"
   }
+
   identity {
     type = "SystemAssigned"
   }
+
   os_disk {
     name                 = "${var.vm_sqlha_hostname}0${count.index + 1}-dsk-0S"
     caching              = "ReadWrite"

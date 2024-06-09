@@ -57,6 +57,9 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   admin_password      = var.vm_addc_localadmin_pswd
   license_type        = "Windows_Server"
   tags                = var.tags
+  eviction_policy     = "Deallocate"
+  priority            = "Spot"
+  max_bid_price       = -1
 
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
@@ -88,6 +91,7 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
     ignore_changes = [tags]
   }
 }
+
 # Enable OpenSSH for remote administration
 resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   name                       = "InstallOpenSSH"
