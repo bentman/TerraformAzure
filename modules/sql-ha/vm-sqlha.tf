@@ -192,7 +192,7 @@ resource "azurerm_virtual_machine_run_command" "vm_sqlha_restart" {
   location           = var.rg_location
   virtual_machine_id = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
   source {
-    script = "Restart-Computer -Force"
+    script = "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -Command Restart-Computer -Force"
   }
   depends_on = [
     azurerm_virtual_machine_data_disk_attachment.vm_sqlha_data,
@@ -206,6 +206,44 @@ resource "time_sleep" "vm_sqlha_restart_wait" {
   create_duration = "5m"
   depends_on = [
     azurerm_virtual_machine_run_command.vm_sqlha_restart,
+  ]
+}
+
+resource "null_resource" "vm_sqlAddLocalAdmin_copy" {
+  count = var.vm_sqlha_count
+  provisioner "file" {
+    source      = "${path.module}/${local.sqlAddLocalAdmin}"
+    destination = "C:\\${local.sqlAddLocalAdmin}"
+    connection {
+      type            = "ssh"
+      user            = var.vm_sqlha_localadmin_user
+      password        = var.vm_sqlha_localadmin_pswd
+      host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
+      target_platform = "windows"
+      timeout         = "3m"
+    }
+  }
+  depends_on = [
+    time_sleep.vm_sqlha_restart_wait
+  ]
+}
+
+resource "null_resource" "vm_ssqlAddSysAdmins_copy" {
+  count = var.vm_sqlha_count
+  provisioner "file" {
+    source      = "${path.module}/${local.sqlAddSysAdmins}"
+    destination = "C:\\${local.sqlAddSysAdmins}"
+    connection {
+      type            = "ssh"
+      user            = var.vm_sqlha_localadmin_user
+      password        = var.vm_sqlha_localadmin_pswd
+      host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
+      target_platform = "windows"
+      timeout         = "3m"
+    }
+  }
+  depends_on = [
+    null_resource.vm_sqlAddLocalAdmin_copy
   ]
 }
 
@@ -236,7 +274,7 @@ PROTECTED_SETTINGS
 
   depends_on = [
     time_sleep.vm_sqlha_restart_wait,
-    terraform_data.vm_addc_add_users,
+    null_resource.vm_addc_add_users,
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -245,8 +283,10 @@ PROTECTED_SETTINGS
 
 # Time delay after SQL domain join
 resource "time_sleep" "vm_sqljoin" {
-  create_duration = "2m"
-  depends_on      = [azurerm_virtual_machine_extension.vm_sqlha_domain_join, ]
+  create_duration = "5m"
+  depends_on = [
+    azurerm_virtual_machine_extension.vm_sqlha_domain_join,
+  ]
 }
 
 # Add 'domain\sqlinstall' account to local administrators group on SQL servers
@@ -264,22 +304,16 @@ resource "terraform_data" "sqlsvc_local_admin" {
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
-      timeout         = "2m"
+      timeout         = "3m"
     }
     inline = [
-      "powershell.exe -Command \"${join(";", local.powershell_local_admin)}\""
+      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.sqlAddLocalAdmin} -domain_name ${var.domain_name} -sql_svc_acct_user ${var.sql_svc_acct_user}"
     ]
   }
   depends_on = [
     time_sleep.vm_sqljoin,
-    terraform_data.vm_addc_add_users,
+    null_resource.vm_addc_add_users,
   ]
-}
-
-# Time delay after SQL accounts
-resource "time_sleep" "vm_sql_accts" {
-  create_duration = "5m"
-  depends_on      = [terraform_data.sqlsvc_local_admin, ]
 }
 
 # Add the 'domain\sqlinstall' account to sysadmin roles on SQL servers
@@ -289,19 +323,19 @@ resource "terraform_data" "sql_sysadmin" {
   # SSH connection to target SQL server with local admin account
   provisioner "remote-exec" {
     connection {
-      type = "ssh"
-      user = var.vm_addc_localadmin_user
-      //user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      type            = "ssh"
+      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
       password        = var.vm_addc_localadmin_pswd
-      host            = var.vm_addc_public_ip
+      host            = azurerm_public_ip.vm_sqlha_pip[count.index].ip_address
       target_platform = "windows"
-      timeout         = "2m"
+      timeout         = "3m"
     }
     inline = [
-      "powershell.exe -Command \"${join(";", local.powershell_sql_sysadmin)}\""
+      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.sqlAddSysAdmins} -domain_netbios_name ${var.domain_netbios_name} -sql_sysadmin_user ${var.sql_sysadmin_user} -sql_sysadmin_pswd ${var.sql_sysadmin_pswd}"
     ]
   }
-  depends_on = [terraform_data.sqlsvc_local_admin, ]
+  depends_on = [
+  terraform_data.sqlsvc_local_admin, ]
 }
 
 # Indicates the capability to manage a group of virtual machines specific to Microsoft SQL
@@ -368,6 +402,7 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
     ignore_changes = [tags]
   }
 }
+
 # Create special permission for base OU for Cluster computer object
 resource "terraform_data" "cluster_acl" {
   triggers_replace = {
@@ -381,10 +416,10 @@ resource "terraform_data" "cluster_acl" {
       password        = var.vm_addc_localadmin_pswd
       host            = var.vm_addc_public_ip
       target_platform = "windows"
-      timeout         = "2m"
+      timeout         = "3m"
     }
     inline = [
-      "powershell.exe -Command \"${join(";", local.powershell_acl_commands)}\""
+      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.sqlAddAcl} -domain_name ${var.domain_name} -sqlcluster_name ${var.sqlcluster_name}"
     ]
   }
   depends_on = [

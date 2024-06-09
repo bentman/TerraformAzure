@@ -8,6 +8,7 @@ resource "azurerm_public_ip" "vm_addc_pip" {
   allocation_method   = "Static"
   sku                 = "Standard"
   tags                = var.tags
+
   lifecycle {
     ignore_changes = [tags]
   }
@@ -20,17 +21,20 @@ resource "azurerm_network_interface" "vm_addc_nic" {
   resource_group_name           = var.rg_name
   enable_accelerated_networking = true
   tags                          = var.tags
+
   ip_configuration {
     name                          = "vm-addc-ip"
     subnet_id                     = var.snet_0128_server_id
     private_ip_address_allocation = "Static"
-    private_ip_address            = cidrhost("10.0.0.128/25", 22) // "10.0.0.150"
+    private_ip_address            = cidrhost("10.0.0.128/25", 22) # "10.0.0.150"
     primary                       = true
     public_ip_address_id          = azurerm_public_ip.vm_addc_pip.id
   }
+
   depends_on = [
     azurerm_public_ip.vm_addc_pip,
   ]
+
   lifecycle {
     ignore_changes = [tags]
   }
@@ -53,32 +57,37 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   admin_password      = var.vm_addc_localadmin_pswd
   license_type        = "Windows_Server"
   tags                = var.tags
+
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
     sku       = "2022-Datacenter"
     version   = "latest"
   }
+
   os_disk {
     name                 = "vm-addc-dsk0os"
     caching              = "ReadWrite"
     disk_size_gb         = 127
     storage_account_type = "Standard_LRS"
   }
+
   network_interface_ids = [
     azurerm_network_interface.vm_addc_nic.id
   ]
+
   depends_on = [
     azurerm_network_interface_security_group_association.vm_addc_nsg_assoc,
   ]
+
   winrm_listener {
     protocol = "Http"
   }
+
   lifecycle {
     ignore_changes = [tags]
   }
 }
-
 # Enable OpenSSH for remote administration
 resource "azurerm_virtual_machine_extension" "vm_addc_openssh" {
   name                       = "InstallOpenSSH"
@@ -115,11 +124,49 @@ resource "null_resource" "vm_addc_dcpromo_copy" {
   ]
 }
 
+# Copy Add Users script to VM
+resource "null_resource" "vm_addc_add_users_copy" {
+  provisioner "file" {
+    source      = "${path.module}/${local.dcAddUsers}"
+    destination = "C:\\${local.dcAddUsers}"
+    connection {
+      type            = "ssh"
+      user            = var.vm_addc_localadmin_user
+      password        = var.vm_addc_localadmin_pswd
+      host            = azurerm_public_ip.vm_addc_pip.ip_address
+      target_platform = "windows"
+      timeout         = "5m"
+    }
+  }
+  depends_on = [
+    null_resource.vm_addc_dcpromo_exec
+  ]
+}
+
+# Copy SQL ACL script to VM
+resource "null_resource" "vm_addc_sqlAddAcl_copy" {
+  provisioner "file" {
+    source      = "${path.module}/${local.sqlAddAcl}"
+    destination = "C:\\${local.sqlAddAcl}"
+    connection {
+      type            = "ssh"
+      user            = var.vm_addc_localadmin_user
+      password        = var.vm_addc_localadmin_pswd
+      host            = azurerm_public_ip.vm_addc_pip.ip_address
+      target_platform = "windows"
+      timeout         = "5m"
+    }
+  }
+  depends_on = [
+    null_resource.vm_addc_dcpromo_exec
+  ]
+}
+
 # Execute DCPromo script on VM
 resource "null_resource" "vm_addc_dcpromo_exec" {
   provisioner "remote-exec" {
     inline = [
-      "powershell.exe -ExecutionPolicy Unrestricted -File C:\\${local.dcPromoScript} -domain_name ${var.domain_name} -domain_netbios_name ${var.domain_netbios_name} -safemode_admin_pswd ${var.safemode_admin_pswd}"
+      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.dcPromoScript} -domain_name ${var.domain_name} -domain_netbios_name ${var.domain_netbios_name} -safemode_admin_pswd ${var.safemode_admin_pswd}"
     ]
     connection {
       type            = "ssh"
@@ -135,13 +182,15 @@ resource "null_resource" "vm_addc_dcpromo_exec" {
   ]
 }
 
+# SSH connection to create new OU and technical users for SQL installation
+
 # Restart VM after DCPromo
 resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
   name               = "RestartCommand"
   location           = var.rg_location
   virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
   source {
-    script = "Restart-Computer -Force"
+    script = "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -Command Restart-Computer -Force"
   }
   depends_on = [
     null_resource.vm_addc_dcpromo_exec,
@@ -156,25 +205,20 @@ resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
   ]
 }
 
-# SSH connection to create new OU and technical users for SQL installation
-resource "terraform_data" "vm_addc_add_users" {
-  triggers_replace = {
-    openssh  = azurerm_virtual_machine_extension.vm_addc_openssh.id,
-    dcpromo  = null_resource.vm_addc_dcpromo_exec.id,
-    dc_sleep = time_sleep.vm_addc_dcpromo_restart_wait.id,
-  }
+# Execute script to add users on VM
+resource "null_resource" "vm_addc_add_users" {
   provisioner "remote-exec" {
+    inline = [
+      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.dcAddUsers} -domain_name ${var.domain_name} -sql_svc_acct_user ${var.sql_svc_acct_user} -sql_svc_acct_pswd ${var.sql_svc_acct_pswd}"
+    ]
     connection {
       type            = "ssh"
-      user            = var.vm_addc_localadmin_user
-      password        = var.vm_addc_localadmin_user
+      user            = "${var.domain_netbios_name}\\${var.vm_addc_localadmin_user}"
+      password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
       timeout         = "5m"
     }
-    inline = [
-      "powershell.exe -Command \"${join(";", local.powershell_add_users)}\""
-    ]
   }
   depends_on = [
     time_sleep.vm_addc_dcpromo_restart_wait,
@@ -192,7 +236,7 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
     enabled = false
   }
   depends_on = [
-    terraform_data.vm_addc_add_users,
+    null_resource.vm_addc_add_users,
   ]
 }
 
@@ -202,7 +246,7 @@ resource "azurerm_virtual_machine_run_command" "vm_timezone_addc" {
   location           = var.rg_location
   virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
   source {
-    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
+    script = "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -Command Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
   }
   depends_on = [
     azurerm_virtual_machine_run_command.vm_timezone_sqlha,
