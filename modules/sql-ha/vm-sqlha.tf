@@ -273,8 +273,8 @@ SETTINGS
   }
 PROTECTED_SETTINGS
   depends_on = [
-    time_sleep.vm_sqlha_restart_wait,
-    time_sleep.vm_addc_dcpromo_restart_wait,
+    null_resource.vm_ssqlAddSysAdmins_copy,
+    null_resource.vm_addc_add_users,
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -283,7 +283,7 @@ PROTECTED_SETTINGS
 
 # Time delay after SQL domain join
 resource "time_sleep" "vm_sqlha_domain_join_wait" {
-  create_duration = "3m"
+  create_duration = "5m"
   depends_on = [
     azurerm_virtual_machine_extension.vm_sqlha_domain_join,
   ]
@@ -292,7 +292,7 @@ resource "time_sleep" "vm_sqlha_domain_join_wait" {
 # Add 'domain\sqlinstall' account to local administrators group on SQL servers
 resource "null_resource" "sqlsvc_local_admin" {
   count = var.vm_sqlha_count
-  # SSH connection to target SQL server with domain admin account
+  # SSH connection to target SQL server with domain_netbios_name\domain_admin account
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
@@ -315,7 +315,7 @@ resource "null_resource" "sqlsvc_local_admin" {
 # Add the 'domain\sqlinstall' account to sysadmin roles on SQL servers
 resource "null_resource" "sql_sysadmin" {
   count = var.vm_sqlha_count
-  # SSH connection to target SQL server with local admin account
+  # SSH connection to target SQL server with domain_admin account
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
@@ -391,7 +391,6 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
     }
   }
   depends_on = [
-    azurerm_windows_virtual_machine.vm_sqlha,
     null_resource.sql_sysadmin,
   ]
   lifecycle {

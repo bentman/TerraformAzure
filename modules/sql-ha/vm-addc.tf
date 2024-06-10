@@ -190,7 +190,7 @@ resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
 
 # Wait for vm-addc
 resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
-  create_duration = "3m"
+  create_duration = "5m"
   depends_on = [
     azurerm_virtual_machine_run_command.vm_addc_restart,
   ]
