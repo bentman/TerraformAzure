@@ -31,8 +31,8 @@ module "sql_ha" {
   safemode_admin_pswd      = var.safemode_admin_pswd
   vm_shutdown_tz           = var.vm_shutdown_tz
   vm_addc_hostname         = var.vm_addc_hostname
-  vm_addc_localadmin_user  = var.domain_admin_user //NOTE: becomes domain admin after dcpromo
-  vm_addc_localadmin_pswd  = var.domain_admin_pswd //NOTE: becomes domain admin after dcpromo
+  vm_addc_localadmin_user  = var.domain_admin_user //NOTE: domain admin after dcpromo
+  vm_addc_localadmin_pswd  = var.domain_admin_pswd //NOTE: domain admin after dcpromo
   vm_addc_size             = var.vm_addc_size
   vm_addc_public_ip        = module.vm_addc[0].vm_addc_public_ip
   vm_addc_private_ip       = module.vm_addc[0].vm_addc_private_ip
@@ -45,8 +45,8 @@ module "sql_ha" {
   sql_sysadmin_pswd        = var.sql_sysadmin_pswd
   sql_svc_acct_user        = var.sql_svc_acct_user
   sql_svc_acct_pswd        = var.sql_svc_acct_pswd
-  sqlaag_name              = var.sqlaag_name
-  sqlcluster_name          = var.sqlcluster_name
+  sql_ag_name              = var.sql_ag_name
+  sql_cluster_name         = var.sql_cluster_name
   tags                     = var.tags
   depends_on = [
     azurerm_subnet.snet_0128_server,
