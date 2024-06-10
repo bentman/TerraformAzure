@@ -54,8 +54,9 @@ vm_addc_hostname = "vm-dc0150"       // vm addc hostname, 15 character max
 # vm-sqlha.tf values
 vm_sqlha_size     = "Standard_D2s_v3" // vm sqlha size
 vm_sqlha_hostname = "vm-mysqlha"      // vm sqlha hostname, 13 character max (*01 & *02)
-sqlcluster_name   = "mysqlcluster"    // vm sqlha cluster name, 12 character recommended
-sqlaag_name       = "mysqlhaaoaag"    // vm sqlha AG name, 12 character recommended
+sql_cluster_name  = "sqlcluster"      // vm sqlha clustername, 12 character recommended
+sql_ag_name       = "sqlag"           // vm sqlha avail group, 12 character recommended
+sql_listener      = "sqllistener"     // vm sqlha listener, 12 character recommended
 sql_svc_acct_user = "mysqlsvc"        // sql service username
 sql_svc_acct_pswd = "P@ssword!2024"   // sql service password
 sql_sysadmin_user = "mysqllogin"      // sql sysadmin username

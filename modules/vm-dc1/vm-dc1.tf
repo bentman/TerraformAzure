@@ -28,6 +28,9 @@ resource "azurerm_network_interface" "vm_dc1_nic" {
     primary                       = true
     public_ip_address_id          = azurerm_public_ip.vm_dc1_pip.id
   }
+  depends_on = [
+    azurerm_public_ip.vm_dc1_pip,
+  ]
   lifecycle {
     ignore_changes = [tags]
   }
@@ -40,7 +43,7 @@ resource "azurerm_network_interface_security_group_association" "vm_dc1_nsg_asso
 }
 
 # Create vm-dc1
-resource "azurerm_windows_virtual_machine" "vm_addc" {
+resource "azurerm_windows_virtual_machine" "vm_dc1" {
   name                = var.vm_dc1_hostname
   location            = var.rg_location
   resource_group_name = var.rg_name
@@ -50,19 +53,30 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   admin_password      = var.vm_localadmin_pswd
   license_type        = "Windows_Server"
   tags                = var.tags
-  os_disk {
-    name                 = "${var.vm_dc1_hostname}-dsk0os"
-    caching              = "ReadWrite"
-    disk_size_gb         = 127
-    storage_account_type = "Standard_LRS"
-  }
+  /*eviction_policy     = "Deallocate"
+  priority            = "Spot"
+  max_bid_price       = -1*/
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
     sku       = "2022-Datacenter"
     version   = "latest"
   }
-  network_interface_ids = [azurerm_network_interface.vm_dc1_nic.id]
+  os_disk {
+    name                 = "vm-dc1-dsk0os"
+    caching              = "ReadWrite"
+    disk_size_gb         = 127
+    storage_account_type = "Standard_LRS"
+  }
+  network_interface_ids = [
+    azurerm_network_interface.vm_dc1_nic.id
+  ]
+  depends_on = [
+    azurerm_network_interface_security_group_association.vm_dc1_nsg_assoc,
+  ]
+  winrm_listener {
+    protocol = "Http"
+  }
   lifecycle {
     ignore_changes = [tags]
   }
@@ -71,11 +85,14 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
 # Enable OpenSSH for remote administration
 resource "azurerm_virtual_machine_extension" "vm_dc1_openssh" {
   name                       = "InstallOpenSSH"
-  virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
+  virtual_machine_id         = azurerm_windows_virtual_machine.vm_dc1.id
   publisher                  = "Microsoft.Azure.OpenSSH"
   type                       = "WindowsOpenSSH"
   type_handler_version       = "3.0"
   auto_upgrade_minor_version = true
+  depends_on = [
+    azurerm_windows_virtual_machine.vm_dc1
+  ]
   lifecycle {
     ignore_changes = [tags]
   }
@@ -85,7 +102,7 @@ resource "azurerm_virtual_machine_extension" "vm_dc1_openssh" {
 resource "azurerm_virtual_machine_run_command" "vm_dc1_timezone" {
   name               = "SetTimeZone"
   location           = var.rg_location
-  virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_dc1.id
   source {
     script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
   }
@@ -103,7 +120,7 @@ resource "null_resource" "vm_dc1_dcpromo_copy" {
       password        = var.vm_localadmin_pswd
       host            = azurerm_public_ip.vm_dc1_pip.ip_address
       target_platform = "windows"
-      timeout         = "120s"
+      timeout         = "3m"
     }
   }
   depends_on = [azurerm_virtual_machine_run_command.vm_dc1_timezone, ]
@@ -120,55 +137,48 @@ resource "null_resource" "vm_server_stuff_copy" {
       password        = var.vm_localadmin_pswd
       host            = azurerm_public_ip.vm_dc1_pip.ip_address
       target_platform = "windows"
-      timeout         = "120s"
+      timeout         = "3m"
     }
   }
   depends_on = [null_resource.vm_dc1_dcpromo_copy]
 }
 
 # Execute DCPromo script on VM
-resource "null_resource" "vm_dc1_dcpromo_exec" {
-  provisioner "remote-exec" {
-    inline = [
-      "powershell.exe -ExecutionPolicy Unrestricted -File C:\\${local.dcPromoScript} -domain_name ${var.dc1_domain_name} -domain_netbios_name ${var.dc1_domain_netbios_name} -safemode_admin_pswd ${var.dc1_safemode_admin_pswd}"
-    ]
-    connection {
-      type            = "ssh"
-      user            = var.vm_localadmin_user
-      password        = var.vm_localadmin_pswd
-      host            = azurerm_public_ip.vm_dc1_pip.ip_address
-      target_platform = "windows"
-      timeout         = "20m"
+resource "azurerm_virtual_machine_extension" "vm_dc1_dcpromo_exec" {
+  name                       = "dc1Promo"
+  virtual_machine_id         = azurerm_windows_virtual_machine.vm_dc1.id
+  publisher                  = "Microsoft.Compute"
+  type                       = "CustomScriptExtension"
+  type_handler_version       = "1.10"
+  auto_upgrade_minor_version = true
+  settings                   = <<SETTINGS
+    {
+    "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.dcPromoScript} -domain_name ${var.dc1_domain_name} -domain_netbios_name ${var.dc1_domain_netbios_name} -safemode_admin_pswd ${var.dc1_safemode_admin_pswd}"
     }
-  }
-  depends_on = [null_resource.vm_dc1_dcpromo_copy, ]
-}
+  SETTINGS
 
-# Wait for DCPromo to complete
-resource "time_sleep" "vm_dc1_dcpromo_wait" {
-  create_duration = "3m"
-  depends_on      = [null_resource.vm_dc1_dcpromo_exec, ]
+  depends_on = [null_resource.vm_dc1_dcpromo_copy, ]
 }
 
 # Restart VM after DCPromo
 resource "azurerm_virtual_machine_run_command" "vm_dc1_restart" {
   name               = "RestartCommand"
   location           = var.rg_location
-  virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_dc1.id
   source {
-    script = "Restart-Computer -Force"
+    script = "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -Command Restart-Computer -Force"
   }
-  depends_on = [time_sleep.vm_dc1_dcpromo_wait, ]
+  depends_on = [azurerm_virtual_machine_extension.vm_dc1_dcpromo_exec, ]
 }
 
 # Enable dev\test shutdown schedule (to save $)
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_dc1_shutdown" {
-  virtual_machine_id    = azurerm_windows_virtual_machine.vm_addc.id
+  virtual_machine_id    = azurerm_windows_virtual_machine.vm_dc1.id
   location              = var.rg_location
   enabled               = true
   daily_recurrence_time = var.vm_dc1_shutdown_hhmm
   timezone              = var.vm_shutdown_tz
-  depends_on            = [azurerm_windows_virtual_machine.vm_addc, ]
+  depends_on            = [azurerm_windows_virtual_machine.vm_dc1, ]
   notification_settings {
     enabled = false
   }

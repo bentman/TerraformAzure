@@ -59,8 +59,8 @@ module "sql_ha" {
   vm_sqlha_size            = var.vm_sqlha_size
   vm_sqlha_localadmin_user = var.vm_localadmin_user
   vm_sqlha_localadmin_pswd = var.vm_localadmin_pswd
-  sqlaag_name              = var.sqlaag_name
-  sqlcluster_name          = var.sqlcluster_name
+  sql_ag_name              = var.sql_ag_name
+  sql_cluster_name         = var.sql_cluster_name
   sql_sysadmin_user        = var.sql_sysadmin_user
   sql_sysadmin_pswd        = var.sql_sysadmin_pswd
   sql_svc_acct_user        = var.sql_svc_acct_user

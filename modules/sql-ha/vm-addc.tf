@@ -21,7 +21,6 @@ resource "azurerm_network_interface" "vm_addc_nic" {
   resource_group_name           = var.rg_name
   enable_accelerated_networking = true
   tags                          = var.tags
-
   ip_configuration {
     name                          = "vm-addc-ip"
     subnet_id                     = var.snet_0128_server_id
@@ -30,11 +29,9 @@ resource "azurerm_network_interface" "vm_addc_nic" {
     primary                       = true
     public_ip_address_id          = azurerm_public_ip.vm_addc_pip.id
   }
-
   depends_on = [
     azurerm_public_ip.vm_addc_pip,
   ]
-
   lifecycle {
     ignore_changes = [tags]
   }
@@ -57,36 +54,30 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
   admin_password      = var.vm_addc_localadmin_pswd
   license_type        = "Windows_Server"
   tags                = var.tags
-  eviction_policy     = "Deallocate"
+  /*eviction_policy     = "Deallocate"
   priority            = "Spot"
-  max_bid_price       = -1
-
+  max_bid_price       = -1*/
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
     sku       = "2022-Datacenter"
     version   = "latest"
   }
-
   os_disk {
     name                 = "vm-addc-dsk0os"
     caching              = "ReadWrite"
     disk_size_gb         = 127
     storage_account_type = "Standard_LRS"
   }
-
   network_interface_ids = [
     azurerm_network_interface.vm_addc_nic.id
   ]
-
   depends_on = [
     azurerm_network_interface_security_group_association.vm_addc_nsg_assoc,
   ]
-
   winrm_listener {
     protocol = "Http"
   }
-
   lifecycle {
     ignore_changes = [tags]
   }
@@ -139,7 +130,7 @@ resource "null_resource" "vm_addc_add_users_copy" {
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
-      timeout         = "5m"
+      timeout         = "3m"
     }
   }
   depends_on = [
@@ -158,7 +149,7 @@ resource "null_resource" "vm_addc_sqlAddAcl_copy" {
       password        = var.vm_addc_localadmin_pswd
       host            = azurerm_public_ip.vm_addc_pip.ip_address
       target_platform = "windows"
-      timeout         = "5m"
+      timeout         = "3m"
     }
   }
   depends_on = [
@@ -168,18 +159,17 @@ resource "null_resource" "vm_addc_sqlAddAcl_copy" {
 
 # Execute DCPromo script on VM
 resource "azurerm_virtual_machine_extension" "vm_addc_dcpromo_exec" {
-  name                       = "InstallGPMC"
+  name                       = "addcPromo"
   virtual_machine_id         = azurerm_windows_virtual_machine.vm_addc.id
   publisher                  = "Microsoft.Compute"
   type                       = "CustomScriptExtension"
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
-  settings = <<SETTINGS
+  settings                   = <<SETTINGS
     {
     "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.dcPromoScript} -domain_name ${var.domain_name} -domain_netbios_name ${var.domain_netbios_name} -safemode_admin_pswd ${var.safemode_admin_pswd}"
     }
   SETTINGS
-
   depends_on = [
     null_resource.vm_addc_sqlAddAcl_copy,
   ]
@@ -200,14 +190,14 @@ resource "azurerm_virtual_machine_run_command" "vm_addc_restart" {
 
 # Wait for vm-addc
 resource "time_sleep" "vm_addc_dcpromo_restart_wait" {
-  create_duration = "5m"
+  create_duration = "3m"
   depends_on = [
     azurerm_virtual_machine_run_command.vm_addc_restart,
   ]
 }
 
 # Execute script to add users on domain
-resource "terraform_data" "vm_addc_add_users" {
+resource "null_resource" "vm_addc_add_users" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
@@ -237,7 +227,7 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_addc_shutdown" {
     enabled = false
   }
   depends_on = [
-    terraform_data.vm_addc_add_users,
+    null_resource.vm_addc_add_users,
   ]
 }
 

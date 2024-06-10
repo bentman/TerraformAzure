@@ -73,25 +73,21 @@ resource "azurerm_windows_virtual_machine" "vm_sqlha" {
   license_type        = "Windows_Server"
   zone                = count.index + 1
   tags                = var.tags
-  eviction_policy     = "Deallocate"
+  /*eviction_policy     = "Deallocate"
   priority            = "Spot"
-  max_bid_price       = -1
-
+  max_bid_price       = -1*/
   network_interface_ids = [
     azurerm_network_interface.vm_sqlha_nic[count.index].id
   ]
-
   source_image_reference {
     publisher = var.vm_sqlha_image_publisher
     offer     = var.vm_sqlha_image_offer
     sku       = var.vm_sqlha_image_sku
     version   = "latest"
   }
-
   identity {
     type = "SystemAssigned"
   }
-
   os_disk {
     name                 = "${var.vm_sqlha_hostname}0${count.index + 1}-dsk-0S"
     caching              = "ReadWrite"
@@ -210,7 +206,7 @@ resource "azurerm_virtual_machine_run_command" "vm_sqlha_restart" {
 
 resource "time_sleep" "vm_sqlha_restart_wait" {
   count           = var.vm_sqlha_count
-  create_duration = "5m"
+  create_duration = "3m"
   depends_on = [
     azurerm_virtual_machine_run_command.vm_sqlha_restart,
   ]
@@ -262,8 +258,7 @@ resource "azurerm_virtual_machine_extension" "vm_sqlha_domain_join" {
   publisher            = "Microsoft.Compute"
   type                 = "JsonADDomainExtension"
   type_handler_version = "1.3"
-
-  settings = <<SETTINGS
+  settings             = <<SETTINGS
   {
     "Name": "${var.domain_name}",
     "OUPath": "${local.servers_ou_path}",
@@ -272,16 +267,14 @@ resource "azurerm_virtual_machine_extension" "vm_sqlha_domain_join" {
     "Options": "3"
   }
 SETTINGS
-
-  protected_settings = <<PROTECTED_SETTINGS
+  protected_settings   = <<PROTECTED_SETTINGS
   {
     "Password": "${var.vm_addc_localadmin_pswd}"
   }
 PROTECTED_SETTINGS
-
   depends_on = [
     time_sleep.vm_sqlha_restart_wait,
-    terraform_data.vm_addc_add_users,
+    time_sleep.vm_addc_dcpromo_restart_wait,
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -289,20 +282,16 @@ PROTECTED_SETTINGS
 }
 
 # Time delay after SQL domain join
-resource "time_sleep" "vm_sqljoin" {
-  create_duration = "5m"
+resource "time_sleep" "vm_sqlha_domain_join_wait" {
+  create_duration = "3m"
   depends_on = [
     azurerm_virtual_machine_extension.vm_sqlha_domain_join,
   ]
 }
 
 # Add 'domain\sqlinstall' account to local administrators group on SQL servers
-resource "terraform_data" "sqlsvc_local_admin" {
+resource "null_resource" "sqlsvc_local_admin" {
   count = var.vm_sqlha_count
-  triggers_replace = {
-    domainjoin = azurerm_virtual_machine_extension.vm_sqlha_domain_join[count.index].id,
-    dj_sleep   = time_sleep.vm_sqljoin.id
-  }
   # SSH connection to target SQL server with domain admin account
   provisioner "remote-exec" {
     connection {
@@ -318,13 +307,13 @@ resource "terraform_data" "sqlsvc_local_admin" {
     ]
   }
   depends_on = [
-    time_sleep.vm_sqljoin,
-    terraform_data.vm_addc_add_users,
+    time_sleep.vm_sqlha_domain_join_wait,
+    null_resource.vm_addc_add_users,
   ]
 }
 
 # Add the 'domain\sqlinstall' account to sysadmin roles on SQL servers
-resource "terraform_data" "sql_sysadmin" {
+resource "null_resource" "sql_sysadmin" {
   count = var.vm_sqlha_count
   # SSH connection to target SQL server with local admin account
   provisioner "remote-exec" {
@@ -341,12 +330,13 @@ resource "terraform_data" "sql_sysadmin" {
     ]
   }
   depends_on = [
-  terraform_data.sqlsvc_local_admin, ]
+    null_resource.sqlsvc_local_admin,
+  ]
 }
 
 # Indicates the capability to manage a group of virtual machines specific to Microsoft SQL
 resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
-  name                = var.sqlcluster_name
+  name                = var.sql_cluster_name
   location            = var.rg_location
   resource_group_name = var.rg_name
   sql_image_offer     = var.sql_image_offer
@@ -356,20 +346,20 @@ resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
     cluster_subnet_type            = "MultiSubnet"
     cluster_bootstrap_account_name = "sqlinstall@${var.domain_name}"
     cluster_operator_account_name  = "sqlinstall@${var.domain_name}"
-    sql_service_account_name       = "sqlsvc@${var.domain_name}"
+    sql_service_account_name       = "${var.sql_svc_acct_user}@${var.domain_name}"
     organizational_unit_path       = local.servers_ou_path
     storage_account_primary_key    = azurerm_storage_account.sqlha_stga.primary_access_key
     storage_account_url            = "${azurerm_storage_account.sqlha_stga.primary_blob_endpoint}${azurerm_storage_container.sqlha_quorum.name}"
   }
   depends_on = [
-    terraform_data.sql_sysadmin,
+    null_resource.sql_sysadmin,
   ]
   lifecycle {
     ignore_changes = [tags]
   }
 }
 
-# vm-sqlha MSSQL configuration
+# vm-sqlha MSSQL configuration - this can take 15-30 minutes!
 resource "azurerm_mssql_virtual_machine" "az_sqlha" {
   count                            = var.vm_sqlha_count
   virtual_machine_id               = azurerm_windows_virtual_machine.vm_sqlha[count.index].id
@@ -402,7 +392,7 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
   }
   depends_on = [
     azurerm_windows_virtual_machine.vm_sqlha,
-    terraform_data.sql_sysadmin,
+    null_resource.sql_sysadmin,
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -410,11 +400,7 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
 }
 
 # Create special permission for base OU for Cluster computer object
-resource "terraform_data" "cluster_acl" {
-  triggers_replace = {
-    sqlha_vm_ids = join(",", azurerm_mssql_virtual_machine.az_sqlha[*].id)
-  }
-  # With SSH connection
+resource "null_resource" "cluster_acl" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
@@ -425,7 +411,7 @@ resource "terraform_data" "cluster_acl" {
       timeout         = "3m"
     }
     inline = [
-      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.sqlAddAcl} -domain_name ${var.domain_name} -sqlcluster_name ${var.sqlcluster_name}"
+      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\${local.sqlAddAcl} -domain_name ${var.domain_name} -sqlcluster_name ${var.sql_cluster_name}"
     ]
   }
   depends_on = [
@@ -435,17 +421,17 @@ resource "terraform_data" "cluster_acl" {
 
 # Create Always-On availability listener for SQL cluster with multi-subnet configuration
 resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
-  name                         = "sqlha-listener" # Length of the name (1-15)
-  availability_group_name      = "sqlhaaag"
+  name                         = var.sql_listener
+  availability_group_name      = var.sql_ag_name
   port                         = 1433
   sql_virtual_machine_group_id = azurerm_mssql_virtual_machine_group.sqlha_vmg.id
   multi_subnet_ip_configuration {
-    private_ip_address     = cidrhost(var.snet_0064_db1_prefixes[0], 6)
+    private_ip_address     = cidrhost(var.snet_0064_db1_prefixes[0], 25) // "10.0.0.89"
     sql_virtual_machine_id = azurerm_mssql_virtual_machine.az_sqlha[0].id
     subnet_id              = var.snet_0064_db1_id
   } // "10.0.0.70"
   multi_subnet_ip_configuration {
-    private_ip_address     = cidrhost(var.snet_0096_db2_prefixes[0], 6)
+    private_ip_address     = cidrhost(var.snet_0096_db2_prefixes[0], 25) // "10.0.0.121"
     sql_virtual_machine_id = azurerm_mssql_virtual_machine.az_sqlha[1].id
     subnet_id              = var.snet_0096_db2_id
   } // "10.0.0.102"
@@ -467,7 +453,7 @@ resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
     create = "15m"
   }
   depends_on = [
-    terraform_data.cluster_acl,
+    null_resource.cluster_acl,
   ]
 }
 

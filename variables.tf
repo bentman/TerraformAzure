@@ -172,13 +172,18 @@ variable "safemode_admin_pswd" {
 }
 
 ########## vm-sqlha VARIABLES
-variable "sqlaag_name" {
+variable "sql_listener" {
+  description = "Name of the SQL Listener"
+  type        = string
+  default     = "sqllistener"
+}
+variable "sql_ag_name" {
   description = "Name of the SQL AG (Availability Group)"
   type        = string
-  default     = "sqlhaaoaag"
+  default     = "sqlag"
 }
 
-variable "sqlcluster_name" {
+variable "sql_cluster_name" {
   description = "Name of the SQL cluster"
   type        = string
   default     = "sqlcluster"

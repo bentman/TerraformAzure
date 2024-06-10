@@ -48,7 +48,7 @@ locals {
   powershell_acl_commands = [
     "Start-Transcript -Path C:\\BUILD\\transcript-sql_acl.txt",
     "Test-NetConnection -Computername ${var.domain_name} -Port 9389",
-    "$Computer = Get-ADComputer ${var.sqlcluster_name}",
+    "$Computer = Get-ADComputer ${var.sql_cluster_name}",
     "$ComputerSID = [System.Security.Principal.SecurityIdentifier] $Computer.SID",
     "$ACL = Get-Acl -Path 'AD:${local.servers_ou_path}'",
     "$Identity = [System.Security.Principal.IdentityReference] $ComputerSID",

@@ -132,14 +132,21 @@ variable "vm_sqlha_shutdown_hhmm" {
 }
 
 ########## sqlha 
-variable "sqlaag_name" {
+variable "sql_listener" {
+  description = "Name of the SQL Listener"
+  type        = string
+  default     = "sqllistener"
+}
+variable "sql_ag_name" {
   description = "Name of the SQL AG (Availability Group)"
   type        = string
+  default     = "sqlag"
 }
 
-variable "sqlcluster_name" {
+variable "sql_cluster_name" {
   description = "Name of the SQL cluster"
   type        = string
+  default     = "sqlcluster"
 }
 
 variable "snet_0064_db1_id" {
