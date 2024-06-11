@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param ( 
     [Parameter(ValueFromPipeline = $true, Mandatory = $true)] [string]$domain_netbios_name,
+    [Parameter(ValueFromPipeline = $true, Mandatory = $true)] [string]$domain_admin,
     [Parameter(ValueFromPipeline = $true, Mandatory = $true)] [string]$sql_sysadmin_user,
     [Parameter(ValueFromPipeline = $true, Mandatory = $true)] [string]$sql_sysadmin_pswd
 )
@@ -12,8 +13,11 @@ Start-Transcript -Path 'C:\BUILD\Logs\transcript-sql_sysadmin.txt'
 Test-NetConnection -Computername $env:COMPUTERNAME -Port 1433
 # Define a SQL script to create a new SQL login and add it to the sysadmin server role
 $sqlAdmin = @"
-CREATE LOGIN [$domain_netbios_name\\sqlinstall] FROM WINDOWS WITH DEFAULT_DATABASE=[master]
-EXEC master..sp_addsrvrolemember @loginame = ''$domain_netbios_name\\sqlinstall'', @rolename = ''sysadmin''
+CREATE LOGIN [$domain_netbios_name\$domain_admin] FROM WINDOWS WITH DEFAULT_DATABASE=[master]
+EXEC master..sp_addsrvrolemember @loginame = '$domain_netbios_name\$domain_admin', @rolename = 'sysadmin'
+
+CREATE LOGIN [$domain_netbios_name\sqlinstall] FROM WINDOWS WITH DEFAULT_DATABASE=[master]
+EXEC master..sp_addsrvrolemember @loginame = '$domain_netbios_name\sqlinstall', @rolename = 'sysadmin'
 "@
 # Save the SQL script to a file
 $sqlAdmin | Set-Content -Path 'C:\BUILD\sqladmin.sql'

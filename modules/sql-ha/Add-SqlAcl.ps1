@@ -36,6 +36,6 @@ $Rule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($Identity,
 # Add the new access rule to the ACL
 $ACL.AddAccessRule($Rule)
 # Apply the updated ACL to the specified AD path
-Set-Acl -Path "AD:$servers_ou_path" -AclObject $ACL
+Set-Acl -Path "AD:$servers_ou_path" -AclObject $ACL -Verbose
 # Stop the transcript
 Stop-Transcript

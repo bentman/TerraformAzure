@@ -237,7 +237,7 @@ resource "azurerm_virtual_machine_run_command" "vm_timezone_addc" {
   location           = var.rg_location
   virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
   source {
-    script = "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -Command Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
+    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
   }
   depends_on = [
     azurerm_virtual_machine_run_command.vm_timezone_sqlha,

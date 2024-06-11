@@ -10,8 +10,8 @@ Start-Transcript -Path 'C:\BUILD\Logs\transcript-sql_local_admin.txt'
 # Test the network connection to the specified domain name and port 9389
 Test-NetConnection -Computername $domain_name -Port 9389
 # Add the SQL installation account to the local Administrators group
-Add-LocalGroupMember -Group 'Administrators' -Member "sqlinstall@$domain_name"
+Add-LocalGroupMember -Group 'Administrators' -Member "sqlinstall@$domain_name" -Verbose
 # Add the SQL service account to the local Administrators group
-Add-LocalGroupMember -Group 'Administrators' -Member "$sql_svc_acct_user@$domain_name"
+Add-LocalGroupMember -Group 'Administrators' -Member "$sql_svc_acct_user@$domain_name" -Verbose
 # Stop the transcript
 Stop-Transcript
