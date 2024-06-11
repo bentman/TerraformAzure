@@ -5,12 +5,12 @@ terraform {
     # Provider for managing Azure resources
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.0"
+      version = "~> 3.7"
     }
     # Provider for generating random values
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.0"
+      version = "~> 3.5"
     }
     # Provider for using null resources
     null = {
@@ -20,11 +20,15 @@ terraform {
     # Provider for managing TLS certificates
     tls = {
       source  = "hashicorp/tls"
+      version = "~> 3.4"
+    }
+    http = {
+      source  = "hashicorp/http"
       version = "~> 3.0"
     }
   }
   # Specify the required Terraform version
-  required_version = ">= 1.1.0"
+  required_version = ">= 1.6.0"
 }
 
 # Configure the AzureRM provider with necessary credentials

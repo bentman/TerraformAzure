@@ -334,6 +334,14 @@ resource "null_resource" "sql_sysadmin" {
   ]
 }
 
+# Time delay after SQL domain join
+resource "time_sleep" "vm_sql_sysadmin_wait" {
+  create_duration = "5m"
+  depends_on = [
+    null_resource.sql_sysadmin,
+  ]
+}
+
 # Indicates the capability to manage a group of virtual machines specific to Microsoft SQL
 resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
   name                = var.sql_cluster_name
@@ -352,11 +360,19 @@ resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
     storage_account_url            = "${azurerm_storage_account.sqlha_stga.primary_blob_endpoint}${azurerm_storage_container.sqlha_quorum.name}"
   }
   depends_on = [
-    null_resource.sql_sysadmin,
+    time_sleep.vm_sql_sysadmin_wait,
   ]
   lifecycle {
     ignore_changes = [tags]
   }
+}
+
+# Time delay after SQL domain join
+resource "time_sleep" "sqlha_vmg_wait" {
+  create_duration = "5m"
+  depends_on = [
+    azurerm_mssql_virtual_machine_group.sqlha_vmg,
+  ]
 }
 
 # vm-sqlha MSSQL configuration - this can take 15-30 minutes!
@@ -398,6 +414,13 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
   }
 }
 
+resource "time_sleep" "az_sqlha_wait" {
+  create_duration = "5m"
+  depends_on = [
+   azurerm_mssql_virtual_machine.az_sqlha,
+  ]
+}
+
 # Create special permission for base OU for Cluster computer object
 resource "null_resource" "cluster_acl" {
   provisioner "remote-exec" {
@@ -414,12 +437,19 @@ resource "null_resource" "cluster_acl" {
     ]
   }
   depends_on = [
-    azurerm_mssql_virtual_machine_group.sqlha_vmg,
+    time_sleep.az_sqlha_wait,
+  ]
+}
+
+resource "time_sleep" "cluster_acl_wait" {
+  create_duration = "5m"
+  depends_on = [
+   null_resource.cluster_acl,
   ]
 }
 
 # Create Always-On availability listener for SQL cluster with multi-subnet configuration
-resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
+resource "azurerm_mssql_virtual_machine_availability_group_listener" "sql_aag" {
   name                         = var.sql_listener
   availability_group_name      = var.sql_ag_name
   port                         = 1433
@@ -456,6 +486,13 @@ resource "azurerm_mssql_virtual_machine_availability_group_listener" "aag" {
   ]
 }
 
+resource "time_sleep" "az_sql_aag_wait" {
+  create_duration = "5m"
+  depends_on = [
+   azurerm_mssql_virtual_machine_availability_group_listener.sql_aag,
+  ]
+}
+
 # vm-sqlha AUTOSHUTDOWN
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_sqlha_shutdown" {
   count                 = var.vm_sqlha_count
@@ -468,7 +505,7 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_sqlha_shutdown" {
     enabled = false
   }
   depends_on = [
-    azurerm_mssql_virtual_machine_availability_group_listener.aag,
+    time_sleep.az_sql_aag_wait,
   ]
 }
 
