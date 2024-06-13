@@ -162,8 +162,8 @@ resource "null_resource" "vm_dc1_add_dev" {
   provisioner "remote-exec" {
     connection {
       type            = "ssh"
-      user            = var.vm_localadmin_user
-      password        = var.vm_localadmin_user
+      user            = var.vm_localadmin_user //"${var.dc1_domain_netbios_name}\\${var.vm_localadmin_user}"
+      password        = var.vm_localadmin_pswd
       host            = azurerm_public_ip.vm_dc1_pip.ip_address
       target_platform = "windows"
       timeout         = "5m"
