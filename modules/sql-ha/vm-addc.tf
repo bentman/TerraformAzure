@@ -64,7 +64,7 @@ resource "azurerm_windows_virtual_machine" "vm_addc" {
     version   = "latest"
   }
   os_disk {
-    name                 = "vm-addc-dsk0os"
+    name                 = "vm-addc-dsk-0S"
     caching              = "ReadWrite"
     disk_size_gb         = 127
     storage_account_type = "Standard_LRS"

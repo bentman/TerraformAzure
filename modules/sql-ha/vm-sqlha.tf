@@ -210,7 +210,7 @@ resource "time_sleep" "vm_sqlha_restart_wait" {
   count           = var.vm_sqlha_count
   create_duration = "3m"
   depends_on = [
-    azurerm_virtual_machine_run_command.vm_sqlha_restart[*].id,
+    azurerm_virtual_machine_run_command.vm_sqlha_restart,
   ]
 }
 
@@ -229,7 +229,7 @@ resource "null_resource" "vm_sqlAddLocalAdmin_copy" {
     }
   }
   depends_on = [
-    time_sleep.vm_sqlha_restart_wait[*].id
+    time_sleep.vm_sqlha_restart_wait
   ]
 }
 
@@ -248,7 +248,7 @@ resource "null_resource" "vm_ssqlAddSysAdmins_copy" {
     }
   }
   depends_on = [
-    null_resource.vm_sqlAddLocalAdmin_copy[*].id
+    null_resource.vm_sqlAddLocalAdmin_copy
   ]
 }
 
@@ -275,7 +275,7 @@ SETTINGS
   }
 PROTECTED_SETTINGS
   depends_on = [
-    null_resource.vm_ssqlAddSysAdmins_copy[*].id,
+    null_resource.vm_ssqlAddSysAdmins_copy,
     null_resource.vm_addc_add_users,
   ]
   lifecycle {
@@ -288,7 +288,7 @@ resource "time_sleep" "vm_sqlha_domain_join_wait" {
   count           = var.vm_sqlha_count
   create_duration = "5m"
   depends_on = [
-    azurerm_virtual_machine_extension.vm_sqlha_domain_join[count.index].id,
+    azurerm_virtual_machine_extension.vm_sqlha_domain_join,
   ]
 }
 
@@ -310,7 +310,7 @@ resource "null_resource" "sqlsvc_local_admin" {
     ]
   }
   depends_on = [
-    time_sleep.vm_sqlha_domain_join_wait[*].id,
+    time_sleep.vm_sqlha_domain_join_wait,
     null_resource.vm_addc_add_users,
   ]
 }
@@ -333,7 +333,7 @@ resource "null_resource" "sql_sysadmin" {
     ]
   }
   depends_on = [
-    null_resource.sqlsvc_local_admin[*].id,
+    null_resource.sqlsvc_local_admin,
   ]
 }
 
@@ -341,7 +341,7 @@ resource "null_resource" "sql_sysadmin" {
 resource "time_sleep" "vm_sql_sysadmin_wait" {
   create_duration = "5m"
   depends_on = [
-    null_resource.sql_sysadmin[*].id,
+    null_resource.sql_sysadmin,
   ]
 }
 
@@ -363,7 +363,7 @@ resource "azurerm_mssql_virtual_machine_group" "sqlha_vmg" {
     storage_account_url            = "${azurerm_storage_account.sqlha_stga.primary_blob_endpoint}${azurerm_storage_container.sqlha_quorum.name}"
   }
   depends_on = [
-    time_sleep.vm_sql_sysadmin_wait[*].id,
+    time_sleep.vm_sql_sysadmin_wait,
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -410,7 +410,7 @@ resource "azurerm_mssql_virtual_machine" "az_sqlha" {
     }
   }
   depends_on = [
-    null_resource.sql_sysadmin[*].id,
+    null_resource.sql_sysadmin,
   ]
   lifecycle {
     ignore_changes = [tags]
@@ -440,14 +440,14 @@ resource "null_resource" "cluster_acl" {
     ]
   }
   depends_on = [
-    time_sleep.az_sqlha_wait[*].id,
+    azurerm_mssql_virtual_machine_group.sqlha_vmg,
   ]
 }
 
 resource "time_sleep" "cluster_acl_wait" {
   create_duration = "5m"
   depends_on = [
-    null_resource.cluster_acl[*].id,
+    null_resource.cluster_acl,
   ]
 }
 
@@ -485,7 +485,7 @@ resource "azurerm_mssql_virtual_machine_availability_group_listener" "sql_aag" {
     create = "15m"
   }
   depends_on = [
-    null_resource.cluster_acl[*].id,
+    null_resource.cluster_acl,
   ]
 }
 
@@ -508,7 +508,7 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_sqlha_shutdown" {
     enabled = false
   }
   depends_on = [
-    time_sleep.az_sql_aag_wait[*].id,
+    time_sleep.az_sql_aag_wait,
   ]
 }
 
@@ -522,6 +522,6 @@ resource "azurerm_virtual_machine_run_command" "vm_timezone_sqlha" {
     script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
   }
   depends_on = [
-    azurerm_dev_test_global_vm_shutdown_schedule.vm_sqlha_shutdown[*].id,
+    azurerm_dev_test_global_vm_shutdown_schedule.vm_sqlha_shutdown,
   ]
 }

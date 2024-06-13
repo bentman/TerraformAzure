@@ -63,7 +63,7 @@ resource "azurerm_windows_virtual_machine" "vm_dc1" {
     version   = "latest"
   }
   os_disk {
-    name                 = "vm-dc1-dsk0os"
+    name                 = "vm-dc1-dsk-0S"
     caching              = "ReadWrite"
     disk_size_gb         = 127
     storage_account_type = "Standard_LRS"
@@ -98,17 +98,6 @@ resource "azurerm_virtual_machine_extension" "vm_dc1_openssh" {
   }
 }
 
-# Set VM timezone
-resource "azurerm_virtual_machine_run_command" "vm_dc1_timezone" {
-  name               = "SetTimeZone"
-  location           = var.rg_location
-  virtual_machine_id = azurerm_windows_virtual_machine.vm_dc1.id
-  source {
-    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
-  }
-  depends_on = [azurerm_virtual_machine_extension.vm_dc1_openssh]
-}
-
 # Copy DCPromo script to VM
 resource "null_resource" "vm_dc1_dcpromo_copy" {
   provisioner "file" {
@@ -123,7 +112,9 @@ resource "null_resource" "vm_dc1_dcpromo_copy" {
       timeout         = "3m"
     }
   }
-  depends_on = [azurerm_virtual_machine_run_command.vm_dc1_timezone, ]
+  depends_on = [
+    azurerm_virtual_machine_run_command.vm_dc1_timezone,
+  ]
 }
 
 # Copy DCPromo script to VM
@@ -140,7 +131,9 @@ resource "null_resource" "vm_server_stuff_copy" {
       timeout         = "3m"
     }
   }
-  depends_on = [null_resource.vm_dc1_dcpromo_copy]
+  depends_on = [
+    null_resource.vm_dc1_dcpromo_copy
+  ]
 }
 
 # Execute DCPromo script on VM
@@ -157,7 +150,9 @@ resource "azurerm_virtual_machine_extension" "vm_dc1_dcpromo_exec" {
     }
   SETTINGS
 
-  depends_on = [null_resource.vm_dc1_dcpromo_copy, ]
+  depends_on = [
+    null_resource.vm_dc1_dcpromo_copy,
+  ]
 }
 
 # Restart VM after DCPromo
@@ -168,7 +163,9 @@ resource "azurerm_virtual_machine_run_command" "vm_dc1_restart" {
   source {
     script = "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -Command Restart-Computer -Force"
   }
-  depends_on = [azurerm_virtual_machine_extension.vm_dc1_dcpromo_exec, ]
+  depends_on = [
+    azurerm_virtual_machine_extension.vm_dc1_dcpromo_exec,
+  ]
 }
 
 # Enable dev\test shutdown schedule (to save $)
@@ -178,8 +175,23 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_dc1_shutdown" {
   enabled               = true
   daily_recurrence_time = var.vm_dc1_shutdown_hhmm
   timezone              = var.vm_shutdown_tz
-  depends_on            = [azurerm_windows_virtual_machine.vm_dc1, ]
   notification_settings {
     enabled = false
   }
+  depends_on = [
+    azurerm_windows_virtual_machine.vm_dc1,
+  ]
+}
+
+# Set VM timezone
+resource "azurerm_virtual_machine_run_command" "vm_dc1_timezone" {
+  name               = "SetTimeZone"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_dc1.id
+  source {
+    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
+  }
+  depends_on = [
+    azurerm_virtual_machine_extension.vm_dc1_openssh
+  ]
 }
