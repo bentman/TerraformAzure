@@ -113,26 +113,7 @@ resource "null_resource" "vm_dc1_dcpromo_copy" {
     }
   }
   depends_on = [
-    azurerm_virtual_machine_run_command.vm_dc1_timezone,
-  ]
-}
-
-# Copy DCPromo script to VM
-resource "null_resource" "vm_server_stuff_copy" {
-  provisioner "file" {
-    source      = "${path.module}/../../content/vm-server/${local.server_stuff}"
-    destination = "C:\\Users\\Public\\Documents\\${local.server_stuff}"
-    connection {
-      type            = "ssh"
-      user            = var.vm_localadmin_user
-      password        = var.vm_localadmin_pswd
-      host            = azurerm_public_ip.vm_dc1_pip.ip_address
-      target_platform = "windows"
-      timeout         = "3m"
-    }
-  }
-  depends_on = [
-    null_resource.vm_dc1_dcpromo_copy
+    azurerm_virtual_machine_extension.vm_dc1_openssh,
   ]
 }
 
@@ -168,18 +149,31 @@ resource "azurerm_virtual_machine_run_command" "vm_dc1_restart" {
   ]
 }
 
-# Enable dev\test shutdown schedule (to save $)
-resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_dc1_shutdown" {
-  virtual_machine_id    = azurerm_windows_virtual_machine.vm_dc1.id
-  location              = var.rg_location
-  enabled               = true
-  daily_recurrence_time = var.vm_dc1_shutdown_hhmm
-  timezone              = var.vm_shutdown_tz
-  notification_settings {
-    enabled = false
+# Wait for vm-addc
+resource "time_sleep" "vm_dc1_dcpromo_restart_wait" {
+  create_duration = "5m"
+  depends_on = [
+    azurerm_virtual_machine_run_command.vm_dc1_restart,
+  ]
+}
+
+# Execute script to add users on domain
+resource "null_resource" "vm_dc1_add_dev" {
+  provisioner "remote-exec" {
+    connection {
+      type            = "ssh"
+      user            = var.vm_localadmin_user
+      password        = var.vm_localadmin_user
+      host            = azurerm_public_ip.vm_dc1_pip.ip_address
+      target_platform = "windows"
+      timeout         = "5m"
+    }
+    inline = [
+      "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File 'C:\\BUILD\\Scripts\\${local.addDevToServer}'"
+    ]
   }
   depends_on = [
-    azurerm_windows_virtual_machine.vm_dc1,
+    time_sleep.vm_dc1_dcpromo_restart_wait,
   ]
 }
 
@@ -192,6 +186,21 @@ resource "azurerm_virtual_machine_run_command" "vm_dc1_timezone" {
     script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
   }
   depends_on = [
-    azurerm_virtual_machine_extension.vm_dc1_openssh
+    null_resource.vm_dc1_add_dev,
+  ]
+}
+
+# Enable dev\test shutdown schedule (to save $)
+resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_dc1_shutdown" {
+  virtual_machine_id    = azurerm_windows_virtual_machine.vm_dc1.id
+  location              = var.rg_location
+  enabled               = true
+  daily_recurrence_time = var.vm_dc1_shutdown_hhmm
+  timezone              = var.vm_shutdown_tz
+  notification_settings {
+    enabled = false
+  }
+  depends_on = [
+    azurerm_virtual_machine_run_command.vm_dc1_timezone
   ]
 }
