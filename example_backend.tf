@@ -9,9 +9,9 @@
 # Commented out to avoid conflict with the project's configuration
 # terraform {
 #   backend "azurerm" {
-#     resource_group_name   = "exampleResourceGroup"
-#     storage_account_name  = "exampleStorageAccount"
-#     container_name        = "exampleContainer"
+#     resource_group_name   = "<your-resource-group>"
+#     storage_account_name  = "<your-storage-account>"
+#     container_name        = "<your-container-name>"
 #     key                   = "example.tfstate"
 #   }
 # }

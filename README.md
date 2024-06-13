@@ -2,6 +2,21 @@
 
 Build an Azure lab environment using Terraform. Journey into mastering infrastructure as code by creating a real-world cloud architecture that can also be used as a learning lab. Gain hands-on experience with tools like GitHub, Azure DevOps pipelines, and configuring virtual machines. This project focuses on incremental learning to develop skills one step at a time. 🚀🌐🧭
 
+## Bonus Tips
+
+- Start with smaller, independent modules for easier testing and debugging.
+  - **EXAMPLE 1:** `.\v-network.md` (Lab Network - Base for remaining modules)
+  - **EXAMPLE 2:** `.\modules\vm-jumpbox` (Windows Client and Linux Desktop)
+    - NOTE: Full automation of jumpbox capabilities are "WIP"
+  - **EXAMPLE 3:** `.\modules\vm-dc1` (Domain Controller with Dev Tools)
+  - **EXAMPLE 4:** `.\modules\sql-ha` (Domain Controller w/ SQL Always On Cluster)
+- Utilize Terraform state management for consistent deployments.
+- Follow IaC best practices for clean and maintainable code.
+- Look for *.md files, comments ('#'), and instructions (more '#' & '/') throughout!
+
+## Ready to Start?
+... me too! <gulp>
+
 ## Step 1: Set Up Your Toolkit
 
 - [Install Terraform on Windows with Azure PowerShell](https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-windows-powershell)
@@ -31,15 +46,6 @@ Build an Azure lab environment using Terraform. Journey into mastering infrastru
 - With each apply/destroy cycle, build upon previous components, creating a more complex lab.
 - Use Git branches to manage different stages of your lab's evolution.
 - Continuously learn and add new features, exploring advanced Terraform techniques and community resources.
-
-## Bonus Tips
-
-- Start with smaller, independent modules for easier testing and debugging.
-- Utilize Terraform state management for consistent deployments.
-- Follow IaC best practices for clean and maintainable code.
-
-## Ready to Start?
-... me too! <gulp>
 
 ## Helpful Links
 
