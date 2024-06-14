@@ -15,11 +15,11 @@ resource "azurerm_public_ip" "vm_dc1_pip" {
 
 # vm-dc1 Primary NIC 
 resource "azurerm_network_interface" "vm_dc1_nic" {
-  name                          = "${var.vm_dc1_hostname}-nic"
-  location                      = var.rg_location
-  resource_group_name           = var.rg_name
-  enable_accelerated_networking = true
-  tags                          = var.tags
+  name                           = "${var.vm_dc1_hostname}-nic"
+  location                       = var.rg_location
+  resource_group_name            = var.rg_name
+  accelerated_networking_enabled = true
+  tags                           = var.tags
   ip_configuration {
     name                          = "${var.vm_dc1_hostname}-ip"
     subnet_id                     = var.vm_server_snet_id
@@ -34,6 +34,7 @@ resource "azurerm_network_interface" "vm_dc1_nic" {
   lifecycle {
     ignore_changes = [tags]
   }
+
 }
 
 # vm-dc1 associate NIC with NSG
@@ -117,6 +118,25 @@ resource "null_resource" "vm_dc1_dcpromo_copy" {
   ]
 }
 
+# Copy addDevToServer script to VM
+resource "null_resource" "vm_addDevToServer_copy" {
+  provisioner "file" {
+    source      = "${path.module}/${local.addDevToServer}"
+    destination = "C:\\${local.addDevToServer}"
+    connection {
+      type            = "ssh"
+      user            = var.vm_localadmin_user
+      password        = var.vm_localadmin_pswd
+      host            = azurerm_public_ip.vm_dc1_pip.ip_address
+      target_platform = "windows"
+      timeout         = "3m"
+    }
+  }
+  depends_on = [
+    null_resource.vm_dc1_dcpromo_copy,
+  ]
+}
+
 # Execute DCPromo script on VM
 resource "azurerm_virtual_machine_extension" "vm_dc1_dcpromo_exec" {
   name                       = "dc1Promo"
@@ -132,7 +152,7 @@ resource "azurerm_virtual_machine_extension" "vm_dc1_dcpromo_exec" {
   SETTINGS
 
   depends_on = [
-    null_resource.vm_dc1_dcpromo_copy,
+    null_resource.vm_addDevToServer_copy,
   ]
 }
 
@@ -151,7 +171,7 @@ resource "azurerm_virtual_machine_run_command" "vm_dc1_restart" {
 
 # Wait for vm-addc
 resource "time_sleep" "vm_dc1_dcpromo_restart_wait" {
-  create_duration = "7m"
+  create_duration = "5m"
   depends_on = [
     azurerm_virtual_machine_run_command.vm_dc1_restart,
   ]
@@ -177,19 +197,6 @@ resource "null_resource" "vm_dc1_add_dev" {
   ]
 }
 
-# Set VM timezone
-resource "azurerm_virtual_machine_run_command" "vm_dc1_timezone" {
-  name               = "SetTimeZone"
-  location           = var.rg_location
-  virtual_machine_id = azurerm_windows_virtual_machine.vm_dc1.id
-  source {
-    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
-  }
-  depends_on = [
-    null_resource.vm_dc1_add_dev,
-  ]
-}
-
 # Enable dev\test shutdown schedule (to save $)
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_dc1_shutdown" {
   virtual_machine_id    = azurerm_windows_virtual_machine.vm_dc1.id
@@ -201,6 +208,18 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_dc1_shutdown" {
     enabled = false
   }
   depends_on = [
-    azurerm_virtual_machine_run_command.vm_dc1_timezone
+    null_resource.vm_dc1_add_dev,
+  ]
+}
+# Set VM timezone
+resource "azurerm_virtual_machine_run_command" "vm_dc1_timezone" {
+  name               = "SetTimeZone"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_dc1.id
+  source {
+    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
+  }
+  depends_on = [
+    azurerm_dev_test_global_vm_shutdown_schedule.vm_dc1_shutdown,
   ]
 }

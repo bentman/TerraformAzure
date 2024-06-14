@@ -15,11 +15,11 @@ resource "azurerm_public_ip" "vm_jumplin_pip" {
 
 # Primary vm-jumpLin NIC for VM Internal Communication
 resource "azurerm_network_interface" "vm_jumplin_nic" {
-  name                          = "vm-jumplin-nic"
-  location                      = var.rg_location
-  resource_group_name           = var.rg_name
-  enable_accelerated_networking = true
-  tags                          = var.tags
+  name                           = "vm-jumplin-nic"
+  location                       = var.rg_location
+  resource_group_name            = var.rg_name
+  accelerated_networking_enabled = true
+  tags                           = var.tags
   ip_configuration {
     name                          = "vm-jumplin-ip"
     subnet_id                     = var.vm_snet_id

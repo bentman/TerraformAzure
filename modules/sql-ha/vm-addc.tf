@@ -16,11 +16,11 @@ resource "azurerm_public_ip" "vm_addc_pip" {
 
 # vm-addc Primary NIC 
 resource "azurerm_network_interface" "vm_addc_nic" {
-  name                          = "vm-addc-nic"
-  location                      = var.rg_location
-  resource_group_name           = var.rg_name
-  enable_accelerated_networking = true
-  tags                          = var.tags
+  name                           = "vm-addc-nic"
+  location                       = var.rg_location
+  resource_group_name            = var.rg_name
+  accelerated_networking_enabled = true
+  tags                           = var.tags
   ip_configuration {
     name                          = "vm-addc-ip"
     subnet_id                     = var.snet_0128_server_id
@@ -243,21 +243,3 @@ resource "azurerm_virtual_machine_run_command" "vm_timezone_addc" {
     azurerm_virtual_machine_run_command.vm_timezone_sqlha,
   ]
 }
-
-/*# Copy serverstuff script to VM
-resource "null_resource" "vm_server_stuff_copy" {
-  provisioner "file" {
-    source      = "${path.module}/${local.server_stuff}"
-    destination = "C:\\Users\\Public\\Documents\\${local.server_stuff}"
-    connection {
-      type            = "ssh"
-      user            = var.vm_addc_localadmin_user
-      password        = var.vm_addc_localadmin_user
-      host            = azurerm_public_ip.vm_addc_pip.ip_address
-      target_platform = "windows"
-      timeout         = "5m"
-    }
-  }
-  depends_on = [azurerm_virtual_machine_run_command.vm_timezone_sqlha,]
-}*/
-

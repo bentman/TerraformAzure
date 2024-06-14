@@ -18,12 +18,12 @@ resource "azurerm_public_ip" "vm_sqlha_pip" {
 
 # vm-sqlha primary NIC 
 resource "azurerm_network_interface" "vm_sqlha_nic" {
-  count                         = var.vm_sqlha_count
-  name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-nic"
-  location                      = var.rg_location
-  resource_group_name           = var.rg_name
-  enable_accelerated_networking = true
-  tags                          = var.tags
+  count                          = var.vm_sqlha_count
+  name                           = "${var.vm_sqlha_hostname}0${count.index + 1}-nic"
+  location                       = var.rg_location
+  resource_group_name            = var.rg_name
+  accelerated_networking_enabled = true
+  tags                           = var.tags
   ip_configuration {
     name                          = "${var.vm_sqlha_hostname}0${count.index + 1}-ip" // "10.0.0.73" & "10.0.0.105"
     subnet_id                     = count.index == 0 ? var.snet_0064_db1_id : var.snet_0096_db2_id

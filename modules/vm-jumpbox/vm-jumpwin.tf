@@ -15,11 +15,11 @@ resource "azurerm_public_ip" "vm_jumpwin_pip" {
 
 # vm-jumpbox primary NIC 
 resource "azurerm_network_interface" "vm_jumpwin_nic" {
-  name                          = "vm-jumpwin-nic"
-  location                      = var.rg_location
-  resource_group_name           = var.rg_name
-  enable_accelerated_networking = true
-  tags                          = var.tags
+  name                           = "vm-jumpwin-nic"
+  location                       = var.rg_location
+  resource_group_name            = var.rg_name
+  accelerated_networking_enabled = true
+  tags                           = var.tags
   ip_configuration {
     name                          = "vm-jumpwin-ip"
     subnet_id                     = var.vm_snet_id
