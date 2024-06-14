@@ -7,7 +7,7 @@ variable "rg_location" {
 variable "rg_name" {
   description = "Name of resource group where resources are created"
   type        = string
-  default     = "rg-tzo-p1-eu2"
+  default     = "rg-just-an-example"
 }
 
 variable "tags" {
