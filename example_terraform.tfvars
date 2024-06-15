@@ -1,4 +1,4 @@
-/*#################### VALUES ####################
+#################### VALUES ####################
 ########## SECRET VALUES ##########
 #####  Declare confidential variables here
 #####  Store secret values in *.tfvars file
@@ -67,7 +67,7 @@ vm_dc1_size             = "Standard_D2s_v3"               // vm dc1 size
 vm_dc1_hostname         = "vm-dc170"                      // vm dc1 hostname, 15 character max
 dc1_domain_name         = "anotherdomain.onmicrosoft.lan" // another fqdn domain name
 dc1_domain_netbios_name = "anotherdomain"                 // another netbios domain name, 15 character max
-*/
+
 #################### NOTES ####################
 # Instructions for generating a new Service Principal and Secret using PowerShell
 #
