@@ -16,7 +16,7 @@ module "vm_jumpbox" {
   vm_jumpwin_hostname = "win-hostname"
   vm_jumplin_hostname = "lin-hostname"
   vm_size             = "Standard_DS1_v2"
-  vm_localadmin_user  = "adminuser"code
+  vm_localadmin_user  = "adminuser"
   vm_localadmin_pswd  = "your-password"
   vm_shutdown_hhmm    = "1900"
   vm_shutdown_tz      = "Pacific Standard Time"
