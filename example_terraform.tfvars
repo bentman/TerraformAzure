@@ -1,4 +1,4 @@
-#################### VALUES ####################
+/*#################### VALUES ####################
 ########## SECRET VALUES ##########
 #####  Declare confidential variables here
 #####  Store secret values in *.tfvars file
@@ -32,7 +32,7 @@ tags = {
 vm_size          = "Standard_D2s_v3"       // defaults to 'Standard_D2s_v3'
 vm_shutdown_tz   = "Pacific Standard Time" // defaults to 'Pacific Standard Time'
 vm_shutdown_hhmm = "0000"                  // defaults to '0000' - aka midnight ;-)
-vm_jumpuser_name = "jumpuser"              // defaults to 'jumpuser'
+vm_jumpuser_name = "bentl"                 // defaults to 'jumpuser'
 vm_jumpuser_pswd = "m1n3wP4ss!"            // defaults to 'P@ssw0rd!234'
 
 # vm-jumpwin (fail if not unique in public DNS)
@@ -69,7 +69,7 @@ vm_dc1_size             = "Standard_D2s_v3"               // vm dc1 size
 vm_dc1_hostname         = "vm-dc170"                      // vm dc1 hostname, 15 character max
 dc1_domain_name         = "anotherdomain.onmicrosoft.lan" // another fqdn domain name
 dc1_domain_netbios_name = "anotherdomain"                 // another netbios domain name, 15 character max
-
+*/
 #################### NOTES ####################
 # Instructions for generating a new Service Principal and Secret using PowerShell
 #
