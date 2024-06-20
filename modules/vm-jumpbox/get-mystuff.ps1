@@ -1,16 +1,27 @@
-Set-ExecutionPolicy -Scope Process Bypass -Force
+[CmdletBinding()]
+param ( 
+    [Parameter(ValueFromPipeline = $true, Mandatory = $true)] [string]$new_user,
+    [Parameter(ValueFromPipeline = $true, Mandatory = $true)] [string]$new_pswd,
+    [Parameter(ValueFromPipeline = $true, Mandatory = $true)] [string]$new_tz
+)
+$ErrorActionPreference = "SilentlyContinue"
 
-Update-Help -ErrorAction SilentlyContinue -Force -Verbose
+# Reinforce bypass execution policy
+Set-ExecutionPolicy -Scope Process Unrestricted -Force
+
+# Create log directory if not exist
+if (-not (Test-Path -Path 'c:\BUILD\LOGS\')) { New-Item -Path 'c:\BUILD\LOGS\' -ItemType Directory -Force }
+
+# Start transcript logging
+Start-transcript -Path 'c:\BUILD\LOGS\00_get_mystuff.log'
 
 # Set Time Zone
-$timeZone = 'Pacific Standard Time' # 'Central Standard Time'
-Set-TimeZone -Name $timeZone -Confirm:$false
+Set-TimeZone -Name $new_tz -Confirm:$false
 
 # make a new local user (will prompt for password)
-$localUser = 'bentl'
-New-LocalUser -Name $localUser
+New-LocalUser -Name $new_user -Password (ConvertTo-SecureString $new_pswd -AsPlainText -Force) -PasswordNeverExpires -Verbose
 # add local user to administrators group
-Add-LocalGroupMember -Group Administrators -Member bentl
+Add-LocalGroupMember -Group Administrators -Member $new_user -Verbose
 
 # create a computer info file
 $infoFile = "$env:PUBLIC\Documents\ComputerInfo.txt"
@@ -25,23 +36,25 @@ Out-Host -InputObject "Logical CPU     = $($computerInfo.CsNumberOfLogicalProces
 Out-Host -InputObject "Physical RAM    = $([math]::round($computerInfo.CsPhyicallyInstalledMemory /1MB, 3)) GB"
 Out-Host -InputObject "Windows Build   = $($computerInfo.WindowsBuildLabEx)"
 
+# Stop transcript logging
+Stop-transcript
+
+# Exit script without reporting errors - troubleshooting &/or automation
+exit 0
+
 # Run Internet Explorer (or disable first run wizard)
 # & "C:\Program Files (x86)\Internet Explorer\iexplore.exe"
 
-# Ensure PS remoting is enabled... this is enabled by default for Azure VMs
+<# this is enabled by default for Azure VMs
+# Ensure PS remoting is enabled... 
 Enable-PSRemoting -SkipNetworkProfileCheck -Verbose
-Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private
+Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private  -Verbose
 Enable-PSRemoting -Verbose
-Set-NetFirewallRule -Name WINRM-HTTP-In-TCP -RemoteAddress Any -Enabled True
+Set-NetFirewallRule -Name WINRM-HTTP-In-TCP -RemoteAddress Any -Enabled True -Verbose
 Start-Process -FilePath winrm -ArgumentList "quickconfig", "-q", "-force" -NoNewWindow -Verbose
+#>
 
-# Allow ICMP ping reply in firewall
-Set-NetFirewallRule `
-  -ErrorAction SilentlyContinue `
-  -DisplayName "File and Printer Sharing (Echo Request - ICMPv4-In)" `
-  -Enabled True `
-  -Confirm:$false
-
+<# winget is user centric - reun these from $new_user login
 # Setup NuGet (no prompt) & trust PowerShellGallery
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
@@ -73,6 +86,7 @@ winget install --id Microsoft.AzureCLI --source winget
 
 # Setup Windows Subsystem for Linux (WSL2)
 wsl --install
+#>>
 
 <# winget (if broken) - option 1
 $URL = "https://api.github.com/repos/microsoft/winget-cli/releases/latest"

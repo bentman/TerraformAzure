@@ -40,6 +40,20 @@ variable "vm_localadmin_pswd" {
   sensitive   = true
 }
 
+variable "vm_jumpuser_name" {
+  type        = string
+  default     = "jumpuser" // fail if not unique in public DNS
+  description = "Add username for jumpbox"
+  sensitive   = true
+}
+
+variable "vm_jumpuser_pswd" {
+  type        = string
+  default     = "P@ssw0rd!234" // fail if not unique in public DNS
+  description = "Add username pasword for jumpbox"
+  sensitive   = true
+}
+
 ##### MODULE VARIABLES
 # caution: 'terraform plan' produces 'changed state' after toggle
 #          if exist, resources may be destroyed on next 'apply'

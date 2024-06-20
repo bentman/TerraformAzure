@@ -56,12 +56,6 @@ resource "azurerm_windows_virtual_machine" "vm_jumpwin" {
     sku       = "win11-23h2-pro"
     version   = "latest"
   }
-  /*custom_data = base64encode(<<EOF
-    <powershell>
-    "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"    
-    </powershell>
-  EOF
-  )*/
   network_interface_ids = [
     azurerm_network_interface.vm_jumpwin_nic.id,
   ]
@@ -92,25 +86,24 @@ resource "azurerm_virtual_machine_extension" "vm_jumpwin_openssh" {
   ]
 }
 
-/* Work in progress
-resource "null_resource" "jumpwin_copy_file" {
-  connection {
-    type     = "ssh"
-    host     = azurerm_public_ip.vm_jumpwin_pip.ip_address
-    user     = var.vm_localadmin_user
-    password = var.vm_localadmin_pswd
-    agent    = false
-    timeout  = "2m"
-  }
+resource "null_resource" "get_mystuff_win_copy" {
   provisioner "file" {
-    source      = "${path.module}/../../content/vm-windows/get-mystuff.ps1"
-    destination = "c:\\users\\public\\documents\\get-mystuff.ps1"
+    source      = "${path.module}/get-mystuff.ps1"
+    destination = "c:\\get-mystuff.ps1"
+    connection {
+      type            = "ssh"
+      user            = var.vm_localadmin_user
+      password        = var.vm_localadmin_pswd
+      host            = azurerm_public_ip.vm_jumpwin_pip.ip_address
+      target_platform = "windows"
+      timeout         = "2m"
+    }
   }
   depends_on = [
     azurerm_virtual_machine_extension.vm_jumpwin_openssh,
     azurerm_network_interface_security_group_association.vm_jumpwin_nsg_assoc,
   ]
-}*/
+}
 
 # vm-jumpWin AUTOSHUTDOWN
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumpwin_shutdown" {
@@ -122,4 +115,38 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumpwin_shutdown" {
   notification_settings {
     enabled = false
   }
+  depends_on = [
+    null_resource.get_mystuff_win_copy,
+  ]
 }
+
+# Set VM timezone
+resource "azurerm_virtual_machine_run_command" "vm_timezone_jumpwin" {
+  name               = "SetTimeZone"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_jumpwin.id
+  source {
+    script = "Set-TimeZone -Name '${var.vm_shutdown_tz}' -Confirm:$false"
+  }
+  depends_on = [
+    azurerm_dev_test_global_vm_shutdown_schedule.vm_jumpwin_shutdown,
+  ]
+}
+
+### Work-in-Progress
+/*resource "azurerm_virtual_machine_extension" "get_mystuff_win_exec" {
+  name                       = "getmystuff"
+  virtual_machine_id         = azurerm_windows_virtual_machine.vm_jumpwin.id
+  publisher                  = "Microsoft.Compute"
+  type                       = "CustomScriptExtension"
+  type_handler_version       = "1.10"
+  auto_upgrade_minor_version = true
+  settings                   = <<SETTINGS
+    {
+    "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -NoProfile -File C:\\get-mystuff.ps1 -new_user ${var.vm_jumpuser_name} -new_pswd ${var.vm_jumpuser_pswd} -new_tz ${var.vm_shutdown_tz}"
+    }
+  SETTINGS
+  depends_on = [
+    null_resource.get_mystuff_win_copy,
+  ]
+}*/

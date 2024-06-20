@@ -9,7 +9,7 @@ locals {
   sqlAddAcl        = "Add-SqlAcl.ps1"
   server_stuff     = "get-serverstuff.ps1"
 
-##### UNUSED: Converted below into .ps1 scripts - remain here for reference #####
+  ##### UNUSED: Converted below into .ps1 scripts - remain here for reference #####
   # Generate locals for domain join parameters
   split_domain    = split(".", var.domain_name)
   dn_path         = join(",", [for dc in local.split_domain : "DC=${dc}"])

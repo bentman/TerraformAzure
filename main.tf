@@ -24,6 +24,8 @@ module "vm_jumpbox" {
   vm_size             = var.vm_size
   vm_localadmin_user  = var.vm_localadmin_user
   vm_localadmin_pswd  = var.vm_localadmin_pswd
+  vm_jumpuser_name    = var.vm_jumpuser_name
+  vm_jumpuser_pswd    = var.vm_jumpuser_pswd
   vm_shutdown_hhmm    = var.vm_shutdown_hhmm
   vm_shutdown_tz      = var.vm_shutdown_tz
   tags                = var.tags

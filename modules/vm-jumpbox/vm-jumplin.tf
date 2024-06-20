@@ -56,11 +56,6 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
     sku       = "22_04-lts"
     version   = "latest"
   }
-  /*custom_data = base64encode(<<EOF
-    #!/bin/bash
-    sudo timedatectl set-timezone '${var.vm_shutdown_tz}'
-  EOF
-  )*/
   network_interface_ids = [
     azurerm_network_interface.vm_jumplin_nic.id,
   ]
@@ -75,25 +70,6 @@ resource "azurerm_network_interface_security_group_association" "vm_jumplin_nsg_
   network_security_group_id = azurerm_network_security_group.nsg_jumpbox.id
 }
 
-/* Work in progress
-resource "null_resource" "jumplin_copy_file" {
-  connection {
-    type     = "ssh"
-    host     = azurerm_public_ip.vm_jumplin_pip.ip_address
-    user     = var.vm_localadmin_user
-    password = var.vm_localadmin_pswd
-    agent    = false
-    timeout  = "2m"
-  }
-  provisioner "file" {
-    source      = "${path.module}/../../content/vm-linux/get-mystuff.bash"
-    destination = "/home/get-mystuff.bash"
-  }
-  depends_on = [
-    azurerm_linux_virtual_machine.vm_jumplin,
-  ]
-}*/
-
 # vm-jumpLin AUTOSHUTDOWN
 resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumplin_shutdown" {
   virtual_machine_id    = azurerm_linux_virtual_machine.vm_jumplin.id
@@ -104,4 +80,39 @@ resource "azurerm_dev_test_global_vm_shutdown_schedule" "vm_jumplin_shutdown" {
   notification_settings {
     enabled = false
   }
+  depends_on = [
+    azurerm_network_interface_security_group_association.vm_jumplin_nsg_assoc,
+  ]
 }
+
+resource "null_resource" "jumplin_copy_file" {
+  provisioner "file" {
+    source      = "${path.module}/get-mystuff.bash"
+    destination = "~/get-mystuff.bash"
+    connection {
+      type     = "ssh"
+      user     = var.vm_localadmin_user
+      password = var.vm_localadmin_pswd
+      host     = azurerm_public_ip.vm_jumplin_pip.ip_address
+      agent    = false
+      timeout  = "2m"
+    }
+  }
+  depends_on = [
+    azurerm_linux_virtual_machine.vm_jumplin,
+  ]
+}
+
+### Work-in-Progress
+/*# Set VM timezone
+resource "azurerm_virtual_machine_run_command" "vm_timezone_addc" {
+  name               = "SetTimeZone"
+  location           = var.rg_location
+  virtual_machine_id = azurerm_windows_virtual_machine.vm_addc.id
+  source {
+    script = "sudo timedatectl set-timezone '${var.vm_shutdown_tz}'"
+  }
+  depends_on = [
+    azurerm_dev_test_global_vm_shutdown_schedule.vm_jumplin_shutdown,
+  ]
+}*/

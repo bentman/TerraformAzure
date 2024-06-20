@@ -1,11 +1,24 @@
 #################### VARIABLES ####################
 ########## vm-jumpBox
 # vm-jumpWin Hostname
+variable "vm_jumpuser_name" {
+  type        = string
+  default     = "jumpuser" // fail if not unique in public DNS
+  description = "Add username for jumpbox"
+}
+
+variable "vm_jumpuser_pswd" {
+  type        = string
+  default     = "P@ssw0rd!" // fail if not unique in public DNS
+  description = "Add username pasword for jumpbox"
+}
+
 variable "vm_jumpwin_hostname" {
   type        = string
   default     = "jumpwin007" // fail if not unique in public DNS
   description = "Computername for the windows-vm jumpbox"
 }
+
 # vm-jumpLin Hostname
 variable "vm_jumplin_hostname" {
   type        = string
