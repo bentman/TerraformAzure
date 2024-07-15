@@ -16,14 +16,25 @@ variable "vm_jumpuser_pswd" {
 variable "vm_jumpwin_hostname" {
   type        = string
   default     = "jumpwin007" // fail if not unique in public DNS
-  description = "Computername for the windows-vm jumpbox"
+  description = "Computername for windows-vm jumpbox"
+}
+
+variable "vm_jumpwin_sku" {
+  type        = string
+  description = "Image SKU for windows-vm jumpbox"
 }
 
 # vm-jumpLin Hostname
 variable "vm_jumplin_hostname" {
   type        = string
   default     = "jumplin008" // fail if not unique in public DNS
-  description = "Computername for the linux-vm jumpbox"
+  description = "Computername for linux-vm jumpbox"
+}
+
+# vm-jumpLin Hostname
+variable "vm_jumplin_sku" {
+  type        = string
+  description = "Image SKU for linux-vm jumpbox"
 }
 
 # vm-jumpbox subnet

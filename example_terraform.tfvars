@@ -37,9 +37,11 @@ vm_jumpuser_pswd = "m1n3wP4ss!"            // defaults to 'P@ssw0rd!234'
 
 # vm-jumpwin (fail if not unique in public DNS)
 vm_jumpwin_hostname = "jumpwin007" // defaults to 'jumpwin007'
+vm_jumpwin_sku      = "win11-23h2-pro"
 
 # vm-jumplin (fail if not unique in public DNS)
 vm_jumplin_hostname = "jumpwin008" // defaults to 'jumpwin008'
+vm_jumplin_sku      = "22_04-lts"
 
 ##### sql-ha module values
 # sql-ha domain values

@@ -20,7 +20,9 @@ module "vm_jumpbox" {
   rg_location         = azurerm_resource_group.mylab.location
   vm_snet_id          = azurerm_subnet.snet_0000_jumpbox.id
   vm_jumpwin_hostname = var.vm_jumpwin_hostname
+  vm_jumpwin_sku      = var.vm_jumpwin_sku
   vm_jumplin_hostname = var.vm_jumplin_hostname
+  vm_jumplin_sku      = var.vm_jumplin_sku
   vm_size             = var.vm_size
   vm_localadmin_user  = var.vm_localadmin_user
   vm_localadmin_pswd  = var.vm_localadmin_pswd

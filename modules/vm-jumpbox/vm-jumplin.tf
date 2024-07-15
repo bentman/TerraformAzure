@@ -53,7 +53,7 @@ resource "azurerm_linux_virtual_machine" "vm_jumplin" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
+    sku       = var.vm_jumplin_sku
     version   = "latest"
   }
   network_interface_ids = [

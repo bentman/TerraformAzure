@@ -53,7 +53,7 @@ resource "azurerm_windows_virtual_machine" "vm_jumpwin" {
   source_image_reference {
     publisher = "MicrosoftWindowsDesktop"
     offer     = "Windows-11"
-    sku       = "win11-23h2-pro"
+    sku       = var.vm_jumpwin_sku
     version   = "latest"
   }
   network_interface_ids = [

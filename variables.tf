@@ -100,17 +100,28 @@ variable "tags" {
 
 ########## vm-jumpBox VARIABLES
 # vm-jumpLin Hostname
-variable "vm_jumplin_hostname" {
-  description = "Computer name for the Linux VM jumpbox"
+variable "vm_jumpwin_hostname" {
   type        = string
-  default     = "vm-jumplin008" // fail if not unique in public DNS
+  default     = "jumpwin007" // fail if not unique in public DNS
+  description = "Computername for windows-vm jumpbox"
 }
 
-# vm-jumpWin Hostname
-variable "vm_jumpwin_hostname" {
-  description = "Computer name for the Windows VM jumpbox"
+variable "vm_jumpwin_sku" {
   type        = string
-  default     = "vm-jumpwin007" // fail if not unique in public DNS
+  description = "Image SKU for windows-vm jumpbox"
+}
+
+# vm-jumpLin Hostname
+variable "vm_jumplin_hostname" {
+  type        = string
+  default     = "jumplin008" // fail if not unique in public DNS
+  description = "Computername for linux-vm jumpbox"
+}
+
+# vm-jumpLin Hostname
+variable "vm_jumplin_sku" {
+  type        = string
+  description = "Image SKU for linux-vm jumpbox"
 }
 
 # vm common Variables
