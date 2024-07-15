@@ -20,7 +20,7 @@ terraform {
     # Provider for managing TLS certificates
     tls = {
       source  = "hashicorp/tls"
-      version = "~> 3.4"
+      version = "~> 3.0"
     }
     http = {
       source  = "hashicorp/http"
