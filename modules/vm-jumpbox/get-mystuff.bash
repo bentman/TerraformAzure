@@ -20,10 +20,12 @@ sudo apt -y install cinnamon-desktop-environment
 cinnamon --version
 # Use script to install xrdp 
 # Check for new versions! https://c-nergy.be/blog/?p=19814
+pushd ~/Downloads
 wget https://www.c-nergy.be/downloads/xRDP/xrdp-installer-1.5.1.zip
 unzip xrdp-installer-1.5.1.zip
 chmod +x  ~/Downloads/xrdp-installer-1.5.1.sh
 ./xrdp-installer-1.5.1.sh -s
+popd
 # Allow RDP 3389 in firewall
 sudo ufw allow 3389
 sudo systemctl restart ufw
