@@ -8,16 +8,19 @@
 variable "arm_tenant_id" {
   description = "Azure Tenant ID"
   type        = string
+  sensitive   = true
 }
 
 variable "arm_subscription_id" {
   description = "Azure Subscription ID"
   type        = string
+  sensitive   = true
 }
 
 variable "arm_client_id" {
   description = "Azure Client ID (Service Principal ID)"
   type        = string
+  sensitive   = true
 }
 
 variable "arm_client_secret" {
@@ -101,27 +104,26 @@ variable "tags" {
 ########## vm-jumpBox VARIABLES
 # vm-jumpLin Hostname
 variable "vm_jumpwin_hostname" {
+  description = "Computername for windows-vm jumpbox"
   type        = string
   default     = "jumpwin007" // fail if not unique in public DNS
-  description = "Computername for windows-vm jumpbox"
 }
 
 variable "vm_jumpwin_sku" {
-  type        = string
   description = "Image SKU for windows-vm jumpbox"
+  type        = string
 }
 
 # vm-jumpLin Hostname
 variable "vm_jumplin_hostname" {
+  description = "Computername for linux-vm jumpbox"
   type        = string
   default     = "jumplin008" // fail if not unique in public DNS
-  description = "Computername for linux-vm jumpbox"
 }
 
-# vm-jumpLin Hostname
 variable "vm_jumplin_sku" {
-  type        = string
   description = "Image SKU for linux-vm jumpbox"
+  type        = string
 }
 
 # vm common Variables
