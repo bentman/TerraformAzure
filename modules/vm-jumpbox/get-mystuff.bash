@@ -15,14 +15,25 @@ sudo timedatectl set-timezone America/Chicago
 # Update Ubuntu
 sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
 sudo apt -y update
+# Install preferred DE
 sudo apt -y install cinnamon-desktop-environment
 cinnamon --version
-sudo apt -y install xrdp
-sudo systemctl enable xrdp
-sudo adduser xrdp ssl-cert
+# Use script to install xrdp 
+# Check for new versions! https://c-nergy.be/blog/?p=19814
+pushd ~
+mkdir ~/Downloads
+pushd ~/Downloads
+wget https://www.c-nergy.be/downloads/xRDP/xrdp-installer-1.5.1.zip
+unzip xrdp-installer-1.5.1.zip
+chmod +x  ~/Downloads/xrdp-installer-1.5.1.sh
+./xrdp-installer-1.5.1.sh -s
+popd
+# Allow RDP 3389 in firewall
 sudo ufw allow 3389
 sudo systemctl restart ufw
+# Install restricted extras
 sudo apt install -y ubuntu-restricted-extras
+# Re-Enforce MSFT Fonts
 sudo apt install -y --reinstall ttf-mscorefonts-installer
 # now you can use rdp to connect to your linux desktop
 
@@ -47,7 +58,7 @@ sudo apt install -y conky conky-all
 # Remove Games & Open Office
 sudo apt remove -y --purge xscreensaver gnome-screensaver gnome-games
 sudo apt remove -y --purge libreoffice-math libreoffice-writer libreoffice-impress libreoffice-draw libreoffice-calc
-sudo apt remove -y --purge libreoffice-base
+sudo apt remove -y --purge libreoffice*
 sudo apt autoremove -y
 
 #############################################################
@@ -63,8 +74,14 @@ sudo snap install git-ubuntu --classic
 sudo snap install remmina
 
 # Install Azure-CLI (One-Liner)
+pushd ~/Downloads
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+popd
 
+# Reboot to login by RDP
+sudo reboot
+
+#############################################################
 # Edge Browser (Stable)
 firefox https://www.microsoft.com/en-us/edge
 pushd ~/Downloads/

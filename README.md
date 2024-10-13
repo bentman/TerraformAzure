@@ -1,6 +1,6 @@
 # Azure with Terraform Learning Journey! WIP
 
-Build an Azure lab environment using Terraform. Journey into mastering infrastructure as code by creating a real-world cloud architecture that can also be used as a learning lab. Gain hands-on experience with tools like GitHub, Azure DevOps pipelines, and configuring virtual machines. This project focuses on incremental learning to develop skills one step at a time. 🚀🌐🧭
+Build Azure lab environments using Terraform. Journey into mastering infrastructure as code by creating a real-world cloud architecture that can also be used as a learning lab. Gain hands-on experience with tools like GitHub, Azure DevOps pipelines, and configuring virtual machines. This project focuses on incremental learning to develop skills one step at a time. 🚀🌐🧭
 
 ## Bonus Tips
 
