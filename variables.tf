@@ -204,6 +204,7 @@ variable "sql_listener" {
   type        = string
   default     = "sqllistener"
 }
+
 variable "sql_ag_name" {
   description = "Name of the SQL AG (Availability Group)"
   type        = string
